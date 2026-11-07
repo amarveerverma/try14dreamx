@@ -1,0 +1,1871 @@
+# DreamX --- Product Requirements Document (PRD) V3.0
+
+**Product:** DreamX\
+**Document version:** 3.0\
+**Document status:** Consolidated product baseline; implementation and
+launch gates remain open\
+**Prepared:** 6 November 2026\
+**Primary market:** India\
+**Currency / operating timezone:** INR / Asia-Kolkata\
+**Product category:** Outcome-accountable career success marketplace\
+**Audience:** Founder, product/design, engineering, QA, operations,
+mentors, legal/tax advisors, payment and integration partners
+
+> **Important status statement:** This document defines the approved
+> product direction and the current requirements baseline. It does not
+> certify that the software exists, that any integration has been
+> implemented, that a payment provider has approved DreamX, or that
+> legal and tax requirements have been fully validated. Payment/payout,
+> legal/tax/privacy, and selected integration requirements remain
+> explicit launch or implementation gates.
+
+------------------------------------------------------------------------
+
+## Document control and authority
+
+### Version history
+
+  --------------------------------------------------------------------------
+  Version                 Date                    Role in the history
+  ----------------------- ----------------------- --------------------------
+  `DreamX-PRD-v3.md`      11 July 2026            Earlier
+                                                  program/cohort-oriented
+                                                  product concept.
+                                                  Historical reference only.
+
+  `V8(1).MD`              25 July 2026            Broad global
+                                                  marketplace/architecture
+                                                  blueprint. Historical
+                                                  reference; not the India
+                                                  MVP contract.
+
+  `newprd(4).md`          30 October 2026         Detailed product,
+                                                  business, security,
+                                                  schema, API and
+                                                  implementation
+                                                  specification. Important
+                                                  source of requirements and
+                                                  edge cases.
+
+  `newprdupdated.md`      30 October 2026         v7.0 update with 1:1
+                                                  services, four-session
+                                                  bundles, in-call
+                                                  scorecards and related
+                                                  viability proposals.
+
+  `prd(2).md`             2 November 2026         v7.1 canonical engineering
+                                                  specification; detailed
+                                                  legacy technical baseline.
+
+  `DreamX_PRD_v1.0.md`    2 November 2026         Consolidated decision
+                                                  baseline incorporating
+                                                  earlier sources and
+                                                  founder decisions.
+
+  `prd(3).md`             3 November 2026         Later saved copy/update of
+                                                  the v7.1.0-canonical
+                                                  engineering specification.
+                                                  Its file metadata is newer,
+                                                  although its stated
+                                                  effective date remains
+                                                  30 October 2026. Used as
+                                                  the latest detailed legacy
+                                                  engineering reference;
+                                                  superseded commercial and
+                                                  provider assumptions are
+                                                  not treated as approved.
+
+  **This document ---     **6 November 2026**     Current product baseline,
+  V3.0**                                          reconciled against the
+                                                  above sources and later
+                                                  approved decisions.
+  --------------------------------------------------------------------------
+
+### Source reconciliation note
+
+The Library search surfaced `prd(3).md`, `prd(2).md`, `newprd(4).md`, `DreamX_PRD_v1.0.md`, `V8(1).MD` and the earlier `DreamX-PRD-v3.md`. The later v7.1 source explicitly identifies `newprdupdated.md` (`v7.0.0`) as a superseded predecessor. The standalone `newprdupdated.md` file was not independently returned by the Library search in this run; its superseded rules are therefore treated through the later canonical source's references and the founder-approved decisions, not as a separately re-verified current authority.
+
+### Authority rules
+
+1.  This V3.0 document is the current product decision baseline from its
+    preparation date onward.
+2.  Later explicit founder-approved decisions recorded in the
+    conversation supersede conflicting historical source rules.
+3.  `prd(3).md` is the latest dated canonical engineering source located
+    in the Library (saved 3 November 2026; stated effective date 30 October
+    2026). `prd(2).md` is its earlier 2 November counterpart. Both remain
+    valuable technical references, but their claims of "production-ready"
+    status and superseded commercial/provider rules are not carried forward
+    automatically.
+4.  `DreamX_PRD_v1.0.md` is used as a consolidation and
+    decision-traceability reference, not as a reason to ignore later
+    decisions.
+5.  Detailed schema, API contracts, architecture, frontend, backend and
+    implementation plans are separate engineering deliverables. This PRD
+    does not replace those documents.
+6.  No external provider, legal, tax, security or performance claim is
+    considered validated unless evidence is recorded in the Validation
+    Register.
+7.  If implementation discovers a conflict, the team must stop the
+    affected work, record an `OPEN DECISION`, and obtain approval rather
+    than silently changing the product.
+
+### Status labels
+
+-   **CONFIRMED** --- explicitly approved product decision.
+-   **APPROVED DEFAULT** --- accepted recommendation to use unless the
+    founder changes it.
+-   **PROPOSED** --- recommended but not yet confirmed.
+-   **ASSUMPTION** --- requires pilot or market evidence.
+-   **VALIDATION REQUIRED** --- depends on current official
+    documentation, provider confirmation, legal advice or a working
+    test.
+-   **LAUNCH BLOCKER** --- must be resolved before paid public launch or
+    the affected capability can go live.
+-   **DEFERRED** --- intentionally excluded from MVP.
+-   **OUT OF SCOPE** --- not part of the current product commitment.
+
+------------------------------------------------------------------------
+
+# 1. Executive summary
+
+DreamX is an India-first, outcome-accountable Career Success
+Marketplace. It helps students, fresh graduates, early-career
+professionals and career switchers make measurable progress toward
+career goals by connecting them with vetted mentors and structured
+career services.
+
+DreamX is not merely a directory of mentor profiles or a marketplace for
+unstructured calls. Its product loop is:
+
+1.  Understand the user's career goal and current readiness.
+2.  Identify the most important gaps using an evidence-informed
+    assessment.
+3.  Recommend relevant services and mentors.
+4.  Enable direct booking or a guided Smart Match request.
+5.  Deliver a clearly scoped mentor session.
+6.  Provide a structured service-specific report and action plan.
+7.  Update the user's career journey and readiness history.
+8.  Recommend the next useful action without promising a job or
+    placement outcome.
+
+### Product pillars
+
+1.  **Career services marketplace:** standardised, clearly described 1:1
+    services with transparent prices, durations and deliverables.
+2.  **Career readiness and guided journey:** an eight-dimension
+    readiness assessment, evidence coverage, progress history and
+    deterministic next-step recommendations.
+3.  **Trust and mentor quality:** separate identity verification,
+    professional/experience verification and service-specific approval.
+4.  **Booking and Smart Match:** reliable availability, atomic booking,
+    mentor acceptance and explicit student choice when a match cannot be
+    found.
+5.  **Memberships and bundles:** optional recurring benefits and a
+    simple custom bundle discount, without discount stacking.
+6.  **Operations and accountability:** reports, support, cancellations,
+    refunds, disputes, notifications, audit logs and measurable
+    marketplace quality.
+
+### MVP principle
+
+The MVP is deterministic and operationally focused. It should prove that
+users will pay for specific, useful career services and that DreamX can
+deliver a trustworthy end-to-end experience. LLM co-pilot features, AI
+tools and credit-wallet monetisation belong to Phase 2.
+
+------------------------------------------------------------------------
+
+# 2. Product vision, mission and positioning
+
+## 2.1 Vision
+
+Make practical, trustworthy career guidance accessible and measurable at
+every important stage of a person's career journey.
+
+## 2.2 Mission
+
+Help career seekers identify what to improve, access credible human
+guidance, receive actionable feedback and track progress through a
+structured platform.
+
+## 2.3 Positioning
+
+**DreamX --- an outcome-accountable Career Success Marketplace.**
+
+DreamX combines: - Human mentor expertise. - Defined service outcomes
+and deliverables. - Evidence-informed career readiness. - Transparent
+booking and refund rules. - A guided journey that connects one service
+to the next useful action.
+
+## 2.4 Initial India launch domains
+
+The initial India MVP domains are founder-selected launch hypotheses:
+
+1. Software Engineering
+2. Data Science / AI
+3. Product Management
+
+These are the initial focus areas for mentor recruitment, service relevance and pilot learning. Their order is not a validated market-demand ranking. DreamX should expand into additional domains only after the initial areas demonstrate adequate mentor supply, student demand and reliable service fulfilment.
+
+## 2.5 What DreamX may promise
+
+DreamX may promise: - A clearly described service. - A stated duration
+and deliverable. - Access to a mentor who has passed the required
+verification and service approval. - Transparent booking, cancellation
+and support processes. - A structured report within the stated service
+SLA. - Progress tracking based on recorded assessment evidence.
+
+DreamX must not promise: - A guaranteed job, internship, salary, offer,
+shortlist or interview pass. - A guaranteed mentor match before a mentor
+has accepted. - A particular outcome rate unless it is supported by
+valid, clearly defined data. - A payout, refund or settlement time that
+the payment provider has not confirmed.
+
+------------------------------------------------------------------------
+
+# 3. Goals, non-goals and success definition
+
+## 3.1 Product goals
+
+  ------------------------------------------------------------------------------
+  ID                      Goal                    Measurement
+  ----------------------- ----------------------- ------------------------------
+  G-01                    Make career gaps        Assessment completion and
+                          understandable          evidence coverage
+
+  G-02                    Help users choose a     Recommendation-to-booking
+                          relevant service        conversion
+
+  G-03                    Build mentor trust      Verification completion,
+                                                  approval quality and complaint
+                                                  rate
+
+  G-04                    Make booking reliable   Payment-to-confirmed-booking
+                                                  consistency; double-booking
+                                                  rate
+
+  G-05                    Deliver useful          Report SLA compliance and
+                          post-session value      report feedback
+
+  G-06                    Create measurable       Assessment history, dimension
+                          career progress         movement and action completion
+
+  G-07                    Establish sustainable   Contribution margin by service
+                          marketplace economics   and membership
+
+  G-08                    Operate safely and      Refund/dispute resolution
+                          transparently           time, audit coverage and
+                                                  support quality
+  ------------------------------------------------------------------------------
+
+## 3.2 Business goals
+
+The first pilot should validate: - Whether users understand and value
+the service catalogue. - Which services convert and are completed
+reliably. - Whether qualified mentors are willing to participate at the
+proposed prices and terms. - Whether Smart Match improves fulfilment
+without creating operational overhead. - Whether reports and readiness
+tracking create repeat usage. - Whether membership benefits produce
+retention without making unit economics negative.
+
+Numeric targets must be set after a baseline pilot. Historical source
+targets such as "\<15-minute matching", "\>99% instant scorecard
+submission", "22% bundle conversion" or a fixed 90-day revenue target
+are hypotheses, not guaranteed performance commitments.
+
+## 3.3 MVP non-goals
+
+-   LLM-powered career co-pilot.
+-   AI-generated resume rewrites or AI ATS review sold as equivalent to
+    a human service.
+-   AI credit wallet, credit top-ups or cashback wallet.
+-   Multi-country and multi-currency checkout.
+-   Native iOS or Android applications.
+-   Group cohorts or multi-student programs as a core MVP feature.
+-   WhatsApp Business API interactive dispatch.
+-   Session recording by default.
+-   Self-built escrow or custody of customer funds.
+-   Guaranteed placement, hiring or salary outcomes.
+-   Microservices architecture before scale justifies it.
+
+------------------------------------------------------------------------
+
+# 4. Target users and personas
+
+  -----------------------------------------------------------------------
+  Persona                 Needs                   DreamX value
+  ----------------------- ----------------------- -----------------------
+  Student / placement     Resume, portfolio,      Assessment, relevant
+  seeker                  technical preparation,  services, mentors and
+                          interview confidence    guided next steps
+                          and a clear plan        
+
+  Fresh graduate          Interview preparation,  Structured service
+                          job search strategy,    recommendations and
+                          communication and       measurable progress
+                          profile quality         
+
+  Early-career            Career growth, role     Targeted mentor
+  professional            transition, technical   services and career
+                          interview preparation   planning
+                          and negotiation         
+
+  Career switcher         Gap identification,     Segment-aware
+                          transferable skills,    assessment and
+                          portfolio and           specialist guidance
+                          transition roadmap      
+
+  Mentor                  Credible profile,       Verified profile,
+                          relevant bookings,      service catalogue,
+                          clear expectations,     scheduling, reports and
+                          fair compensation and   earnings visibility
+                          low admin overhead      
+
+  Operations/admin        Trust, service quality, Permissioned operations
+                          exceptions, disputes,   console, queues, audit
+                          payment reconciliation  history and reporting
+                          and platform health     
+  -----------------------------------------------------------------------
+
+## 4.1 User roles
+
+-   **Visitor:** can browse public pages and service information.
+-   **Student:** can manage their profile, assessment, bookings,
+    payments, reports, membership and support requests.
+-   **Mentor applicant:** can submit an application and verification
+    evidence but cannot accept paid bookings.
+-   **Approved mentor:** can manage approved services and availability,
+    accept eligible bookings and submit deliverables.
+-   **Operations admin:** handles assigned operational queues and
+    customer support.
+-   **Verification reviewer:** reviews identity and professional
+    evidence.
+-   **Finance admin:** handles payment reconciliation, refund and payout
+    records subject to dual-control policy.
+-   **Super admin:** manages roles, platform configuration and
+    exceptional access.
+
+No user can grant themselves a privileged role. Admin permissions must
+be server-enforced and audited.
+
+------------------------------------------------------------------------
+
+# 5. Product scope and release plan
+
+## 5.1 Phase 1 --- MVP
+
+### Required capabilities
+
+1.  Public marketing pages and service catalogue.
+2.  Authentication and student onboarding.
+3.  Student profile and career goal capture.
+4.  Eight-dimension readiness assessment.
+5.  Evidence coverage and readiness history.
+6.  Deterministic service recommendations.
+7.  Mentor application and verification workflow.
+8.  Service-specific mentor approval.
+9.  Mentor public profile and service listings.
+10. Availability management.
+11. Direct booking.
+12. Smart Match request and acceptance workflow.
+13. Payment collection through a provider-approved model.
+14. Booking confirmation and reminders.
+15. Session completion and service-specific report workflow.
+16. Career journey updates.
+17. Memberships and entitlement checks.
+18. Custom bundle discount.
+19. Cancellation, refund and dispute workflows.
+20. Student, mentor and admin dashboards.
+21. Email and in-app notifications.
+22. Support, audit logs and analytics.
+23. Privacy, retention, deletion and security controls.
+
+**Paid launch dependency:** a compliant payment collection and mentor
+settlement arrangement must be confirmed in writing. If it is not
+available, DreamX may pilot non-transactional discovery, waitlist and
+assessment flows, but must not represent the paid marketplace as ready.
+
+## 5.2 Phase 2 --- AI co-pilot and AI tools
+
+-   AI career co-pilot.
+-   AI-assisted resume feedback and improvement suggestions.
+-   ATS-oriented resume analysis.
+-   LinkedIn profile suggestions.
+-   Portfolio review assistance.
+-   Interview practice and question generation.
+-   Career roadmap assistance.
+-   AI recommendations grounded in user goals and evidence.
+-   Credit wallet, monthly allowances, paid credit packs and immutable
+    credit ledger.
+-   AI quality evaluation, cost monitoring, safety controls and
+    feature-level pause controls.
+
+Phase 2 AI output is assistive and must not be presented as a guaranteed
+hiring assessment or substitute for professional advice.
+
+## 5.3 Later phases
+
+-   Group programs/cohorts only after validated demand.
+-   WhatsApp interactive notifications if operationally and commercially
+    justified.
+-   International markets, additional currencies and market-specific
+    rules.
+-   Recruiter, university or enterprise products only after the core
+    marketplace has demonstrated repeatable outcomes.
+
+------------------------------------------------------------------------
+
+# 6. Career services catalogue
+
+The following catalogue is the MVP service baseline. Prices are proposed
+launch list prices and must be reviewed against mentor supply,
+willingness to pay, taxes, gateway fees and unit economics before public
+launch.
+
+  ID    Service                          Duration   List price
+  ----- ------------------------------ ---------- ------------
+  S01   Resume Review                      45 min         ₹599
+  S02   ATS Resume Optimization            45 min         ₹799
+  S03   LinkedIn Profile Review            30 min         ₹499
+  S04   Portfolio Review                   45 min         ₹599
+  S05   Behavioral Mock Interview          60 min         ₹799
+  S06   Technical Mock Interview           60 min         ₹999
+  S07   Career Consultation                30 min         ₹499
+  S08   Salary Negotiation                 30 min         ₹699
+  S09   Career Roadmap Session             60 min         ₹799
+  S10   Coding Interview Preparation       60 min         ₹999
+
+## 6.1 Service definition requirements
+
+Every service listing must include: - Service ID and name. - Intended
+user and use case. - Scope and exclusions. - Duration. - List price and
+applicable tax/fee disclosure. - Mentor eligibility requirements. -
+Required student inputs. - Expected deliverable/report. - Report
+delivery SLA. - Cancellation and rescheduling policy. - Whether the
+service is available for direct booking, Smart Match or both.
+
+## 6.2 Mentor-specific availability and pricing
+
+The catalogue establishes standard service definitions and reference
+list prices. Whether a mentor may set a different price, and the allowed
+price band, must be controlled by product configuration and approved
+before launch. The client must never be trusted to submit its own final
+price; checkout uses the server-authoritative price record.
+
+------------------------------------------------------------------------
+
+# 7. Memberships, discounts and bundles
+
+## 7.1 Membership plans
+
+  Plan         Monthly                      Annual   Service discount
+  ------- ------------ --------------------------- ------------------
+  Free              ₹0                         ---                 0%
+  Pro       ₹199/month   ₹1,788/year, paid upfront                 5%
+  Elite     ₹399/month   ₹4,188/year, paid upfront                10%
+
+Annual prices are the approved plan prices. The interface must show the
+total amount due today, billing interval, renewal date and cancellation
+effect before confirmation.
+
+## 7.2 Membership lifecycle requirements
+
+-   Membership state is derived from verified subscription/payment
+    events, not client state.
+-   Support start, active, renewal due, payment failed, grace period (if
+    approved), cancellation scheduled, expired and refunded states.
+-   Show the user when benefits begin and end.
+-   A cancellation request must not be confused with an immediate
+    refund.
+-   Failed renewal handling and any grace period must be configured and
+    disclosed before launch.
+-   Upgrade/downgrade proration rules require a clear policy and
+    provider validation.
+-   Membership benefits beyond the approved service discount must not be
+    invented in the interface.
+
+## 7.3 Discount rules
+
+-   Pro service discount: 5%.
+-   Elite service discount: 10%.
+-   Custom bundle: any 3 eligible services receive a 5% bundle discount.
+-   Membership discounts and bundle discounts do not stack.
+-   Apply the single better eligible discount to the relevant eligible
+    subtotal.
+-   DreamX funds the discount; mentor payout calculation is based on the
+    original list price, subject to the approved commercial agreement
+    and compliant payment structure.
+-   The checkout must show list price, selected discount, tax/fees where
+    applicable and final amount before payment.
+-   All monetary calculations use integer paise.
+
+## 7.4 Bundle rules
+
+The approved bundle concept is a custom bundle of any three eligible
+services for a 5% discount. It replaces the older fixed
+four-session/15%-off/24-hour roll-forward proposal.
+
+The product must define eligible service combinations, redemption order,
+booking expiry, partial cancellation, partial refund and mentor-mix
+behaviour in configuration before bundles are enabled. Unless a rule is
+explicitly approved, the interface must not imply that bundle credits
+are transferable, cash-redeemable or refundable as cash.
+
+------------------------------------------------------------------------
+
+# 8. Career readiness assessment and guided journey
+
+## 8.1 Eight dimensions
+
+1.  Resume
+2.  LinkedIn
+3.  Portfolio
+4.  Communication
+5.  Technical Skills
+6.  Interview Skills
+7.  Career Planning
+8.  Confidence
+
+## 8.2 Segment weights
+
+  ---------------------------------------------------------------------------
+  Dimension              Student Fresh graduate   Early career         Career
+                                                                     switcher
+  --------------- -------------- -------------- -------------- --------------
+  Resume                     15%            15%            15%            15%
+
+  LinkedIn                    8%            10%            10%            10%
+
+  Portfolio                  12%            10%             5%            15%
+
+  Communication              10%            10%            10%            10%
+
+  Technical                  20%            20%            15%            15%
+  Skills                                                       
+
+  Interview                  15%            15%            15%            10%
+  Skills                                                       
+
+  Career Planning            10%            10%            20%            20%
+
+  Confidence                 10%            10%            10%             5%
+
+  **Total**             **100%**       **100%**       **100%**       **100%**
+  ---------------------------------------------------------------------------
+
+These are initial approved weights, not empirically validated predictors
+of hiring outcomes.
+
+## 8.3 Dimension scoring
+
+Each dimension uses a 0--5 scale:
+
+    Score Interpretation
+  ------- -------------------------------------
+        0 No evidence / not assessed
+        1 Major improvement required
+        2 Below expected level
+        3 Developing / acceptable foundation
+        4 Strong
+        5 Excellent and supported by evidence
+
+Overall readiness is displayed from 0--100:
+
+`Readiness = Σ(weight × dimension_score / 5) × 100`
+
+If Portfolio is not applicable, its weight is redistributed
+proportionally across applicable dimensions. A missing score must not
+silently be treated as zero unless the assessment rubric explicitly
+defines that state.
+
+## 8.4 Evidence and assessment integrity
+
+-   Store dimension score, rubric version, evidence reference, assessor,
+    assessment date and confidence/coverage.
+-   Confidence is a separate dimension and must not be used as a proxy
+    for technical competence.
+-   Students may provide evidence and request reassessment; mentor/admin
+    updates must be attributable.
+-   Preserve historical assessments rather than overwriting history.
+-   Display evidence coverage and last-assessed date with the score.
+-   The readiness score is private by default.
+-   Do not market the score as a scientifically validated probability of
+    getting hired.
+
+## 8.5 Guided career journey
+
+The journey should: - Explain the user's current stage. - Identify the
+highest-priority gaps. - Recommend a small number of next actions. -
+Link recommended services to the relevant gap. - Record completed
+actions and assessment changes. - Avoid arbitrary stage advancement
+based only on time or purchases.
+
+A recommendation must include a reason such as "Technical Skills is
+currently the highest weighted gap for your selected goal."
+
+------------------------------------------------------------------------
+
+# 9. Mentor onboarding, verification and quality
+
+## 9.1 Three separate trust checks
+
+1.  **Identity verification:** confirms the applicant is a real person
+    and identity evidence matches.
+2.  **Professional/experience verification:** reviews work history,
+    claimed expertise, credentials and professional background.
+3.  **Service-specific approval:** confirms which individual DreamX
+    services the mentor may deliver.
+
+A work-email OTP may support professional-domain evidence but does not,
+by itself, prove identity, current employment or service competence.
+
+## 9.2 Mentor application workflow
+
+1.  Create an account as a mentor applicant.
+2.  Submit profile, experience, target domains and requested services.
+3.  Complete identity verification using an approved process.
+4.  Submit professional evidence.
+5.  Admin/reviewer evaluates the professional background.
+6.  Each requested service is separately approved, rejected or returned
+    for more evidence.
+7.  Mentor configures availability and approved pricing.
+8.  Only eligible approved mentors can accept paid bookings.
+
+## 9.3 Mentor profile fields
+
+-   Display name and profile photo.
+-   Professional headline and biography.
+-   Current/most relevant professional experience, with verification
+    label.
+-   Skills and career domains.
+-   Approved service list.
+-   Education and credentials where relevant.
+-   Languages.
+-   Years of experience, where verified or clearly self-reported.
+-   Availability and timezone.
+-   Service-specific rating/review information when enough valid data
+    exists.
+-   Clear verification status labels.
+
+Do not publish private identity documents, personal contact information
+or unverified claims as verified facts.
+
+## 9.4 Quality operations
+
+Track: - Acceptance and response time. - Attendance and cancellation. -
+Report delivery SLA. - Student feedback. - Dispute and refund
+patterns. - Service-specific quality and repeat bookings.
+
+Provide review, suspension and appeal workflows. A mentor's approval for
+one service does not automatically approve every other service.
+
+------------------------------------------------------------------------
+
+# 10. Discovery, booking and Smart Match
+
+## 10.1 Discovery
+
+Students can discover by: - Career goal. - Service category. - Mentor
+skills and experience. - Availability. - Price. - Approved verification
+labels. - Rating/reviews where available.
+
+Ranking must not imply outcome superiority without valid evidence. Paid
+placement or sponsored ranking, if introduced later, must be disclosed.
+
+## 10.2 Direct booking
+
+1.  Student selects an eligible service and mentor.
+2.  Student selects an available slot.
+3.  Server validates mentor approval, slot availability, service price
+    and student eligibility.
+4.  Slot is held for the configured checkout window.
+5.  Student completes payment.
+6.  Verified payment event confirms booking.
+7.  Calendar/in-app/email confirmations are dispatched.
+8.  If payment fails or expires, the hold is released safely.
+
+The database must enforce atomic slot claiming to prevent double
+booking. The client cannot set booking status to confirmed.
+
+## 10.3 Smart Match
+
+Smart Match is a deterministic MVP workflow, not an LLM-based matching
+feature.
+
+-   Match only mentors approved for the requested service and available
+    for the requested windows.
+-   Consider service fit, career-domain fit, availability,
+    experience/verification, quality signals and operational load.
+-   Store match reasons and the matching configuration/version.
+-   Student submits preferred time windows and the request.
+-   Initial dispatch wave starts when the request is valid and eligible.
+-   **Wave 2 begins after 30 minutes** if no mentor has accepted.
+-   If no mentor accepts within **2 hours**, DreamX presents an
+    available open-slot alternative or a full refund option.
+-   The student explicitly chooses the alternative or refund.
+-   DreamX must not automatically reschedule the student.
+-   Mentor acceptance must use an atomic claim so only one mentor can
+    win the booking.
+-   Notify the student when a mentor accepts and make the confirmed
+    details visible.
+-   If the provider's payment model cannot support the described
+    hold/refund path, the flow must be adapted before launch and
+    documented.
+
+## 10.4 No double booking and race conditions
+
+Acceptance and slot reservation must be transaction-safe. Two mentors
+accepting the same request simultaneously must result in exactly one
+successful acceptance. A losing mentor receives a clear "already
+accepted" response.
+
+------------------------------------------------------------------------
+
+# 11. Session delivery, reports and outcomes
+
+## 11.1 Session lifecycle
+
+-   Booking confirmed.
+-   Pre-session information collected.
+-   Reminder dispatched.
+-   Student and mentor join.
+-   Attendance events recorded.
+-   Session completed or exception recorded.
+-   Mentor submits the service-specific report.
+-   Report reviewed/approved if the service or risk policy requires it.
+-   Student receives report and action plan.
+-   Readiness history and next-step recommendations update when
+    appropriate.
+
+## 11.2 Reports
+
+-   A report is required for each service where the catalogue promises
+    one.
+-   Target report delivery: **within 48 hours after the session**.
+-   Report structure varies by service; do not force every service into
+    the same scorecard.
+-   Reports must include the service performed, key observations,
+    actionable recommendations and next steps.
+-   Reports should identify the author and creation/version time.
+-   Corrections/revisions must preserve prior versions and an audit
+    trail.
+-   A late report triggers a mentor reminder and an operations queue.
+-   PDF and secure web view are acceptable delivery formats; final
+    format selection belongs in UX/technical specifications.
+
+## 11.3 Outcome tracking
+
+Students may voluntarily record milestones such as resume completion,
+applications, interviews, shortlists and offers. Outcome data must be
+labelled as self-reported unless independently verified. Public
+aggregate claims require sufficient sample size, clear denominator,
+timeframe and methodology.
+
+------------------------------------------------------------------------
+
+# 12. Cancellation, rescheduling, refunds and disputes
+
+## 12.1 Approved baseline
+
+-   Student cancellation at least **1 hour before** a 1:1 session:
+    **100% refund**.
+-   Post-session issue report: submit within **48 hours** after the
+    session.
+-   If a post-session issue is substantiated under the published policy:
+    **80% refund**.
+-   If the issue is not substantiated: provide a reasoned decision and
+    evidence summary, subject to applicable consumer rights.
+-   Refund initiation and refund completion are separate states.
+-   Never claim that a refund is instant unless the payment provider
+    confirms that timeline.
+
+## 12.2 Operational handling defaults requiring final policy publication
+
+The following should be treated as operational defaults and reviewed
+before launch:
+
+  -----------------------------------------------------------------------
+  Scenario                            Recommended handling
+  ----------------------------------- -----------------------------------
+  Student cancels at least 1 hour     Full refund under the approved
+  before                              baseline
+
+  Student cancels less than 1 hour    Normally no automatic refund; allow
+  before                              documented exception review
+
+  Student no-show                     Normally no refund if mentor
+                                      attended and was available for the
+                                      stated grace period; evidence and
+                                      legal review required
+
+  Mentor cancels                      Student chooses a suitable
+                                      reschedule or full refund
+
+  Mentor no-show                      Full refund or student-selected
+                                      reschedule; no automatic reschedule
+
+  Late arrival                        Record join times; apply a
+                                      published grace/shortened-session
+                                      rule
+
+  Technical failure                   Determine responsibility using
+                                      platform/attendance evidence;
+                                      provide reschedule or refund as
+                                      appropriate
+
+  Report not delivered within 48      Operations escalation; require
+  hours                               delivery or issue resolution
+
+  Quality complaint after session     Student submits within 48 hours;
+                                      review evidence and apply
+                                      substantiated 80% refund rule
+  -----------------------------------------------------------------------
+
+The exact grace period, late-arrival treatment, reschedule limits, and
+student/mentor no-show definitions must be published in the final
+customer and mentor terms before paid launch.
+
+## 12.3 Dispute evidence
+
+Evidence may include: - Booking and payment events. - Attendance
+timestamps. - Session schedule and approved service scope. - In-platform
+communications. - Report submission timestamps and report versions. -
+User-submitted supporting information.
+
+No session recording is stored by default. Transcripts or recordings may
+only be considered after explicit informed consent from all
+participants, legal review, purpose limitation, access controls and a
+defined retention policy. A transcript must never be the sole automated
+judge of a dispute.
+
+------------------------------------------------------------------------
+
+# 13. Payments, fees and mentor settlement
+
+## 13.1 Financial principles
+
+-   All money is stored as integer paise.
+-   Client-supplied prices and payout amounts are never authoritative.
+-   Payment status is based on verified provider events and
+    reconciliation.
+-   Webhooks must be signature-verified, idempotent and replay-safe.
+-   Payment capture, booking confirmation, refund and mentor settlement
+    are distinct states.
+-   Maintain a complete financial audit trail.
+
+## 13.2 Marketplace payout model
+
+**LAUNCH BLOCKER --- provider and legal validation required.**
+
+Do not assume: - Razorpay Route is approved for DreamX. - Split
+settlement is available to DreamX. - Escrow or on-hold transfers are
+permitted. - DreamX may collect and later transfer funds under an
+unreviewed arrangement. - Any specific payout percentage, settlement
+cadence or KYC flow is provider-approved.
+
+The previously discussed mentor payout model based on original list
+price while DreamX absorbs discounts is the intended commercial
+direction, but final commission, gateway fee treatment, taxes,
+settlement timing, refund deductions and payout statements require
+provider and legal confirmation.
+
+The system must isolate provider-specific operations behind an adapter
+so the approved provider can be selected without rewriting core booking
+logic.
+
+If no compliant marketplace collection and settlement model is
+available, paid marketplace launch is blocked. Do not create a custom
+"escrow" wallet as a workaround.
+
+------------------------------------------------------------------------
+
+# 14. Notifications and communication
+
+## 14.1 Required events
+
+-   Account verification and password recovery.
+-   Mentor application received and status updated.
+-   Verification status and additional evidence request.
+-   Service approval/rejection.
+-   Booking request and mentor acceptance.
+-   Smart Match dispatch and Wave 2.
+-   Two-hour fallback choice.
+-   Payment success/failure.
+-   Booking confirmation and reminders.
+-   Cancellation, reschedule and refund status.
+-   Session completion and report ready/overdue.
+-   Dispute submitted and resolved.
+-   Membership start, renewal, payment failure and cancellation.
+-   Account deletion and privacy request status.
+
+## 14.2 Channels
+
+MVP: - In-app notifications. - Transactional email through an approved
+provider.
+
+Deferred: - WhatsApp Business API interactive dispatch unless separately
+approved and justified.
+
+Notifications must be idempotent, retryable and observable. A
+notification failure must not reverse a successful payment or booking
+state.
+
+------------------------------------------------------------------------
+
+# 15. Admin, operations and permissions
+
+## 15.1 Admin functions
+
+-   Mentor applications and verification queues.
+-   Service-specific approvals.
+-   Mentor/service catalogue management.
+-   Booking and Smart Match exception queues.
+-   Payment and refund reconciliation.
+-   Dispute handling.
+-   Report SLA monitoring.
+-   Membership and discount configuration.
+-   Support ticket ownership.
+-   Analytics and operational reports.
+-   Audit-log review.
+-   Data export/deletion requests.
+
+## 15.2 Permission principles
+
+-   Least privilege by default.
+-   Separate operational, verification and finance permissions.
+-   Sensitive actions require reason codes.
+-   High-impact financial actions should use dual approval where
+    practical.
+-   Admin access to user files and sensitive evidence is logged.
+-   No shared admin accounts.
+-   Privileged role changes are audited.
+
+------------------------------------------------------------------------
+
+# 16. Data requirements and conceptual entities
+
+This section describes logical data domains, not a final SQL schema. The
+detailed schema must be specified and reviewed in `database.md` before
+migrations.
+
+  -----------------------------------------------------------------------
+  Domain                              Core entities / records
+  ----------------------------------- -----------------------------------
+  Identity                            users, profiles, roles, sessions
+
+  Mentor trust                        mentor applications, identity
+                                      checks, professional checks,
+                                      service approvals, evidence
+                                      references
+
+  Catalogue                           service definitions, service
+                                      versions, prices, deliverable
+                                      templates
+
+  Availability                        mentor availability rules, slots,
+                                      holds
+
+  Assessment                          assessment responses, dimension
+                                      scores, rubric versions, score
+                                      history, evidence references
+
+  Journey                             career goals, journey stages,
+                                      actions, completion records
+
+  Discovery                           service requests, match candidates,
+                                      match reasons, offers
+
+  Booking                             bookings, booking state events,
+                                      attendance events, reschedules
+
+  Commerce                            payments, refunds, provider events,
+                                      fee records, settlement/payout
+                                      records
+
+  Membership                          plans, subscriptions, entitlements,
+                                      renewal events
+
+  Bundles                             bundle definitions, bundle
+                                      purchases, service entitlements,
+                                      redemptions
+
+  Delivery                            reports, report versions, action
+                                      items, student feedback
+
+  Operations                          notifications, support cases,
+                                      disputes, audit logs
+
+  Phase 2 AI                          credit accounts, immutable credit
+                                      ledger, reservations, AI
+                                      usage/cost/evaluation records
+  -----------------------------------------------------------------------
+
+## 16.1 Data invariants
+
+-   Every booking belongs to one student, one approved mentor, one
+    service and one slot.
+-   A slot cannot be confirmed for multiple bookings.
+-   Payment provider event IDs are unique for idempotency.
+-   Refunds reference a payment and booking.
+-   Mentor service approval is explicit and independently queryable.
+-   Assessment scores reference a rubric version.
+-   Report revisions preserve history.
+-   Membership entitlement is derived from verified subscription state.
+-   AI credit balance is derived from immutable ledger entries and
+    reservations, not a mutable client-side number.
+
+------------------------------------------------------------------------
+
+# 17. Technical architecture requirements
+
+## 17.1 Preferred MVP stack
+
+  -----------------------------------------------------------------------
+  Layer                   Preferred direction     Status
+  ----------------------- ----------------------- -----------------------
+  Frontend                Next.js App Router,     Proposed baseline;
+                          React, TypeScript       verify current stable
+                                                  versions
+
+  UI                      Tailwind CSS and        Proposed
+                          accessible component    
+                          primitives              
+
+  Application backend     Next.js Server Actions  Proposed
+                          and Route Handlers,     
+                          domain modules          
+
+  Database                Supabase PostgreSQL     Preferred
+
+  Authentication          Supabase Auth,          Preferred; validate
+                          cookie-based SSR        current official
+                                                  guidance
+
+  Authorization           Server-side role checks Required design
+                          plus PostgreSQL RLS     principle
+
+  Hosting                 Vercel                  Preferred
+
+  Version control         Git + GitHub            Confirmed workflow
+
+  Payments                Provider adapter;       Validation required
+                          provider not yet        
+                          approved                
+
+  Email                   Resend or another       Validation required
+                          approved transactional  
+                          provider                
+
+  Calendar                Google Calendar         Validation required
+                          integration             
+
+  Video meeting           Google Meet             Validation required
+                          link/creation approach  
+
+  File storage            Supabase Storage        Preferred; validate
+                          private buckets         access and retention
+
+  Monitoring              Sentry or suitable      Proposed
+                          error monitoring plus   
+                          platform logs           
+
+  AI                      Deterministic rules in  Confirmed release
+                          MVP; LLM provider in    boundary
+                          Phase 2                 
+  -----------------------------------------------------------------------
+
+## 17.2 Architecture principles
+
+-   Start with a modular monolith.
+-   Keep business rules in server-side domain/application modules.
+-   Use typed validation at trust boundaries.
+-   Use PostgreSQL constraints and transactions for financial and
+    booking invariants.
+-   Treat verified payment webhooks as authoritative provider events.
+-   Use idempotency for webhooks, notifications and background tasks.
+-   Use background jobs for dispatch, reminders, report SLA, expiry and
+    reconciliation.
+-   Keep provider integrations behind adapters.
+-   Store timestamps in UTC and display in the user's timezone.
+-   Store money in integer paise.
+-   Commit database migrations to Git.
+-   Never expose service-role secrets or provider secrets to browser
+    code.
+
+## 17.3 High-level architecture flow
+
+``` mermaid
+flowchart TD
+    U[Student / Mentor / Admin] --> W[Next.js Web App on Vercel]
+    W --> A[Supabase Auth]
+    W --> S[Server Actions and Route Handlers]
+    S --> D[(Supabase PostgreSQL)]
+    D --> R[RLS, Constraints and Transactions]
+    S --> F[Private File Storage]
+    S --> M[Deterministic Readiness and Matching]
+    M --> D
+    S --> P[Payment Provider Adapter]
+    P --> H[Verified Provider Webhooks]
+    H --> D
+    S --> J[Background Jobs and Scheduled Work]
+    J --> D
+    J --> E[Transactional Email]
+    J --> C[Calendar / Meeting Integration]
+    O[Admin Console] --> S
+    S --> X[Logs, Metrics, Error Monitoring and Audit]
+```
+
+## 17.4 Founder-required infrastructure sequence
+
+**Confirmed preferred order: Git/GitHub → Vercel → Supabase
+connection.**
+
+1.  Create Git repository and establish project ownership.
+2.  Configure `.gitignore`, environment templates and secret policy.
+3.  Make the initial commit and push to GitHub.
+4.  Connect the GitHub repository to Vercel.
+5.  Establish production and preview deployment behaviour.
+6.  Provision/connect Supabase using the selected supported route.
+7.  Configure environment-specific credentials and variables.
+8.  Configure Auth redirect/callback URLs.
+9.  Create and review migrations, private storage buckets and RLS
+    policies.
+10. Verify development, preview/staging and production independently.
+11. Add payment, email, calendar, meeting and monitoring integrations
+    only after their documentation and account requirements have been
+    checked.
+
+Do not place secrets in source control, chat transcripts or client-side
+bundles.
+
+------------------------------------------------------------------------
+
+# 18. Security, privacy and retention
+
+## 18.1 Authentication and authorization
+
+-   Use a supported authentication flow.
+-   Never trust browser-supplied user IDs or roles.
+-   Public signup cannot self-assign mentor/admin roles.
+-   Privileged actions are server-side.
+-   Every private table requires explicit RLS policies.
+-   Service-role keys remain server-only.
+-   Test cross-user and cross-role access denial.
+
+## 18.2 File security
+
+-   Resumes and reports are private by default.
+-   Use short-lived signed URLs.
+-   Validate file type, size and content server-side.
+-   Restrict access to the owner and authorised parties for the relevant
+    active service.
+-   Do not expose private resume URLs in public mentor search.
+-   Avoid logging resume contents or identity documents.
+
+## 18.3 Approved initial retention schedule
+
+  -----------------------------------------------------------------------
+  Data                                Initial retention rule
+  ----------------------------------- -----------------------------------
+  Resumes                             12 months after last activity
+
+  Scorecards/readiness history        While account remains active
+
+  Session recordings                  Not stored by default
+
+  Payment records                     8 years, subject to
+                                      legal/accounting validation
+
+  Audit logs                          3 years
+
+  Account deletion                    Soft-delete immediately
+
+  Personal-data purge                 Target 30 days after deletion
+                                      request, subject to lawful
+                                      exceptions
+  -----------------------------------------------------------------------
+
+Legal, tax, active-dispute, security and backup-retention exceptions
+must be documented. Do not promise immediate deletion from immutable
+backups or records that must lawfully be retained.
+
+## 18.4 Privacy requirements
+
+-   Provide clear privacy notice and purposes.
+-   Collect only data needed for the service.
+-   Record consent where required.
+-   Support access, correction, deletion and grievance workflows as
+    applicable.
+-   Define processors, access controls and incident response.
+-   Restrict sensitive verification evidence.
+-   Obtain explicit consent from all participants before any future
+    session transcript or recording.
+-   Obtain qualified Indian legal review of the DPDP Act/Rules
+    applicability and commencement provisions at launch.
+
+------------------------------------------------------------------------
+
+# 19. Non-functional requirements
+
+These are proposed acceptance targets to validate in staging, not claims
+of current performance.
+
+  -----------------------------------------------------------------------
+  Area                                Requirement
+  ----------------------------------- -----------------------------------
+  Performance                         Responsive mobile-first pages;
+                                      establish p75 LCP and API latency
+                                      baselines
+
+  Reliability                         Booking/payment states recover
+                                      safely from webhook delays and
+                                      retries
+
+  Consistency                         Atomic booking and offer
+                                      acceptance; no duplicate
+                                      settlement/refund events
+
+  Accessibility                       Semantic HTML, keyboard navigation,
+                                      visible focus, accessible labels
+                                      and suitable contrast
+
+  Compatibility                       Test current stable major desktop
+                                      browsers and common Android/iOS
+                                      browsers
+
+  Observability                       Structured logs, error monitoring,
+                                      key business events and alerting
+
+  Privacy                             No secrets, raw identity evidence
+                                      or full resume content in logs
+
+  Recovery                            Document backup, restore and
+                                      rollback procedures before
+                                      production
+
+  Maintainability                     Typed modules, migrations, tests,
+                                      code review and decision
+                                      traceability
+  -----------------------------------------------------------------------
+
+------------------------------------------------------------------------
+
+# 20. Analytics and product measurement
+
+## 20.1 Core funnel
+
+-   Visitor → signup.
+-   Signup → onboarding completion.
+-   Onboarding → assessment completion.
+-   Assessment → service recommendation viewed.
+-   Recommendation → booking initiated.
+-   Booking initiated → payment success.
+-   Payment success → session completed.
+-   Session completed → report delivered within 48 hours.
+-   Report delivered → next action completed / repeat booking.
+
+## 20.2 Marketplace health
+
+Track: - Approved mentors by service. - Available slots and mentor
+utilisation. - Direct booking conversion. - Smart Match acceptance and
+fulfilment. - Time to mentor acceptance. - Cancellation and no-show
+rates. - Payment failure and refund rates. - Report SLA compliance. -
+Dispute rates and resolution time. - Repeat booking and bundle use. -
+Membership activation, renewal and churn. - Readiness assessment
+completion and evidence coverage.
+
+## 20.3 Measurement rules
+
+-   Define every metric's numerator, denominator, event time and
+    exclusions.
+-   Separate self-reported outcomes from verified outcomes.
+-   Avoid publishing small-sample outcome percentages.
+-   Do not optimise for booking volume at the expense of quality,
+    refunds or mentor wellbeing.
+
+------------------------------------------------------------------------
+
+# 21. Acceptance criteria and definition of done
+
+A feature is not complete merely because its UI exists.
+
+## 21.1 Core acceptance criteria
+
+### Identity and roles
+
+-   A student cannot self-promote to mentor or admin.
+-   Mentor applicants cannot accept paid bookings before required
+    verification and service approval.
+-   Admin actions are permission-checked and audited.
+
+### Readiness
+
+-   Segment weights total 100%.
+-   Score calculation is deterministic and versioned.
+-   Not-applicable dimensions are handled according to the documented
+    redistribution rule.
+-   History is preserved and score visibility defaults to private.
+
+### Catalogue and checkout
+
+-   Service duration, list price and deliverable are visible before
+    purchase.
+-   Final price is calculated server-side.
+-   Discounts do not stack.
+-   Money uses integer paise.
+
+### Booking and Smart Match
+
+-   Unavailable slots cannot be booked.
+-   Concurrent acceptance cannot create two confirmed bookings.
+-   Wave 2 begins at 30 minutes if no mentor accepts.
+-   Two-hour timeout presents an open-slot alternative or full refund
+    option.
+-   No reschedule occurs without student choice.
+
+### Payment
+
+-   Invalid/replayed webhooks cannot create duplicate payment or booking
+    events.
+-   Booking confirmation follows verified payment state.
+-   Refund initiation and completion are separately represented.
+-   Provider reconciliation is available.
+
+### Reports
+
+-   Applicable service reports are delivered within 48 hours or
+    escalated.
+-   Report versions and timestamps are preserved.
+-   Student can access only their own report.
+
+### Privacy and security
+
+-   RLS tests cover cross-student and cross-mentor access.
+-   Private files are not publicly accessible.
+-   Sensitive data is excluded from logs.
+-   Deletion and retention workflows are testable.
+
+## 21.2 Definition of done
+
+Each feature must have: 1. Approved requirement and acceptance criteria.
+2. Design/UX states. 3. Reviewed implementation. 4. Unit and integration
+tests. 5. Negative security tests where applicable. 6. Migration and
+rollback plan where applicable. 7. Observability and audit events. 8.
+Accessibility review. 9. Preview deployment evidence. 10. Product-owner
+approval.
+
+------------------------------------------------------------------------
+
+# 22. Pilot and launch strategy
+
+## 22.1 Pilot approach
+
+Start with a controlled India pilot rather than a broad national launch.
+The exact campus/geography, mentor count, student count, service mix and
+pilot duration must be set after mentor sourcing and payment/legal
+feasibility are known.
+
+## 22.2 Pilot questions
+
+-   Do students understand the service differences?
+-   Which services generate repeatable demand?
+-   Are the proposed prices acceptable?
+-   Can mentors consistently deliver the promised report?
+-   Does Smart Match fulfil enough requests to justify its operational
+    cost?
+-   Do students trust the verification labels?
+-   Are cancellations, refunds and support manageable?
+-   Does readiness tracking improve user understanding and repeat
+    engagement?
+
+## 22.3 Launch gates
+
+Paid public launch requires: - Written approval/confirmation of a
+compliant payment collection and mentor settlement arrangement. -
+Legal/tax review of marketplace structure, GST, TDS, invoicing,
+consumer/refund terms and mentor agreements. - Privacy review and
+required policies. - Verified mentor onboarding and service approval
+process. - Published service scope, cancellation, refund and support
+policies. - Payment reconciliation and refund operations tested
+end-to-end. - Security review of auth, RLS, files and admin
+permissions. - Production monitoring, backups and incident response. -
+Successful pilot acceptance against defined metrics.
+
+If a gate fails, reduce scope or delay paid transactions; do not bypass
+the gate by inventing a financial or legal workaround.
+
+------------------------------------------------------------------------
+
+# 23. Risks, dependencies and mitigations
+
+  -----------------------------------------------------------------------
+  Risk                    Impact                  Mitigation
+  ----------------------- ----------------------- -----------------------
+  Marketplace payout      Paid launch blocked     Obtain written
+  model unavailable                               provider/legal
+                                                  confirmation before
+                                                  implementing settlement
+
+  Legal/tax treatment     Regulatory and          Qualified Indian
+  misunderstood           financial exposure      CA/legal review
+
+  Low mentor liquidity    Smart Match failure and Controlled pilot,
+                          poor experience         service-specific mentor
+                                                  recruitment and
+                                                  transparent fallback
+
+  Inconsistent mentor     Trust damage and        Separate verification,
+  quality                 refunds                 service approval,
+                                                  rubrics and quality
+                                                  monitoring
+
+  Report delays           Reduced perceived value 48-hour SLA, reminders
+                                                  and escalation queue
+
+  Incorrect readiness     Misleading user         Evidence coverage,
+  interpretation          guidance                rubric versioning and
+                                                  clear limitations
+
+  Payment/webhook race    Duplicate or            Idempotency,
+  conditions              inconsistent            transactions and
+                          booking/payment state   reconciliation
+
+  Privacy breach          User harm and legal     Least privilege,
+                          exposure                private storage,
+                                                  retention and incident
+                                                  response
+
+  Discount economics      Unsustainable unit      Track contribution
+  negative                economics               margin and configure
+                                                  discounts centrally
+
+  Scope expansion         Delayed MVP             Strict Phase 1 / Phase
+                                                  2 boundary and phase
+                                                  approval
+  -----------------------------------------------------------------------
+
+------------------------------------------------------------------------
+
+# 24. Technical, legal and provider validation register
+
+This register is mandatory. A named technology in this PRD is a
+preference or proposed integration unless marked validated with
+evidence.
+
+  ------------------------------------------------------------------------------------------------------------------------------------------------
+  ID         Validation item        Current assumption /    Evidence required            Owner                  Blocking stage      Status /
+                                    requirement                                                                                     decision
+  ---------- ---------------------- ----------------------- ---------------------------- ---------------------- ------------------- --------------
+  V-01       Marketplace collection Provider must support   Written provider             Founder + payment      Paid launch         **LAUNCH
+             and mentor settlement  the intended            confirmation, product        provider                                   BLOCKER**
+                                    marketplace model       eligibility, contractual                                                
+                                                            terms and tested sandbox                                                
+                                                            flow                                                                    
+
+  V-02       Razorpay Route         Do not assume           Written eligibility/approval Founder + Razorpay     Paid launch if      **NOT APPROVED
+             eligibility            eligibility or approval for DreamX legal entity and                         selected            / VALIDATE**
+                                                            use case                                                                
+
+  V-03       Escrow/hold/split      No self-created escrow; Provider contract and        Founder + legal +      Paid launch         **NOT
+             transfers              no assumed hold         qualified legal opinion      provider                                   APPROVED**
+                                    capability                                                                                      
+
+  V-04       Commission, gateway    Mentor payout based on  Signed commercial model, fee Founder + CA +         Paid launch         **OPEN**
+             fees and payout        original list price is  schedule, tax treatment and  provider                                   
+             schedule               intended; exact         payout SLA                                                              
+                                    commercial terms open                                                                           
+
+  V-05       GST, invoices and      India-first marketplace Written CA/legal memo        CA + legal counsel     Paid launch         **LEGAL REVIEW
+             marketplace                                    covering GST, invoicing,                                                REQUIRED**
+             obligations                                    marketplace/intermediary                                                
+                                                            treatment and records                                                   
+
+  V-06       TDS and mentor         Mentor payments may     CA memo covering             CA                     Paid launch         **LEGAL REVIEW
+             payments               create                  classification, thresholds,                                             REQUIRED**
+                                    withholding/reporting   rates, certificates and                                                 
+                                    duties                  reporting                                                               
+
+  V-07       Consumer               Published               Legal review of disclosures, Legal counsel          Paid launch         **LEGAL REVIEW
+             protection/refunds     service-specific        unfair terms, grievance                                                 REQUIRED**
+                                    cancellation/refund     handling and statutory                                                  
+                                    terms                   rights                                                                  
+
+  V-08       DPDP Act/Rules         Retention and           Current                      Privacy counsel        Before data         **VALIDATION
+             applicability          user-rights flows must  applicability/commencement                          collection/launch   REQUIRED**
+                                    match operative         memo, privacy notice and                                                
+                                    provisions              consent review                                                          
+
+  V-09       Mentor                 Mentors are independent Reviewed mentor agreement,   Legal counsel          Paid launch         **LEGAL REVIEW
+             agreements/liability   service providers       liability, IP,                                                          REQUIRED**
+                                    unless counsel advises  confidentiality and dispute                                             
+                                    otherwise               terms                                                                   
+
+  V-10       Identity verification  Identity verification   Vendor due diligence, data   Founder + trust ops    Before mentor paid  **OPEN**
+             vendor/process         separate from work      flow, evidence minimisation                         activation          
+                                    email                   and test                                                                
+
+  V-11       Supabase Auth SSR      Preferred auth approach Current official docs,       Engineering            Before auth         **VALIDATE**
+                                                            cookie/session                                      implementation      
+                                                            implementation review and                                               
+                                                            auth tests                                                              
+
+  V-12       Google OAuth           Preferred sign-in       OAuth consent,               Engineering            Before auth launch  **VALIDATE**
+                                    option                  redirect/callback                                                       
+                                                            configuration, scopes and                                               
+                                                            test                                                                    
+
+  V-13       Google Calendar        Proposed scheduling     API scope review, consent    Engineering            Before              **VALIDATE**
+                                    integration             flow, token storage, event                          calendar-enabled    
+                                                            create/update/cancel tests                          booking             
+
+  V-14       Google Meet            Proposed meeting link   Confirm supported            Engineering            Before meeting      **VALIDATE**
+                                    approach                API/product method, account                         automation          
+                                                            requirements and permissions                                            
+
+  V-15       Supabase Storage       Preferred private file  Bucket policy, signed URL,   Engineering/security   Before              **VALIDATE**
+                                    storage                 RLS/access tests, file                              resume/report       
+                                                            limits and retention tests                          uploads             
+
+  V-16       Resend or email        Transactional email     Sender-domain                Engineering/ops        Before              **VALIDATE**
+             provider               provider                authentication, templates,                          email-dependent     
+                                                            bounce handling, webhooks                           flows               
+                                                            and delivery tests                                                      
+
+  V-17       Vercel and GitHub      GitHub first, Vercel    Successful                   Founder + engineering  Before feature      **PLANNED**
+             workflow               next, Supabase          preview/production                                  development         
+                                    connection after        deployment, environment                                                 
+                                                            separation and rollback test                                            
+
+  V-18       Sentry/error           Proposed monitoring     SDK setup, source maps, PII  Engineering            Before pilot        **VALIDATE**
+             monitoring                                     scrubbing, alert routing and                                            
+                                                            test event                                                              
+
+  V-19       Background jobs and    Required for dispatch,  Select supported execution   Engineering            Before dependent    **OPEN**
+             scheduling             reminders, expiry and   mechanism; prove retries,                           features            
+                                    reconciliation          idempotency and monitoring                                              
+
+  V-20       Support channel and    Support must be visible Select channel, hours,       Founder/ops            Before pilot        **OPEN**
+             SLA                    and owned               response targets, escalation                                            
+                                                            owner and ticket record                                                 
+
+  V-21       Report and dispute     No recording by default Final policy, consent        Founder + legal        Before session      **OPEN**
+             evidence policy                                language for any optional                           delivery            
+                                                            transcript and retention                                                
+                                                            schedule                                                                
+
+  V-22       Pricing and unit       Catalogue and           Mentor interviews, pilot     Founder + finance      Before public       **VALIDATE**
+             economics              membership prices are   conversion, provider fees,                          pricing             
+                                    proposed baseline       tax and contribution-margin                                             
+                                                            model                                                                   
+  ------------------------------------------------------------------------------------------------------------------------------------------------
+
+### Validation completion rule
+
+A validation item is complete only when: - Evidence is linked or
+stored. - The reviewer/owner is named. - The decision is recorded. -
+Affected PRD/technical documents are updated. - Any implementation
+dependency is reflected in the roadmap.
+
+------------------------------------------------------------------------
+
+# 25. Phase 2 --- AI tools and credit economy
+
+This section defines the approved Phase 2 commercial baseline. It is not
+an MVP requirement and must not be implemented in Phase 1 unless
+separately approved.
+
+## 25.1 Credit conversion and pricing
+
+-   Preferred conversion: **₹1 = 10 credits**.
+-   Every AI feature has a visible, fixed credit price.
+-   Feature prices are configurable and versioned.
+-   Reserve credits when a task starts.
+-   Settle the reservation on successful completion.
+-   Release/refund the reservation on failure or timeout.
+-   Track actual model/provider cost separately from user credits.
+
+## 25.2 Monthly allowances
+
+  Plan      Monthly allowance
+  ------- -------------------
+  Free            150 credits
+  Pro             500 credits
+  Elite         1,000 credits
+
+Monthly allowances expire at the end of the membership cycle and do not
+roll over.
+
+## 25.3 Credit packs
+
+  Pack         Price   Base credits
+  --------- -------- --------------
+  Starter        ₹50            500
+  Basic         ₹100          1,000
+  Value         ₹250          2,500
+  Power         ₹500          5,500
+  Large       ₹1,000         12,000
+
+Bonus credits: - Free: 0%. - Pro: 5%. - Elite: 10%.
+
+Purchased base credits do not expire. Bonus credits expire after 90
+days. Credits are granted only after verified payment; webhook
+processing must be idempotent.
+
+## 25.4 Cashback credits
+
+-   Free: 0%.
+-   Pro: 5%.
+-   Elite: 10%.
+-   Cashback is calculated on the original listed service price before
+    discounts.
+-   Issue after service completion and 48 hours without a complaint, or
+    after dispute resolution.
+-   Full refund reverses all related cashback; partial refund reverses
+    proportionally.
+-   One cashback grant per booking.
+-   Cashback is non-cash, non-transferable and non-withdrawable.
+-   Cashback expires after 90 days.
+
+## 25.5 Spend order and wallet integrity
+
+-   Spend credits by earliest expiry first.
+-   For equal expiry, spend the oldest issued credits first.
+-   Protect non-expiring purchased base credits from accidental expiry.
+-   Use atomic reservations and deductions.
+-   No negative wallet balances.
+-   Maintain an immutable credit ledger.
+
+## 25.6 Fair use and cost controls
+
+-   Configurable daily limits by plan and feature.
+-   Input, output, concurrency and frequency limits.
+-   Cost alerts at 70%, 85% and 95% of configured budget thresholds.
+-   Admin may pause a costly or unsafe feature.
+-   Track quality, latency, failure rate, cost per successful task and
+    user feedback.
+-   AI outputs must be labelled as AI-assisted and provide appropriate
+    limitations.
+
+------------------------------------------------------------------------
+
+# 26. Change log --- what V3.0 changes
+
+## 26.1 Major changes from the previous v7.1 baseline
+
+  -------------------------------------------------------------------------
+  Area                    Earlier v7.1 direction  V3.0 direction
+  ----------------------- ----------------------- -------------------------
+  Core product            1:1 services plus fixed Career services +
+                          four-session bundles as readiness journey; custom
+                          flagship                three-service bundle
+                                                  discount
+
+  Bundle discount         Fixed four-pack at 15%  Any 3 eligible services
+                          plus 24-hour            get 5%; old roll-forward
+                          roll-forward            removed
+
+  In-call scorecard       Mandatory 3-minute live Service-specific report;
+                          scorecard and instant   target within 48 hours
+                          PDF                     
+
+  Smart Match             `<15-minute`            Wave 2 after 30 minutes;
+                          confirmation target,    two-hour fallback;
+                          top-three dispatch      student chooses
+                          framing                 alternative or full
+                                                  refund
+
+  Mentor verification     Work-email OTP/domain   Identity,
+                          mapping could           professional/experience
+                          auto-unlock services    and service approval are
+                                                  separate
+
+  Membership              Old Pro ₹399 / Elite    Pro ₹199 / Elite ₹399
+                          ₹799 pricing and larger monthly; annual prices
+                          discount claims         and 5%/10% service
+                                                  discounts
+
+  Payment                 Razorpay Route          Provider/legal approval
+                          split/escrow treated as is a launch blocker; no
+                          core implementation     assumed escrow or split
+                                                  settlement
+
+  Refund policy           Route hold/settlement   1-hour cancellation
+                          mechanics and 72-hour   threshold for full
+                          release framing         refund; post-session
+                                                  issue within 48 hours;
+                                                  substantiated 80% refund
+
+  AI                      AI-related language     Deterministic MVP; AI
+                          mixed into MVP          co-pilot/tools and credit
+                          positioning             economy in Phase 2
+
+  Readiness               Automatic score         Evidence-informed
+                          recalculation from      eight-dimension model
+                          in-call scorecards      with private-by-default
+                                                  score and history
+
+  Product status          "Production-ready /     Product baseline
+                          approved for            approved; external
+                          implementation" label   validation and
+                                                  implementation gates
+                                                  remain open
+  -------------------------------------------------------------------------
+
+## 26.2 New or substantially expanded in V3.0
+
+-   A clearer document authority and version history.
+-   Explicit status labels separating confirmed decisions from
+    assumptions and validation gates.
+-   A clean Phase 1 / Phase 2 boundary.
+-   The final approved service catalogue and launch-price baseline.
+-   The final membership price and discount baseline.
+-   Custom bundle rules and no-stacking logic.
+-   Explicit readiness weights, scoring and N/A handling.
+-   Separate mentor trust checks.
+-   Two-hour Smart Match fallback with explicit student choice.
+-   Service-specific reports with a 48-hour target.
+-   Explicit refund baseline and operational exception table.
+-   Provider-neutral payment architecture and paid-launch blocker.
+-   Data retention and privacy baseline.
+-   Role separation and admin permissions.
+-   A complete technical/legal/provider Validation Register.
+-   Phase 2 AI credit allowances, packs, cashback, expiry and ledger
+    rules.
+-   Acceptance criteria and pilot launch gates.
+
+## 26.3 What was retained from previous specifications
+
+-   India-first launch and INR.
+-   Goal-first discovery.
+-   One-time career services.
+-   Eight readiness dimensions.
+-   Student, mentor and admin areas.
+-   Deterministic MVP matching and recommendations.
+-   Atomic booking and webhook idempotency.
+-   Modular monolith architecture.
+-   GitHub → Vercel → Supabase setup preference.
+-   Private file storage, RLS, audit logs and security testing.
+-   In-app and email notification requirements.
+-   Structured reporting and career progress tracking.
+
+## 26.4 What was removed, demoted or corrected
+
+-   Fixed four-session/15%-off bundle as the central MVP.
+-   24-hour 15% roll-forward upsell.
+-   Mandatory three-minute in-call scorecard as the universal
+    deliverable.
+-   Guaranteed `<15-minute` Smart Match promise.
+-   Automatic professional approval based only on work-email OTP.
+-   Unapproved Razorpay Route, split transfer and escrow assumptions.
+-   Historical membership prices and discount levels.
+-   Unsupported "9.8/10 viability" and "production-ready" claims.
+-   Global expansion and cohort complexity from the India MVP.
+
+------------------------------------------------------------------------
+
+# 27. Open decisions that must not be silently invented
+
+The following require a founder decision or external validation before
+the affected feature is final:
+
+1.  Final student and mentor no-show grace periods.
+2.  Exact late-arrival and shortened-session policy.
+3.  Rescheduling limits and responsibility by party.
+4.  Final mentor commission and gateway-fee allocation.
+5.  Final mentor payout cadence and settlement statement format.
+6.  Final mentor-specific price flexibility, if any.
+7.  Exact eligibility rules for custom bundles and partial
+    redemption/refund.
+8.  Full Elite benefits beyond the approved service discount.
+9.  Membership grace period, proration and renewal-failure policy.
+10. Final report templates and whether any report requires admin review.
+11. Final identity verification vendor and evidence policy.
+12. Final admin role matrix and dual-approval thresholds.
+13. Final support channel, operating hours and response SLA.
+14. Final pilot location, cohort size, mentor count and duration.
+15. Final background-job/scheduler mechanism.
+16. Final calendar/meeting API method and required OAuth scopes.
+17. Final payment provider and legal settlement structure.
+
+Where a safe operational default is needed for design, label it
+`PROPOSED` and do not present it as a founder-confirmed policy.
+
+------------------------------------------------------------------------
+
+# 28. Engineering handoff rules
+
+When this PRD is used by Google Antigravity or another coding agent:
+
+1.  Read this entire PRD and the referenced source specifications.
+2.  Read current official documentation for every external service
+    before implementing its integration.
+3.  Produce and review `architecture.md`, `frontend.md`, `backend.md`,
+    `api.md`, `database.md`, and a Phase 2 `ai.md`.
+4.  Produce ER diagrams, API contracts, RLS/permission matrix, state
+    machines, test strategy and implementation roadmap.
+5.  Keep a traceability map from every requirement ID to design, code,
+    migration and tests.
+6.  Follow the GitHub → Vercel → Supabase setup order.
+7.  Before each implementation phase, list files reviewed, changes
+    proposed, dependencies, external dashboard setup, credentials
+    required and verification steps.
+8.  Ask for founder approval before starting each phase.
+9.  Do not request secrets in chat or commit them to Git.
+10. Do not implement a launch-blocked payment/payout flow as a temporary
+    workaround.
+11. Do not change confirmed business rules without approval.
+12. Do not report a feature complete without tests and
+    preview/deployment evidence.
+13. If documentation or source files conflict, stop and raise an
+    `OPEN DECISION`.
+14. No coding begins merely because this PRD has been prepared;
+    implementation starts only after the supporting specifications,
+    validation gates and phase plan are approved.
+
+------------------------------------------------------------------------
+
+## Appendix A --- Requirement traceability convention
+
+Use stable identifiers: - `PRD-FOUND-*` --- product foundation and
+scope. - `PRD-SVC-*` --- service catalogue. - `PRD-MEM-*` --- membership
+and discounts. - `PRD-READY-*` --- readiness and journey. -
+`PRD-MENTOR-*` --- mentor onboarding and trust. - `PRD-BOOK-*` ---
+discovery, booking and Smart Match. - `PRD-DEL-*` --- sessions and
+reports. - `PRD-REF-*` --- cancellation, refund and disputes. -
+`PRD-PAY-*` --- payments and settlement. - `PRD-PRIV-*` --- privacy and
+security. - `PRD-OPS-*` --- admin and operations. - `PRD-AI-*` --- Phase
+2 AI tools and credits. - `VAL-*` --- external validation register.
+
+Every implementation task and test should reference one or more
+identifiers.
+
+## Appendix B --- Core product flow
+
+``` mermaid
+flowchart TD
+    A[User discovers DreamX] --> B[Signup and onboarding]
+    B --> C[Career goal and readiness assessment]
+    C --> D[Readiness gaps and next-step recommendations]
+    D --> E[Service and mentor discovery]
+    E --> F{Booking path}
+    F -->|Direct| G[Choose mentor and available slot]
+    F -->|Smart Match| H[Submit request and preferred windows]
+    H --> I[Dispatch wave 1]
+    I --> J{Accepted?}
+    J -->|No after 30 min| K[Wave 2]
+    K --> L{Accepted within 2 hours?}
+    L -->|Yes| M[Confirm booking]
+    L -->|No| N[Student chooses open slot or full refund]
+    G --> O[Approved payment flow]
+    M --> O
+    N --> P[Chosen fallback]
+    O --> Q[Session and attendance]
+    Q --> R[Service-specific report within 48 hours]
+    R --> S[Readiness history and next actions]
+    S --> T[Repeat service / membership / bundle]
+```
+
+------------------------------------------------------------------------
+
+**End of DreamX PRD V3.0**

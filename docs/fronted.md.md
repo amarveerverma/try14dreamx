@@ -1,0 +1,3429 @@
+DreamX — Frontend Architecture & UX Specification
+=================================================
+
+**Document:** frontend.md**Product:** DreamX**Version:** 1.0**Status:** Implementation specification based on DreamX PRD v2.0 and established product decisions**Target market:** India (CM-IN)**Currency:** INR**Display timezone:** Asia/Kolkata**Primary framework direction:** Next.js App Router + TypeScript**Backend direction:** Supabase**Deployment direction:** Vercel
+
+1\. Document purpose and authority
+==================================
+
+1.1 Purpose
+-----------
+
+This document defines how the DreamX product should be presented, navigated, experienced and implemented on the frontend.
+
+It is the frontend implementation companion to DreamX\_PRD\_v2.0.md.
+
+It covers:
+
+*   Product information architecture.
+    
+*   Student, mentor and admin experiences.
+    
+*   Page and route structure.
+    
+*   Screen-level requirements.
+    
+*   Navigation and responsive layouts.
+    
+*   Design system and reusable components.
+    
+*   User interactions and state handling.
+    
+*   Forms, validation and feedback.
+    
+*   Loading, empty, success and error states.
+    
+*   Frontend architecture.
+    
+*   Backend integration boundaries.
+    
+*   Accessibility.
+    
+*   Frontend security.
+    
+*   Testing and acceptance criteria.
+    
+
+This document is not a replacement for the PRD. If a frontend recommendation conflicts with a confirmed PRD business rule, the PRD takes precedence.
+
+1.2 Requirement labels
+----------------------
+
+Use these labels throughout implementation:
+
+LabelMeaning**CONFIRMED**Established product or business decision**MVP**Required for the initial marketplace release**PHASE 2**Deferred AI tools, AI Credits and cashback functionality**PROPOSED UX**Recommended frontend design or interaction, pending product review**OPEN**Requires a business or product decision**BLOCKED**Must not be implemented as an assumed capability
+
+1.3 Frontend objectives
+-----------------------
+
+DreamX must not look or behave like a generic mentor-listing website.
+
+The experience should communicate four things:
+
+1.  **Direction:** Help students understand what to do next.
+    
+2.  **Trust:** Make mentor verification and service expectations understandable.
+    
+3.  **Progress:** Show evidence-backed career improvement over time.
+    
+4.  **Accountability:** Make bookings, reports, payments and service outcomes transparent.
+    
+
+The frontend should make the product feel like a guided career improvement platform with a human-service marketplace at its centre.
+
+2\. Product experience principles
+=================================
+
+2.1 Core principles
+-------------------
+
+### Principle 1 — Goal-first, not catalogue-first
+
+Students should be able to start with a problem or career goal rather than needing to understand ten service names.
+
+Example:
+
+> I have an upcoming technical interview and need to improve my problem-solving and interview performance.
+
+DreamX should translate that goal into relevant services and explain why they are recommended.
+
+### Principle 2 — Show the next useful action
+
+Every important dashboard should answer:
+
+*   Where am I currently?
+    
+*   What has happened?
+    
+*   What needs my attention?
+    
+*   What should I do next?
+    
+
+Avoid dashboards filled with unrelated cards, charts and decorative statistics.
+
+### Principle 3 — Explain recommendations
+
+A recommendation should show its reason.
+
+For example:
+
+*   Technical Mock Interview — recommended because interview skills have not yet been assessed.
+    
+*   Resume Review — recommended because the current resume assessment identified improvement areas.
+    
+
+Do not display unexplained recommendation percentages or fabricated AI reasoning.
+
+### Principle 4 — Trust before conversion
+
+Students should be able to understand:
+
+*   Who the mentor is.
+    
+*   What has been verified.
+    
+*   Which services the mentor is approved to deliver.
+    
+*   What the service includes.
+    
+*   What they will receive after the session.
+    
+*   What happens if the booking cannot be fulfilled.
+    
+
+### Principle 5 — Progress must be evidence-based
+
+A readiness score should be accompanied by:
+
+*   Assessment date.
+    
+*   Assessed dimensions.
+    
+*   Evidence or feedback.
+    
+*   Unassessed dimensions.
+    
+*   Suggested actions.
+    
+
+Do not use arbitrary progress animations or automatically increase scores because a student has completed a booking.
+
+### Principle 6 — Never hide commercial details
+
+Before a booking or subscription, clearly display the price, applicable discount, final payable amount and relevant terms.
+
+### Principle 7 — Avoid unnecessary friction
+
+Ask only for information needed at the current stage.
+
+Do not make optional information mandatory just to complete onboarding or view the marketplace.
+
+3\. Frontend technology direction
+=================================
+
+3.1 Proposed stack
+------------------
+
+AreaTechnology directionStatusFrameworkNext.js App RouterConfirmed directionLanguageTypeScriptRecommendedUIReactRequired by frameworkStylingTailwind CSS or an equivalent consistent styling systemProposedComponent primitivesAccessible reusable component systemProposedFormsReact Hook Form + schema validationProposedBackend integrationServer Components, Server Actions and Route Handlers where appropriateImplementation decisionAuthenticationSupabase AuthConfirmed directionDatabaseSupabase PostgreSQLConfirmed directionFile storageSupabase StorageConfirmed directionHostingVercelConfirmed directionTestingVitest and Playwright or equivalentProposedError monitoringSentry or equivalentIntegration to validate
+
+Do not lock the project to an outdated package version. Verify current official Next.js, React, Supabase and Vercel documentation before implementation.
+
+3.2 Rendering strategy
+----------------------
+
+Use the following default strategy:
+
+Page typeRendering directionPublic marketing pagesServer-renderedService catalogueServer-rendered with client-side filters where neededMentor public profilesServer-rendered with controlled public dataStudent dashboardAuthenticated server-rendered shell with interactive client componentsBooking calendarInteractive client component with server validationMentor dispatchInteractive, near-real-time interfaceReportsServer-authorized private retrievalAdmin pagesAuthenticated and permission-checkedAI toolsPhase 2
+
+Do not turn the entire application into a large client-side application unnecessarily.
+
+Use client components only where interaction requires them.
+
+3.3 Suggested frontend folder structure
+---------------------------------------
+
+Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   src/  ├── app/  │   ├── (marketing)/  │   │   ├── page.tsx  │   │   ├── how-it-works/  │   │   ├── services/  │   │   ├── mentors/  │   │   ├── membership/  │   │   ├── about/  │   │   └── contact/  │   │  │   ├── (auth)/  │   │   ├── login/  │   │   ├── signup/  │   │   ├── verify-email/  │   │   ├── forgot-password/  │   │   └── reset-password/  │   │  │   ├── (student)/  │   │   └── dashboard/  │   │       ├── page.tsx  │   │       ├── discover/  │   │       ├── services/  │   │       ├── bookings/  │   │       ├── readiness/  │   │       ├── journey/  │   │       ├── reports/  │   │       ├── membership/  │   │       ├── wallet/          # Phase 2  │   │       └── settings/  │   │  │   ├── (mentor)/  │   │   └── mentor/  │   │       ├── page.tsx  │   │       ├── verification/  │   │       ├── services/  │   │       ├── availability/  │   │       ├── dispatch/  │   │       ├── bookings/  │   │       ├── sessions/  │   │       ├── reports/  │   │       ├── earnings/  │   │       └── settings/  │   │  │   ├── (admin)/  │   │   └── admin/  │   │       ├── page.tsx  │   │       ├── students/  │   │       ├── mentors/  │   │       ├── verification/  │   │       ├── services/  │   │       ├── bookings/  │   │       ├── dispatch/  │   │       ├── disputes/  │   │       ├── payments/  │   │       ├── memberships/  │   │       ├── configuration/  │   │       └── audit-logs/  │   │  │   ├── api/  │   ├── layout.tsx  │   ├── loading.tsx  │   ├── error.tsx  │   └── not-found.tsx  │  ├── components/  │   ├── ui/  │   ├── layout/  │   ├── navigation/  │   ├── dashboard/  │   ├── forms/  │   ├── booking/  │   ├── services/  │   ├── mentors/  │   ├── readiness/  │   ├── reports/  │   ├── membership/  │   ├── notifications/  │   └── feedback/  │  ├── features/  │   ├── auth/  │   ├── student/  │   ├── mentor/  │   ├── admin/  │   ├── discovery/  │   ├── booking/  │   ├── dispatch/  │   ├── readiness/  │   ├── reports/  │   ├── membership/  │   └── ai-credits/             # Phase 2  │  ├── hooks/  ├── lib/  │   ├── supabase/  │   ├── api/  │   ├── validation/  │   ├── formatting/  │   ├── permissions/  │   └── utilities/  │  ├── config/  │   ├── navigation.ts  │   ├── services.ts  │   ├── membership.ts  │   └── career-market.ts  │  ├── types/  ├── styles/  └── tests/   `
+
+The folder structure is a proposed organization, not a requirement to create empty folders for every future feature.
+
+4\. Information architecture
+============================
+
+4.1 Public website
+------------------
+
+Proposed public navigation:
+
+*   Home
+    
+*   How it works
+    
+*   Explore services
+    
+*   Find mentors
+    
+*   Membership
+    
+*   About
+    
+*   Sign in
+    
+*   Get started
+    
+
+The public experience should explain the DreamX value proposition before asking the visitor to create an account.
+
+4.2 Student navigation
+----------------------
+
+Primary navigation:
+
+1.  Overview
+    
+2.  Discover
+    
+3.  Services
+    
+4.  My Bookings
+    
+5.  Career Readiness
+    
+6.  Career Journey
+    
+7.  Reports
+    
+8.  Membership
+    
+9.  Profile and Settings
+    
+
+Phase 2 navigation:
+
+*   AI Tools
+    
+*   AI Credit Wallet
+    
+*   AI Usage History
+    
+
+The AI navigation must not appear as a live feature before Phase 2 is released.
+
+4.3 Mentor navigation
+---------------------
+
+1.  Overview
+    
+2.  Verification
+    
+3.  My Services
+    
+4.  Availability
+    
+5.  Dispatch Offers
+    
+6.  Bookings
+    
+7.  Sessions
+    
+8.  Reports
+    
+9.  Earnings and Payouts
+    
+10.  Profile and Settings
+    
+
+4.4 Admin navigation
+--------------------
+
+1.  Overview
+    
+2.  Students
+    
+3.  Mentors
+    
+4.  Verification Queue
+    
+5.  Service Approvals
+    
+6.  Bookings
+    
+7.  Smart Match Monitoring
+    
+8.  Disputes and Refunds
+    
+9.  Payments and Reconciliation
+    
+10.  Memberships
+    
+11.  Configuration
+    
+12.  Audit Logs
+    
+
+Admin navigation must reflect actual authorization. Hiding a link is not a security control.
+
+5\. Global application shell
+============================
+
+5.1 Student and mentor shell
+----------------------------
+
+Recommended desktop layout:
+
+Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   ┌────────────────────────────────────────────────────────────┐  │ DreamX        Search / Help          Notifications  Avatar │  ├───────────────┬────────────────────────────────────────────┤  │               │                                            │  │ Sidebar       │ Main content                               │  │               │                                            │  │ Overview      │ Page title                                 │  │ Discover      │ Short description                          │  │ Bookings      │                                            │  │ Readiness     │ Main page content                          │  │ Journey       │                                            │  │ Reports       │                                            │  │ Membership    │                                            │  │               │                                            │  │ Settings      │                                            │  └───────────────┴────────────────────────────────────────────┘   `
+
+### Header
+
+Include:
+
+*   DreamX logo.
+    
+*   Contextual search, where useful.
+    
+*   Help/support entry.
+    
+*   Notification control.
+    
+*   User avatar and account menu.
+    
+
+Avoid placing every possible action in the global header.
+
+### Sidebar
+
+*   Persistent on desktop.
+    
+*   Collapsible where appropriate.
+    
+*   Clearly indicate the current page.
+    
+*   Use text labels with icons.
+    
+*   Avoid icon-only navigation on larger screens unless the user deliberately collapses the sidebar.
+    
+
+### Mobile navigation
+
+Use a compact mobile navigation pattern.
+
+Recommended:
+
+*   Bottom navigation for the most important 4–5 destinations.
+    
+*   A More menu for secondary destinations.
+    
+*   A mobile header for page title and notifications.
+    
+
+Do not attempt to compress the complete desktop sidebar into a row of tiny icons.
+
+5.2 Admin shell
+---------------
+
+Admin should have a distinct, operational interface.
+
+Recommended:
+
+*   Persistent sidebar.
+    
+*   Dense but readable data tables.
+    
+*   Search and filters.
+    
+*   Status chips.
+    
+*   Detail drawers or dedicated detail pages.
+    
+*   Explicit confirmation for sensitive actions.
+    
+*   Audit history visible on sensitive records.
+    
+
+Do not reuse the student dashboard layout as the entire admin interface.
+
+6\. Design system
+=================
+
+6.1 Visual direction
+--------------------
+
+**PROPOSED UX — pending visual design approval**
+
+The product should feel:
+
+*   Professional.
+    
+*   Modern.
+    
+*   Calm.
+    
+*   Trustworthy.
+    
+*   Focused.
+    
+*   Premium without looking inaccessible to students.
+    
+
+Avoid:
+
+*   Excessive gradients.
+    
+*   Too many card styles.
+    
+*   Decorative charts without meaning.
+    
+*   Unnecessary glassmorphism.
+    
+*   Constant animation.
+    
+*   Large blocks of marketing copy inside authenticated dashboards.
+    
+
+Use a restrained visual system with one primary brand color, neutral surfaces and clear semantic status colors.
+
+The final brand palette, typography and logo should be approved before production styling is locked.
+
+6.2 Design tokens
+-----------------
+
+Define tokens centrally rather than hardcoding values across pages.
+
+Example starting tokens:
+
+Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   :root {    --background: #ffffff;    --foreground: #171717;    --surface: #ffffff;    --surface-muted: #f7f7f8;    --text-primary: #171717;    --text-secondary: #66666f;    --text-muted: #8b8b95;    --border: #e7e7eb;    --primary: #5145cd;    --primary-hover: #4035b3;    --primary-foreground: #ffffff;    --success: #16834a;    --warning: #a7670b;    --danger: #c43b3b;    --info: #2864c5;    --radius-sm: 6px;    --radius-md: 10px;    --radius-lg: 16px;    --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.04);  }   `
+
+These are starting design values, not a confirmed DreamX brand identity.
+
+6.3 Typography
+--------------
+
+Recommended hierarchy:
+
+UsageTreatmentPage titleStrong, clear, restrainedSection headingMedium or semiboldCard titleSemiboldBodyReadable regular weightSupporting textSmaller and mutedMetadataCompact but legibleFinancial valuesTabular numerals where possible
+
+Use a consistent type scale. Avoid different font sizes for every card.
+
+6.4 Spacing and layout
+----------------------
+
+Use a consistent spacing scale.
+
+Suggested layout principles:
+
+*   Main content should have a readable maximum width.
+    
+*   Forms should not stretch excessively on wide screens.
+    
+*   Tables may use available horizontal space.
+    
+*   Cards should have consistent padding.
+    
+*   Sections should have predictable vertical rhythm.
+    
+*   Avoid nested cards inside cards unless there is a clear information hierarchy.
+    
+
+6.5 Buttons
+-----------
+
+Define a small set of button variants:
+
+*   Primary
+    
+*   Secondary
+    
+*   Outline
+    
+*   Ghost
+    
+*   Destructive
+    
+*   Link
+    
+
+Rules:
+
+*   One primary action per major content region where practical.
+    
+*   Destructive actions require clear labels.
+    
+*   Loading buttons must prevent duplicate submissions.
+    
+*   Disabled controls must explain why when the reason is not obvious.
+    
+
+6.6 Status colors
+-----------------
+
+Use semantic colors consistently.
+
+StatusVisual treatmentConfirmed / completedSuccessPending / processingNeutral or infoNeeds attentionWarningFailed / rejectedDangerInformationalInfo
+
+Do not communicate status through color alone. Include a text label and accessible status description.
+
+7\. Public website screens
+==========================
+
+7.1 Home page
+-------------
+
+**Route:** /
+
+### Purpose
+
+Explain DreamX and encourage a visitor to start a guided career assessment or explore services.
+
+### Sections
+
+1.  Hero.
+    
+2.  Problem and value proposition.
+    
+3.  How DreamX works.
+    
+4.  Service categories.
+    
+5.  Mentor trust and verification explanation.
+    
+6.  Career readiness explanation.
+    
+7.  Membership overview.
+    
+8.  Frequently asked questions.
+    
+9.  Final call to action.
+    
+10.  Footer.
+    
+
+### Hero content direction
+
+Headline proposal:
+
+> Build career readiness with guidance that moves you forward.
+
+Supporting message:
+
+> Discover what needs improvement, work with verified career mentors and receive structured feedback with practical next steps.
+
+Primary CTA:
+
+*   Get started.
+    
+
+Secondary CTA:
+
+*   Explore services.
+    
+
+Do not claim guaranteed jobs, guaranteed placements or guaranteed salary increases.
+
+7.2 How it works
+----------------
+
+**Route:** /how-it-works
+
+Explain the student journey:
+
+1.  Set a career goal.
+    
+2.  Understand current readiness.
+    
+3.  Discover relevant services.
+    
+4.  Work with an approved mentor.
+    
+5.  Receive a structured report.
+    
+6.  Follow recommended next steps.
+    
+
+Use a simple visual flow rather than a long wall of text.
+
+7.3 Service catalogue
+---------------------
+
+**Route:** /services
+
+### Required features
+
+*   Service cards.
+    
+*   Search.
+    
+*   Category filters.
+    
+*   Duration.
+    
+*   Price.
+    
+*   Short description.
+    
+*   Deliverable summary.
+    
+*   Booking CTA.
+    
+
+### Service card information
+
+Each service card should show:
+
+*   Service name.
+    
+*   One-sentence outcome.
+    
+*   Duration.
+    
+*   Starting/listed price.
+    
+*   What the student receives.
+    
+*   Explore service action.
+    
+
+Avoid claiming every service has the same deliverable if the rubric differs.
+
+### Service catalogue
+
+IDServiceDurationProposed launch priceS01Resume Review45 min₹599S02ATS Resume Optimization45 min₹799S03LinkedIn Profile Review30 min₹499S04Portfolio Review45 min₹599S05Behavioral Mock Interview60 min₹799S06Technical Mock Interview60 min₹999S07Career Consultation30 min₹499S08Salary Negotiation30 min₹699S09Career Roadmap Session60 min₹799S10Coding Interview Preparation60 min₹999
+
+**Important:** These are proposed initial prices from the PRD v2 direction. Keep prices centrally configurable and do not hardcode them into individual page components.
+
+7.4 Service detail
+------------------
+
+**Route:** /services/\[serviceSlug\]
+
+Show:
+
+*   Service overview.
+    
+*   Who should use it.
+    
+*   What the session covers.
+    
+*   Session duration.
+    
+*   Required preparation.
+    
+*   Expected deliverable.
+    
+*   Mentor options, when available.
+    
+*   Price.
+    
+*   Booking options.
+    
+*   Cancellation and complaint policy.
+    
+
+The page should explain what the service does not guarantee.
+
+7.5 Mentor discovery
+--------------------
+
+**Route:** /mentors
+
+Show public mentor information that is approved for disclosure.
+
+Possible filters:
+
+*   Service.
+    
+*   Career domain.
+    
+*   Experience category.
+    
+*   Availability.
+    
+
+Mentor cards should show:
+
+*   Display name.
+    
+*   Professional summary.
+    
+*   Approved service categories.
+    
+*   Verification status in accurate terms.
+    
+*   Relevant experience information.
+    
+*   Availability indicator, if current.
+    
+*   Profile link.
+    
+
+Do not display internal verification evidence or private contact details.
+
+7.6 Mentor public profile
+-------------------------
+
+**Route:** /mentors/\[mentorSlug\]
+
+Include:
+
+*   Public professional profile.
+    
+*   Relevant experience.
+    
+*   Approved services.
+    
+*   Service descriptions.
+    
+*   Available slots.
+    
+*   Booking action.
+    
+
+Verification labels must be precise. Do not imply that an employer has endorsed a mentor unless that endorsement has been verified and authorized.
+
+7.7 Membership page
+-------------------
+
+**Route:** /membership
+
+Show a clear comparison.
+
+TierMonthlyAnnual upfrontFree₹0₹0Pro₹199₹1,788Elite₹399₹4,188
+
+Include:
+
+*   Monthly price.
+    
+*   Annual price.
+    
+*   Effective annual monthly price.
+    
+*   Confirmed service discount.
+    
+*   Benefits actually approved for that tier.
+    
+*   Billing and cancellation information.
+    
+
+Proposed confirmed discount display:
+
+TierService discountFree0%Pro5%Elite10%
+
+Do not invent Elite benefits. Reconcile the exact benefit list against the approved PRD and membership decision before displaying it.
+
+AI Credits, cashback and AI feature allowances must only appear when Phase 2 is live and operational.
+
+8\. Authentication and onboarding
+=================================
+
+8.1 Authentication screens
+--------------------------
+
+Routes:
+
+*   /login
+    
+*   /signup
+    
+*   /verify-email
+    
+*   /forgot-password
+    
+*   /reset-password
+    
+
+### Login
+
+Fields:
+
+*   Email.
+    
+*   Password.
+    
+
+Actions:
+
+*   Sign in.
+    
+*   Continue with an enabled OAuth provider.
+    
+*   Forgot password.
+    
+*   Create account.
+    
+
+Display errors without exposing internal authentication details.
+
+### Signup
+
+Collect only the initial required information.
+
+Possible fields:
+
+*   Name.
+    
+*   Email.
+    
+*   Password.
+    
+*   Account intent, if necessary.
+    
+
+Career-specific information can be collected after authentication.
+
+### Authentication states
+
+*   Idle.
+    
+*   Submitting.
+    
+*   Email verification required.
+    
+*   Authenticated.
+    
+*   Invalid credentials.
+    
+*   Account disabled.
+    
+*   Network error.
+    
+*   Session expired.
+    
+
+8.2 Student onboarding
+----------------------
+
+Suggested route:
+
+/dashboard/onboarding
+
+### Step 1 — Career stage
+
+Options:
+
+*   Student.
+    
+*   Fresh graduate.
+    
+*   Early-career professional.
+    
+*   Career switcher.
+    
+
+### Step 2 — Career goal
+
+Collect the target role or goal.
+
+### Step 3 — Current situation
+
+Collect only the information needed for recommendations.
+
+### Step 4 — Optional career documents
+
+Allow optional resume upload or profile completion.
+
+### Step 5 — Baseline assessment
+
+Collect assessment responses needed to calculate the initial readiness baseline.
+
+### Step 6 — Dashboard
+
+Show the initial assessment state and suggested next action.
+
+### UX requirements
+
+*   Show step progress.
+    
+*   Allow users to return to previous steps.
+    
+*   Preserve entered information safely.
+    
+*   Explain why a question is needed.
+    
+*   Allow optional sections to be skipped.
+    
+*   Do not fabricate readiness scores when data is missing.
+    
+
+8.3 Mentor onboarding
+---------------------
+
+Suggested route:
+
+/mentor/onboarding
+
+Mentor onboarding must clearly separate:
+
+1.  Identity verification.
+    
+2.  Professional or experience verification.
+    
+3.  Service-specific approval.
+    
+
+### Identity step
+
+Collect required identity information through an approved secure process.
+
+### Professional experience step
+
+Allow the mentor to submit acceptable evidence.
+
+### Service selection step
+
+The mentor chooses which services they wish to provide.
+
+### Review step
+
+Show the verification status and explain what is pending.
+
+Possible status labels:
+
+*   Not started.
+    
+*   Submitted.
+    
+*   Under review.
+    
+*   More information required.
+    
+*   Approved.
+    
+*   Rejected.
+    
+
+Work-email OTP may be one supporting verification signal. It must not independently approve identity, current employment or service competence.
+
+9\. Student dashboard
+=====================
+
+**Route:** /dashboard
+
+9.1 Dashboard objective
+-----------------------
+
+The student dashboard should be the central control centre for career improvement.
+
+It should answer:
+
+*   What is my current readiness?
+    
+*   What is my next recommended action?
+    
+*   Do I have an upcoming booking?
+    
+*   Are any reports waiting?
+    
+*   What progress have I made?
+    
+
+9.2 Proposed layout
+-------------------
+
+Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   ┌──────────────────────────────────────────────────────────┐  │ Good morning, [First Name]                                │  │ Continue building your career readiness.                 │  ├──────────────────────────────────────────────────────────┤  │ Career Readiness       Next Action        Upcoming        │  │       68/100           Resume Review      Booking         │  ├──────────────────────────────────────────────────────────┤  │ Recommended next steps                                   │  │ [Service card] [Service card] [Service card]              │  ├──────────────────────────────────────────────────────────┤  │ Career journey                                            │  │ Current stage and next milestone                          │  ├──────────────────────────────────────────────────────────┤  │ Recent reports / bookings                                 │  └──────────────────────────────────────────────────────────┘   `
+
+The score shown above is illustrative, not a default or sample account value.
+
+9.3 Dashboard sections
+----------------------
+
+### Welcome area
+
+*   First name.
+    
+*   Career goal.
+    
+*   Short contextual message.
+    
+*   Primary next action.
+    
+
+### Readiness summary
+
+*   Overall score, if enough evidence exists.
+    
+*   Last assessment date.
+    
+*   Assessment coverage.
+    
+*   Link to detailed readiness page.
+    
+
+### Recommended actions
+
+Show a small number of relevant actions.
+
+Each recommendation should include its reason.
+
+### Upcoming booking
+
+Show:
+
+*   Service.
+    
+*   Mentor.
+    
+*   Date and time.
+    
+*   Booking status.
+    
+*   Join action when permitted.
+    
+
+### Reports
+
+Show pending and recently delivered reports.
+
+### Journey progress
+
+Show the current journey stage and next available action.
+
+Avoid filling the dashboard with every possible metric. Prioritize actionable information.
+
+10\. Discovery and recommendation experience
+============================================
+
+10.1 Goal-first discovery
+-------------------------
+
+**Route:** /dashboard/discover
+
+The discovery page begins with a goal prompt.
+
+Example:
+
+> What are you trying to improve right now?
+
+Possible goal categories:
+
+*   Improve my resume.
+    
+*   Improve my LinkedIn profile.
+    
+*   Build my portfolio.
+    
+*   Prepare for technical interviews.
+    
+*   Prepare for behavioral interviews.
+    
+*   Understand my career direction.
+    
+*   Improve salary negotiation.
+    
+*   Create a career roadmap.
+    
+
+These are proposed frontend categories. The backend recommendation mapping must use the approved service catalogue and configured rules.
+
+10.2 Discovery interaction
+--------------------------
+
+1.  Student chooses a goal.
+    
+2.  System asks only relevant follow-up questions.
+    
+3.  System retrieves eligible services.
+    
+4.  Frontend displays recommended services.
+    
+5.  Each recommendation includes an explanation.
+    
+6.  Student opens a service or builds a custom bundle.
+    
+
+### Recommendation card
+
+Show:
+
+*   Service.
+    
+*   Why it is recommended.
+    
+*   Expected deliverable.
+    
+*   Duration.
+    
+*   Price.
+    
+*   Explore or book action.
+    
+
+Do not present a deterministic rule-based recommendation as an AI-generated result.
+
+10.3 Search
+-----------
+
+**Route:** /dashboard/services or a dedicated search route.
+
+Search should support:
+
+*   Service names.
+    
+*   Career goals.
+    
+*   Relevant categories.
+    
+*   Mentor discovery where supported.
+    
+
+Provide:
+
+*   Search input.
+    
+*   Clear filters.
+    
+*   Empty result state.
+    
+*   Loading state.
+    
+*   Search failure state.
+    
+
+11\. Service booking experience
+===============================
+
+11.1 Booking entry points
+-------------------------
+
+A student can begin a booking from:
+
+*   Service detail page.
+    
+*   Mentor profile.
+    
+*   Recommendation card.
+    
+*   Dashboard next action.
+    
+
+All entry points should lead to a consistent booking flow.
+
+11.2 Booking flow
+-----------------
+
+Proposed sequence:
+
+1.  Select service.
+    
+2.  Choose booking mode.
+    
+3.  Select mentor or Smart Match.
+    
+4.  Select time or preferred windows.
+    
+5.  Review booking details.
+    
+6.  Review price and policies.
+    
+7.  Continue to payment.
+    
+8.  Verify payment and booking status.
+    
+9.  Show confirmation or recovery state.
+    
+
+11.3 Direct booking
+-------------------
+
+**Purpose:** Student selects a specific approved mentor and available time slot.
+
+### Screen elements
+
+*   Mentor summary.
+    
+*   Service.
+    
+*   Calendar.
+    
+*   Available time slots.
+    
+*   Timezone.
+    
+*   Session duration.
+    
+*   Price summary.
+    
+*   Continue action.
+    
+
+### Calendar behavior
+
+*   Disable unavailable slots.
+    
+*   Show loading while availability is fetched.
+    
+*   Refresh or revalidate before checkout.
+    
+*   Display local time clearly.
+    
+*   Do not assume a slot remains available because it appeared in an earlier response.
+    
+
+The backend must own slot locking and final booking confirmation.
+
+### Slot-lock states
+
+*   Available.
+    
+*   Temporarily held.
+    
+*   Unavailable.
+    
+*   Expired.
+    
+*   Confirmed.
+    
+
+The frontend must reflect the server response.
+
+11.4 Smart Match
+----------------
+
+**Purpose:** Student requests an eligible mentor through dispatch rather than selecting a particular mentor.
+
+### Screen elements
+
+*   Service summary.
+    
+*   Explanation of Smart Match.
+    
+*   Preferred time-window selection.
+    
+*   Price summary.
+    
+*   Expected process.
+    
+*   Submit request action.
+    
+
+### Time-window selection
+
+The student must be able to understand and edit their preferred availability windows.
+
+Validate:
+
+*   Date and time.
+    
+*   Timezone.
+    
+*   Past times.
+    
+*   Overlapping or duplicate windows.
+    
+*   Required number of valid windows according to backend policy.
+    
+
+The old v1 proposed three-window requirement should not be hardcoded unless confirmed in the final business rules.
+
+### Dispatch status screen
+
+Show:
+
+*   Request submitted.
+    
+*   Matching in progress.
+    
+*   Current dispatch stage.
+    
+*   Mentor accepted, if any.
+    
+*   Timeout and fallback information.
+    
+
+The established timing direction:
+
+*   Wave 2 begins after 30 minutes if no mentor has accepted.
+    
+*   At two hours without acceptance, offer an alternative open slot or full refund.
+    
+
+### Critical interaction
+
+The student must explicitly select the alternative slot or refund option.
+
+Never automatically reschedule the student.
+
+### State model
+
+*   Draft.
+    
+*   Submitting.
+    
+*   Payment pending.
+    
+*   Matching.
+    
+*   Wave 2.
+    
+*   Mentor accepted.
+    
+*   Confirmed.
+    
+*   Alternative slot offered.
+    
+*   Awaiting student decision.
+    
+*   Refund requested.
+    
+*   Refunded.
+    
+*   Failed.
+    
+
+The actual state must come from the backend.
+
+11.5 Booking checkout
+---------------------
+
+Before payment, display:
+
+*   Service.
+    
+*   Mentor, if selected.
+    
+*   Date and time.
+    
+*   Duration.
+    
+*   Listed price.
+    
+*   Membership discount.
+    
+*   Bundle discount, if applicable.
+    
+*   Final payable amount.
+    
+*   Cancellation policy.
+    
+*   What happens if no mentor accepts.
+    
+*   Payment provider information.
+    
+
+### Discount presentation
+
+Membership and custom bundle discounts do not stack.
+
+Apply the better eligible discount.
+
+Do not calculate financial values independently in the browser as authoritative values. The server must return the payable amount and its breakdown.
+
+### Payment states
+
+*   Not started.
+    
+*   Processing.
+    
+*   Successful.
+    
+*   Failed.
+    
+*   Pending verification.
+    
+*   Booking confirmed.
+    
+*   Booking not confirmed.
+    
+
+A successful redirect is not proof of payment. Wait for authoritative server verification.
+
+12\. Custom three-service bundles
+=================================
+
+12.1 Bundle builder
+-------------------
+
+**Route:** /dashboard/services/bundle
+
+The student can select any three eligible services.
+
+### Interface
+
+Show:
+
+*   Selected services.
+    
+*   Service duration.
+    
+*   Original listed price.
+    
+*   Eligible bundle discount.
+    
+*   Final subtotal.
+    
+*   Booking and redemption explanation.
+    
+
+### Rules
+
+*   Exactly three eligible services for the custom bundle.
+    
+*   Bundle discount: 5%.
+    
+*   Membership and bundle discounts do not stack.
+    
+*   Apply the better eligible discount.
+    
+*   DreamX absorbs the eligible discount.
+    
+*   Mentor payout basis remains the original listed price, subject to final mentor commercial terms.
+    
+
+### UX behavior
+
+*   Show the selection count.
+    
+*   Prevent submission until the required selection count is reached.
+    
+*   Allow removing or replacing a selection.
+    
+*   Update the summary after each change.
+    
+*   Ask for confirmation before leaving with unsaved selections.
+    
+
+Do not reintroduce fixed four-session packages or the old 15% roll-forward promotion.
+
+13\. My bookings
+================
+
+**Route:** /dashboard/bookings
+
+13.1 Booking list
+-----------------
+
+Tabs or filters:
+
+*   Upcoming.
+    
+*   In progress.
+    
+*   Completed.
+    
+*   Cancelled.
+    
+*   Needs attention.
+    
+
+Each booking row/card should show:
+
+*   Service.
+    
+*   Mentor.
+    
+*   Date and time.
+    
+*   Duration.
+    
+*   Status.
+    
+*   Payment status.
+    
+*   Report status.
+    
+*   Available actions.
+    
+
+13.2 Booking details
+--------------------
+
+**Route:** /dashboard/bookings/\[bookingId\]
+
+Include:
+
+*   Service details.
+    
+*   Mentor summary.
+    
+*   Booking timeline.
+    
+*   Payment information.
+    
+*   Session link when appropriate.
+    
+*   Cancellation or complaint actions when eligible.
+    
+*   Report status.
+    
+*   Support entry point.
+    
+
+### Join session
+
+Show the Join Session action only when the server confirms the user is permitted to join.
+
+The frontend must not generate or expose meeting links using client-side assumptions.
+
+13.3 Cancellation
+-----------------
+
+Display the applicable cancellation rule before confirmation.
+
+Confirmed rule:
+
+*   Cancellation at least one hour before the session receives a full refund.
+    
+
+The less-than-one-hour cancellation rule remains open.
+
+Do not invent the result for that case. Display a clear policy or direct the user to support until the business decision is finalized.
+
+14\. Career readiness
+=====================
+
+**Route:** /dashboard/readiness
+
+14.1 Purpose
+------------
+
+Help the student understand current career preparation through evidence-backed assessment.
+
+14.2 Overall score
+------------------
+
+Display:
+
+*   Overall readiness score from 0–100.
+    
+*   Assessment date.
+    
+*   Assessment coverage.
+    
+*   Trend history, when enough assessments exist.
+    
+*   Explanation of the score.
+    
+
+Do not show a numerical score as though it is reliable when insufficient assessment evidence exists.
+
+14.3 Eight dimensions
+---------------------
+
+1.  Resume.
+    
+2.  LinkedIn.
+    
+3.  Portfolio.
+    
+4.  Communication.
+    
+5.  Technical Skills.
+    
+6.  Interview Skills.
+    
+7.  Career Planning.
+    
+8.  Confidence.
+    
+
+Each dimension uses an individual 0–5 score.
+
+### Score anchors
+
+ScoreMeaning0No evidence / not assessed1Major improvement needed2Below expected level3Developing / acceptable4Strong5Excellent and evidence-supported
+
+The frontend should show descriptions rather than relying on a number alone.
+
+14.4 Dimension card
+-------------------
+
+Each dimension card should include:
+
+*   Dimension name.
+    
+*   Score.
+    
+*   Assessment status.
+    
+*   Last updated.
+    
+*   Summary of evidence.
+    
+*   Suggested action.
+    
+*   Related service, if appropriate.
+    
+
+14.5 N/A and unassessed states
+------------------------------
+
+Portfolio can be N/A where it is not applicable.
+
+When Portfolio is N/A, the backend redistributes its weight proportionally across the other applicable dimensions.
+
+The frontend should explain that this is an adjusted score.
+
+Do not show unassessed dimensions as confirmed zero competence.
+
+14.6 Privacy
+------------
+
+Readiness scores are private by default.
+
+Do not create public score-sharing pages or public profile badges without a separate approved decision.
+
+15\. Career journey
+===================
+
+**Route:** /dashboard/journey
+
+15.1 Purpose
+------------
+
+Show a guided progression from current career preparation to the student's target.
+
+The journey should not become a decorative gamification page.
+
+15.2 Journey interface
+----------------------
+
+Show:
+
+*   Current stage.
+    
+*   Completed stages.
+    
+*   Current milestone.
+    
+*   Next action.
+    
+*   Relevant evidence.
+    
+*   Recommended services.
+    
+
+### Stage card
+
+Each stage should include:
+
+*   Stage title.
+    
+*   Description.
+    
+*   Completion status.
+    
+*   Requirements.
+    
+*   Related actions.
+    
+*   Progress date, when applicable.
+    
+
+The v1 PRD's journey stages may be used as a reference, but exact unlock conditions must be reconciled with the updated readiness model before implementation.
+
+Do not invent stage completion criteria.
+
+15.3 Progress logic
+-------------------
+
+Progress should be based on actual completed requirements and evidence.
+
+Do not automatically mark a stage complete merely because the student purchased a service.
+
+16\. Reports and deliverables
+=============================
+
+16.1 Reports page
+-----------------
+
+**Route:** /dashboard/reports
+
+Show:
+
+*   Pending reports.
+    
+*   Delivered reports.
+    
+*   Report date.
+    
+*   Related service.
+    
+*   Mentor.
+    
+*   Download or view action.
+    
+
+16.2 Report details
+-------------------
+
+**Route:** /dashboard/reports/\[reportId\]
+
+Report structure:
+
+1.  Student and service context.
+    
+2.  Session date.
+    
+3.  Mentor details.
+    
+4.  Assessment purpose.
+    
+5.  Summary.
+    
+6.  Dimension-level observations.
+    
+7.  Strengths.
+    
+8.  Improvement areas.
+    
+9.  Action plan.
+    
+10.  Suggested next steps.
+    
+11.  Assessment limitations.
+    
+
+16.3 Report status
+------------------
+
+Possible UI states:
+
+*   Awaiting session.
+    
+*   Session completed.
+    
+*   Report pending.
+    
+*   Report processing.
+    
+*   Report delivered.
+    
+*   Report delayed.
+    
+*   Report unavailable.
+    
+
+The report delivery target is within 48 hours after the session.
+
+If a report is delayed, show a clear status and support route.
+
+16.4 PDF access
+---------------
+
+*   Use private storage.
+    
+*   Retrieve reports through an authorized server flow.
+    
+*   Use short-lived signed access URLs where appropriate.
+    
+*   Do not expose permanent public file URLs.
+    
+*   Provide an accessible web view as an alternative to downloading a PDF.
+    
+
+17\. Membership and billing
+===========================
+
+17.1 Membership dashboard
+-------------------------
+
+**Route:** /dashboard/membership
+
+Show:
+
+*   Current tier.
+    
+*   Billing status.
+    
+*   Renewal date.
+    
+*   Monthly or annual plan.
+    
+*   Available upgrade/downgrade actions.
+    
+*   Applicable discount.
+    
+*   Confirmed benefits.
+    
+*   Billing history.
+    
+
+17.2 Membership comparison
+--------------------------
+
+Use the approved membership prices and discount rules.
+
+TierMonthlyAnnual upfrontService discountFree₹0₹00%Pro₹199₹1,7885%Elite₹399₹4,18810%
+
+Annual effective monthly price:
+
+*   Pro: ₹149.
+    
+*   Elite: ₹349.
+    
+
+17.3 Billing interactions
+-------------------------
+
+Before subscribing, show:
+
+*   Plan.
+    
+*   Billing frequency.
+    
+*   Total amount due.
+    
+*   Renewal terms.
+    
+*   Cancellation terms.
+    
+*   Applicable taxes, where determined.
+    
+
+Do not invent automatic renewal or refund conditions. Use the actual approved billing and provider configuration.
+
+17.4 AI cashback visibility
+---------------------------
+
+Phase 2 only.
+
+When enabled, show:
+
+*   Cashback percentage.
+    
+*   Eligibility status.
+    
+*   Credits earned.
+    
+*   Expiry date.
+    
+*   Reversal status, if applicable.
+    
+
+Cashback is AI Credits, not withdrawable cash.
+
+Do not show a live cashback balance in the MVP if the wallet is not implemented.
+
+18\. Mentor dashboard
+=====================
+
+**Route:** /mentor
+
+18.1 Purpose
+------------
+
+Give mentors a clear operational workspace for verification, availability, bookings and delivery.
+
+18.2 Dashboard overview
+-----------------------
+
+Show:
+
+*   Verification status.
+    
+*   Approved services.
+    
+*   Pending offers.
+    
+*   Upcoming sessions.
+    
+*   Reports due.
+    
+*   Recent activity.
+    
+*   Payout status, where verified and available.
+    
+
+Do not display estimated earnings as guaranteed payouts.
+
+18.3 Verification page
+----------------------
+
+**Route:** /mentor/verification
+
+Show separate progress for:
+
+*   Identity.
+    
+*   Professional experience.
+    
+*   Service-specific approval.
+    
+
+For each step, show:
+
+*   Current status.
+    
+*   Required evidence.
+    
+*   Submission date.
+    
+*   Reviewer feedback, where available.
+    
+*   Next action.
+    
+
+Do not allow mentors to self-approve their verification.
+
+18.4 My services
+----------------
+
+**Route:** /mentor/services
+
+Show:
+
+*   Services selected.
+    
+*   Approval status.
+    
+*   Service requirements.
+    
+*   Duration.
+    
+*   Pricing configuration where permitted.
+    
+*   Reason for rejection or pending status.
+    
+
+Only approved services can be offered for paid bookings.
+
+18.5 Availability
+-----------------
+
+**Route:** /mentor/availability
+
+Features:
+
+*   Weekly availability.
+    
+*   Date-specific exceptions.
+    
+*   Unavailable periods.
+    
+*   Existing bookings.
+    
+*   Timezone display.
+    
+*   Save confirmation.
+    
+
+The backend remains authoritative for slot conflicts.
+
+18.6 Dispatch offers
+--------------------
+
+**Route:** /mentor/dispatch
+
+### Offer card
+
+Show:
+
+*   Service.
+    
+*   Student goal summary.
+    
+*   Preferred time windows.
+    
+*   Session duration.
+    
+*   Offer expiry.
+    
+*   Relevant service context.
+    
+*   Accept and decline actions.
+    
+
+Do not expose unnecessary private student information.
+
+If match-fit percentages are implemented, they must be based on a documented and validated matching model. Do not fabricate a match score.
+
+### Accept behavior
+
+*   Confirm the action.
+    
+*   Submit an atomic claim request.
+    
+*   Display server result.
+    
+*   If another mentor claimed first, show that the offer is no longer available.
+    
+
+The frontend must never assume that clicking Accept guarantees the booking.
+
+18.7 Mentor booking details
+---------------------------
+
+**Route:** /mentor/bookings/\[bookingId\]
+
+Show:
+
+*   Student context permitted for this service.
+    
+*   Service rubric.
+    
+*   Session date and time.
+    
+*   Meeting entry point.
+    
+*   Attendance state.
+    
+*   Report requirements.
+    
+
+18.8 Session console
+--------------------
+
+**Route:** /mentor/sessions/\[bookingId\]
+
+Before the session, show a context snapshot:
+
+*   Target role and career goal.
+    
+*   Relevant readiness context.
+    
+*   Relevant resume or documents, if authorized.
+    
+*   Student's primary goal for the session.
+    
+*   Session duration.
+    
+
+During the session, the mentor can use the relevant service rubric.
+
+After the session:
+
+*   Complete the assessment.
+    
+*   Enter observations.
+    
+*   Add strengths and improvement areas.
+    
+*   Add action items.
+    
+*   Submit the report.
+    
+
+The active direction is a post-session report within 48 hours.
+
+Do not force the superseded three-minute in-call scorecard as the mandatory final deliverable.
+
+18.9 Mentor reports
+-------------------
+
+**Route:** /mentor/reports
+
+Show:
+
+*   Reports due.
+    
+*   Submitted reports.
+    
+*   Delayed reports.
+    
+*   Report revision requests, if supported.
+    
+
+Provide a clear submission workflow.
+
+18.10 Earnings and payouts
+--------------------------
+
+**Route:** /mentor/earnings
+
+Show only verified financial information:
+
+*   Completed services.
+    
+*   Gross listed price.
+    
+*   Applicable commercial calculation.
+    
+*   Payment or payout status.
+    
+*   Refund or dispute adjustments.
+    
+*   Actual payout records.
+    
+
+The final platform commission and payout arrangement remain provisional until agreed and provider-validated.
+
+Do not display an assumed escrow balance or guaranteed payout date.
+
+19\. Admin experience
+=====================
+
+19.1 Admin overview
+-------------------
+
+**Route:** /admin
+
+Show operational indicators:
+
+*   Pending mentor verification.
+    
+*   Pending service approvals.
+    
+*   Upcoming sessions.
+    
+*   Dispatch requests awaiting resolution.
+    
+*   Reports overdue.
+    
+*   Open disputes.
+    
+*   Payment reconciliation exceptions.
+    
+
+Use actionable operational metrics rather than decorative analytics.
+
+19.2 Mentor verification queue
+------------------------------
+
+**Route:** /admin/verification
+
+Features:
+
+*   Filter by verification status.
+    
+*   Open mentor application.
+    
+*   Inspect permitted evidence.
+    
+*   Review identity and experience separately.
+    
+*   Review service-specific qualification.
+    
+*   Approve, reject or request additional information.
+    
+*   Record reviewer notes.
+    
+*   Audit each decision.
+    
+
+Sensitive documents must be accessible only to authorized admins.
+
+19.3 Service approvals
+----------------------
+
+**Route:** /admin/services
+
+Allow authorized admins to:
+
+*   Review requested services.
+    
+*   Inspect relevant evidence.
+    
+*   Approve or reject service eligibility.
+    
+*   Record reasons.
+    
+*   View current approval state.
+    
+
+19.4 Booking management
+-----------------------
+
+**Route:** /admin/bookings
+
+Include:
+
+*   Search.
+    
+*   Filters.
+    
+*   Booking detail.
+    
+*   State timeline.
+    
+*   Attendance information.
+    
+*   Report status.
+    
+*   Payment status.
+    
+
+Sensitive booking actions require explicit authorization.
+
+19.5 Smart Match monitoring
+---------------------------
+
+**Route:** /admin/dispatch
+
+Show:
+
+*   Active dispatch requests.
+    
+*   Dispatch wave.
+    
+*   Time since request.
+    
+*   Eligible mentor count, if available.
+    
+*   Accepted or expired status.
+    
+*   Student fallback status.
+    
+
+Admin must not be able to silently reschedule a student.
+
+19.6 Disputes and refunds
+-------------------------
+
+**Route:** /admin/disputes
+
+Show:
+
+*   Complaint.
+    
+*   Booking.
+    
+*   Submitted evidence.
+    
+*   Relevant timeline.
+    
+*   Mentor response, where supported.
+    
+*   Review notes.
+    
+*   Decision status.
+    
+*   Refund calculation.
+    
+*   Provider refund status.
+    
+
+The frontend must not imply that the admin can freeze or reverse mentor funds unless the approved payment arrangement supports it.
+
+19.7 Payment reconciliation
+---------------------------
+
+**Route:** /admin/payments
+
+Show:
+
+*   Payment records.
+    
+*   Provider references.
+    
+*   Booking references.
+    
+*   Verification status.
+    
+*   Refund state.
+    
+*   Reconciliation exceptions.
+    
+
+Do not expose secret keys or provider credentials.
+
+19.8 Audit logs
+---------------
+
+**Route:** /admin/audit-logs
+
+Show:
+
+*   Actor.
+    
+*   Action.
+    
+*   Resource.
+    
+*   Timestamp.
+    
+*   Relevant state transition.
+    
+*   Audit metadata permitted for display.
+    
+
+Audit records should not be editable through the standard admin UI.
+
+20\. Notifications and feedback
+===============================
+
+20.1 Notification centre
+------------------------
+
+A notification centre should provide:
+
+*   Unread indicator.
+    
+*   Notification list.
+    
+*   Read/unread state.
+    
+*   Destination link.
+    
+*   Timestamp.
+    
+*   Relevant action.
+    
+
+Notification examples:
+
+*   Booking confirmed.
+    
+*   Mentor accepted Smart Match.
+    
+*   Report delivered.
+    
+*   Verification status updated.
+    
+*   Complaint status updated.
+    
+*   Membership payment confirmed.
+    
+
+20.2 Notification channels
+--------------------------
+
+Email and in-app notifications are part of the product direction.
+
+The frontend should not assume that browser push notifications or WhatsApp notifications are available.
+
+20.3 Toasts and banners
+-----------------------
+
+Use toasts for short-lived feedback.
+
+Use persistent banners for important states such as:
+
+*   Payment verification pending.
+    
+*   Report delayed.
+    
+*   Verification requires action.
+    
+*   Booking fallback needs a decision.
+    
+
+Do not use toasts as the only way to communicate critical payment or booking outcomes.
+
+21\. Phase 2 frontend — AI tools and AI Credits
+===============================================
+
+**Status: PHASE 2 — not part of MVP launch**
+
+21.1 AI tools page
+------------------
+
+**Route:** /dashboard/ai
+
+Potential features should be implemented only when individually approved:
+
+*   Resume analysis.
+    
+*   Career gap analysis.
+    
+*   Career roadmap assistance.
+    
+*   LinkedIn feedback.
+    
+*   Interview practice and answer feedback.
+    
+
+Do not assume every potential AI feature is approved for release.
+
+21.2 AI Credit wallet
+---------------------
+
+**Route:** /dashboard/wallet
+
+Show:
+
+*   Available credits.
+    
+*   Credit lots.
+    
+*   Monthly allowance.
+    
+*   Purchased credits.
+    
+*   Bonus credits.
+    
+*   Cashback credits.
+    
+*   Expiry dates.
+    
+*   Transaction history.
+    
+
+21.3 AI feature pricing
+-----------------------
+
+Every AI feature must show its fixed credit price before execution.
+
+The user-facing conversion preference is ₹1 = 10 AI Credits.
+
+Actual provider cost is measured internally and must not create surprise additional deductions.
+
+21.4 AI operation interaction
+-----------------------------
+
+1.  User selects a feature.
+    
+2.  Frontend displays its fixed price.
+    
+3.  User reviews input and limits.
+    
+4.  Backend checks eligibility and reserves credits.
+    
+5.  Operation executes.
+    
+6.  Successful operation settles the fixed price.
+    
+7.  Failed or timed-out operation refunds reserved credits.
+    
+
+The frontend should display the server-reported wallet state.
+
+21.5 Credit expiry
+------------------
+
+Spending order:
+
+1.  Earliest actual expiry timestamp.
+    
+2.  Oldest-issued-first when expiry timestamps are equal.
+    
+
+Purchased base credits do not expire.
+
+The frontend should explain credit expiry before purchase and before an operation where relevant.
+
+21.6 Membership allowances
+--------------------------
+
+TierMonthly creditsFree150Pro500Elite1,000
+
+Unused monthly credits expire at the end of the billing cycle.
+
+21.7 Credit packs
+-----------------
+
+PackPriceBase creditsStarter₹50500Basic₹1001,000Value₹2502,500Power₹5005,500Large₹1,00012,000
+
+Purchase bonuses:
+
+*   Free: 0%.
+    
+*   Pro: 5%.
+    
+*   Elite: 10%.
+    
+
+Base credits do not expire. Bonus credits expire 90 days after issuance.
+
+21.8 Cashback
+-------------
+
+*   Free: 0%.
+    
+*   Pro: 5%.
+    
+*   Elite: 10%.
+    
+
+Cashback is calculated on the original eligible listed service price, before membership discount.
+
+It is issued only after service completion and the 48-hour complaint window, or after dispute resolution.
+
+It is AI Credits, not cash.
+
+22\. Responsive design requirements
+===================================
+
+22.1 Breakpoint strategy
+------------------------
+
+Use a consistent responsive breakpoint system.
+
+Suggested starting points:
+
+LayoutApproximate widthSmall mobileBelow 480pxMobile / large phone480–767pxTablet768–1023pxDesktop1024–1439pxLarge desktop1440px and above
+
+Exact breakpoints can be adjusted to the component system.
+
+22.2 Mobile requirements
+------------------------
+
+The following must work well on mobile:
+
+*   Authentication.
+    
+*   Onboarding.
+    
+*   Service discovery.
+    
+*   Service detail.
+    
+*   Mentor profile.
+    
+*   Calendar selection.
+    
+*   Checkout.
+    
+*   Booking status.
+    
+*   Reports.
+    
+*   Readiness dashboard.
+    
+*   Career journey.
+    
+*   Mentor dispatch.
+    
+*   Admin critical workflows.
+    
+
+22.3 Mobile interaction rules
+-----------------------------
+
+*   Avoid horizontal page scrolling.
+    
+*   Use large touch targets.
+    
+*   Make forms easy to complete.
+    
+*   Avoid dense multi-column dashboards.
+    
+*   Use stacked cards instead of wide tables where appropriate.
+    
+*   Preserve clear primary actions.
+    
+*   Use sticky actions only when they do not obscure content.
+    
+*   Ensure modals fit within the viewport.
+    
+*   Support keyboard and screen-reader navigation.
+    
+
+22.4 Desktop requirements
+-------------------------
+
+Desktop can use:
+
+*   Persistent sidebars.
+    
+*   Multi-column layouts.
+    
+*   Wider comparison tables.
+    
+*   Split-screen mentor session console.
+    
+*   Operational admin tables.
+    
+
+Do not let desktop-only layout decisions break mobile functionality.
+
+23\. Component inventory
+========================
+
+Build reusable components where there is genuine repeated behavior.
+
+23.1 Foundation components
+--------------------------
+
+*   Button.
+    
+*   Input.
+    
+*   Textarea.
+    
+*   Select.
+    
+*   Checkbox.
+    
+*   Radio group.
+    
+*   Switch.
+    
+*   Form field.
+    
+*   Tooltip.
+    
+*   Popover.
+    
+*   Dialog.
+    
+*   Drawer.
+    
+*   Tabs.
+    
+*   Dropdown.
+    
+*   Badge.
+    
+*   Avatar.
+    
+*   Skeleton.
+    
+*   Pagination.
+    
+*   Empty state.
+    
+*   Error state.
+    
+*   Confirmation dialog.
+    
+
+23.2 Layout components
+----------------------
+
+*   Public header.
+    
+*   Dashboard header.
+    
+*   Student sidebar.
+    
+*   Mentor sidebar.
+    
+*   Admin sidebar.
+    
+*   Mobile navigation.
+    
+*   Breadcrumbs.
+    
+*   Page container.
+    
+*   Page heading.
+    
+*   Section header.
+    
+*   Content grid.
+    
+
+23.3 Marketplace components
+---------------------------
+
+*   Service card.
+    
+*   Service detail header.
+    
+*   Mentor card.
+    
+*   Mentor verification indicator.
+    
+*   Price summary.
+    
+*   Discount breakdown.
+    
+*   Availability calendar.
+    
+*   Time-slot picker.
+    
+*   Booking summary.
+    
+*   Booking timeline.
+    
+*   Dispatch offer card.
+    
+
+23.4 Career components
+----------------------
+
+*   Readiness score summary.
+    
+*   Dimension score card.
+    
+*   Assessment status.
+    
+*   Evidence panel.
+    
+*   Recommendation card.
+    
+*   Journey stage card.
+    
+*   Progress timeline.
+    
+*   Report preview.
+    
+
+23.5 Operations components
+--------------------------
+
+*   Status badge.
+    
+*   Filter bar.
+    
+*   Search toolbar.
+    
+*   Data table.
+    
+*   Record detail drawer.
+    
+*   Audit timeline.
+    
+*   Refund summary.
+    
+*   Verification evidence viewer.
+    
+
+23.6 Component quality rule
+---------------------------
+
+Do not create a separate component for every small wrapper.
+
+Create a reusable component when it has:
+
+*   Repeated use.
+    
+*   Reusable behavior.
+    
+*   A consistent visual pattern.
+    
+*   A meaningful responsibility.
+    
+
+Avoid building a large component library before the actual product screens are understood.
+
+24\. Frontend state and interaction standards
+=============================================
+
+24.1 Server-authoritative state
+-------------------------------
+
+The backend owns:
+
+*   Authentication and role.
+    
+*   Mentor verification.
+    
+*   Service approval.
+    
+*   Slot availability.
+    
+*   Booking state.
+    
+*   Dispatch state.
+    
+*   Payment status.
+    
+*   Refund status.
+    
+*   Report delivery status.
+    
+*   Readiness score.
+    
+*   Membership status.
+    
+*   AI Credit balance.
+    
+
+The frontend can optimistically update non-critical visual state, but must reconcile it with the server.
+
+24.2 State categories
+---------------------
+
+Separate:
+
+1.  Server data.
+    
+2.  Local component state.
+    
+3.  Form state.
+    
+4.  URL/query state.
+    
+5.  Authentication/session state.
+    
+
+Avoid duplicating the same server record across multiple unrelated client stores.
+
+24.3 Form behavior
+------------------
+
+Every form should include:
+
+*   Labels.
+    
+*   Help text where needed.
+    
+*   Validation.
+    
+*   Submission state.
+    
+*   Success feedback.
+    
+*   Recoverable error feedback.
+    
+*   Prevention of accidental duplicate submission.
+    
+
+Validation should exist on both client and server.
+
+24.4 Loading states
+-------------------
+
+Use:
+
+*   Skeletons for predictable page structures.
+    
+*   Inline loading for small actions.
+    
+*   Progress indicators for longer operations.
+    
+*   Persistent status panels for payment or dispatch workflows.
+    
+
+Avoid blank screens while data loads.
+
+24.5 Empty states
+-----------------
+
+Every list-based page needs an intentional empty state.
+
+Examples:
+
+*   No bookings yet.
+    
+*   No reports delivered.
+    
+*   No mentor offers.
+    
+*   No notifications.
+    
+*   No available slots.
+    
+*   No search results.
+    
+
+Each empty state should explain what it means and offer a relevant next action.
+
+24.6 Error states
+-----------------
+
+Errors should be:
+
+*   Human-readable.
+    
+*   Actionable where possible.
+    
+*   Free of internal stack traces.
+    
+*   Safe to retry where appropriate.
+    
+*   Logged through the appropriate monitoring system.
+    
+
+24.7 Confirmation dialogs
+-------------------------
+
+Use confirmation for:
+
+*   Cancellation.
+    
+*   Refund request.
+    
+*   Mentor acceptance where necessary.
+    
+*   Verification decisions.
+    
+*   Destructive account actions.
+    
+*   Sensitive admin changes.
+    
+
+Do not put a confirmation dialog in front of every ordinary action.
+
+25\. API and Supabase integration boundaries
+============================================
+
+25.1 General rule
+-----------------
+
+The frontend must never be the authority for business decisions.
+
+The frontend may display calculated values returned by the backend, but must not independently determine:
+
+*   Whether a mentor is approved.
+    
+*   Whether a slot is available.
+    
+*   Whether a booking is confirmed.
+    
+*   Whether a payment succeeded.
+    
+*   Whether a refund is valid.
+    
+*   Whether a report is delivered.
+    
+*   Whether cashback is earned.
+    
+*   Whether AI credits can be spent.
+    
+
+25.2 Supabase usage
+-------------------
+
+Use the appropriate Supabase client for:
+
+*   Authenticated session access.
+    
+*   Authorized data reads.
+    
+*   Realtime subscriptions where justified.
+    
+*   Private storage access.
+    
+
+Sensitive operations must go through trusted server-side logic.
+
+Never expose the Supabase service-role key to the browser.
+
+25.3 API error handling
+-----------------------
+
+Normalize errors into a predictable frontend structure.
+
+Example:
+
+Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   type ApiError = {    code: string;    message: string;    fieldErrors?: Record;    retryable?: boolean;  };   `
+
+The actual API response contract must match api.md.
+
+25.4 Realtime
+-------------
+
+Realtime is useful for:
+
+*   Dispatch offer updates.
+    
+*   Booking status changes.
+    
+*   Notifications.
+    
+*   Report status changes.
+    
+
+Realtime events should trigger a server-authoritative refresh or validated state update.
+
+Do not treat a client event as proof of payment or a successful booking.
+
+26\. Frontend security
+======================
+
+26.1 Authentication
+-------------------
+
+*   Protect authenticated routes.
+    
+*   Re-check authorization on the server.
+    
+*   Handle expired sessions.
+    
+*   Do not rely only on client-side route guards.
+    
+
+26.2 Authorization
+------------------
+
+*   Student pages require student access.
+    
+*   Mentor pages require mentor access and appropriate resource ownership.
+    
+*   Admin pages require explicit admin permission.
+    
+*   Sensitive actions require server-side permission checks.
+    
+
+26.3 Personal data
+------------------
+
+*   Do not log resume contents.
+    
+*   Do not put private documents in public URLs.
+    
+*   Do not expose private student information to unrelated mentors.
+    
+*   Do not expose verification documents in public mentor profiles.
+    
+*   Do not include sensitive information in query strings.
+    
+
+26.4 File uploads
+-----------------
+
+The frontend should validate file size and expected type for user experience, but server-side validation remains mandatory.
+
+Use private storage and authorized retrieval.
+
+26.5 Financial security
+-----------------------
+
+*   Do not trust client-calculated prices.
+    
+*   Do not treat a payment redirect as confirmation.
+    
+*   Do not allow client-side edits to booking payment status.
+    
+*   Do not expose provider secrets.
+    
+*   Prevent repeated form submissions where relevant.
+    
+
+27\. Accessibility and usability
+================================
+
+Target WCAG 2.1 AA as the accessibility baseline.
+
+Requirements:
+
+*   Semantic HTML.
+    
+*   Keyboard navigation.
+    
+*   Visible focus indicators.
+    
+*   Screen-reader labels.
+    
+*   Adequate color contrast.
+    
+*   Accessible form errors.
+    
+*   Accessible modal focus handling.
+    
+*   No color-only status communication.
+    
+*   Responsive zoom and text sizing.
+    
+*   Clear link and button labels.
+    
+
+Charts and scores must include a text alternative.
+
+28\. Frontend testing strategy
+==============================
+
+28.1 Unit tests
+---------------
+
+Test:
+
+*   Price formatting.
+    
+*   Discount display.
+    
+*   Membership comparison.
+    
+*   Bundle selection validation.
+    
+*   Readiness score presentation.
+    
+*   Status mapping.
+    
+*   Form validation.
+    
+*   Date and timezone formatting.
+    
+
+Financial calculations must also be validated against backend outputs.
+
+28.2 Component tests
+--------------------
+
+Test:
+
+*   Service cards.
+    
+*   Mentor cards.
+    
+*   Booking summary.
+    
+*   Time-slot picker.
+    
+*   Dispatch offer card.
+    
+*   Readiness dimension card.
+    
+*   Report status.
+    
+*   Membership comparison.
+    
+*   Admin verification controls.
+    
+
+28.3 Integration tests
+----------------------
+
+Test:
+
+*   Authentication and protected routes.
+    
+*   Supabase data retrieval.
+    
+*   Form submissions.
+    
+*   Booking API integration.
+    
+*   Payment status handling.
+    
+*   Report access.
+    
+*   Notification updates.
+    
+
+28.4 E2E tests
+--------------
+
+Minimum student journeys:
+
+1.  Signup → onboarding → dashboard.
+    
+2.  Discovery → service detail → direct booking.
+    
+3.  Discovery → Smart Match → dispatch status.
+    
+4.  Booking → payment verification → confirmation.
+    
+5.  Session → report pending → report delivered.
+    
+6.  Readiness dashboard → dimension details.
+    
+7.  Membership page → subscription flow.
+    
+8.  Custom bundle → checkout.
+    
+
+Minimum mentor journeys:
+
+1.  Signup → verification submission.
+    
+2.  Verification → approval status.
+    
+3.  Service approval → availability setup.
+    
+4.  Dispatch offer → accept or decline.
+    
+5.  Booking → session → report submission.
+    
+
+Minimum admin journeys:
+
+1.  Verification queue → review → decision.
+    
+2.  Service approval.
+    
+3.  Booking inspection.
+    
+4.  Dispute review.
+    
+5.  Payment reconciliation.
+    
+6.  Audit history inspection.
+    
+
+28.5 Responsive testing
+-----------------------
+
+Run important E2E journeys on:
+
+*   Small mobile viewport around 390px.
+    
+*   Tablet viewport.
+    
+*   Desktop viewport around 1440px.
+    
+
+Also test keyboard-only navigation and screen-reader-relevant semantics.
+
+29\. Frontend acceptance criteria
+=================================
+
+A frontend phase is complete only when:
+
+1.  The implemented pages match the approved information architecture.
+    
+2.  Role-specific navigation works.
+    
+3.  Server-side authorization protects sensitive routes.
+    
+4.  The UI reflects backend state rather than inventing it.
+    
+5.  Forms validate and handle errors.
+    
+6.  Loading, empty, success and error states exist.
+    
+7.  Responsive behavior is verified.
+    
+8.  Accessibility requirements are checked.
+    
+9.  Sensitive information is not exposed.
+    
+10.  Critical user journeys pass E2E tests.
+    
+11.  Payment and booking status are verified by the backend.
+    
+12.  The implementation is documented and reviewed.
+    
+
+30\. Frontend development sequence
+==================================
+
+Follow this order to avoid building disconnected screens before the underlying product structure exists.
+
+Phase F0 — Frontend foundation
+------------------------------
+
+*   Establish Next.js project structure.
+    
+*   Set up TypeScript.
+    
+*   Configure styling and design tokens.
+    
+*   Create the application layout.
+    
+*   Create foundational UI components.
+    
+*   Configure environment variables.
+    
+*   Connect the project to the existing GitHub/Vercel/Supabase setup.
+    
+
+**Exit criteria:** Application builds and deploys; shared shell and design tokens are working.
+
+Phase F1 — Public website and authentication
+--------------------------------------------
+
+*   Public homepage.
+    
+*   How it works.
+    
+*   Services catalogue.
+    
+*   Service detail.
+    
+*   Membership overview.
+    
+*   Login and signup.
+    
+*   Email verification.
+    
+*   Password recovery.
+    
+
+**Exit criteria:** Visitors can explore the product and authenticate.
+
+Phase F2 — Role-based shells and onboarding
+-------------------------------------------
+
+*   Student shell.
+    
+*   Mentor shell.
+    
+*   Admin shell.
+    
+*   Student onboarding.
+    
+*   Mentor verification interface.
+    
+*   Role-based route handling.
+    
+
+**Exit criteria:** Users see the correct experience and cannot access unauthorized screens.
+
+Phase F3 — Student career experience
+------------------------------------
+
+*   Student dashboard.
+    
+*   Goal-first discovery.
+    
+*   Service recommendations.
+    
+*   Career readiness.
+    
+*   Career journey.
+    
+*   Reports.
+    
+
+**Exit criteria:** Student can understand their current state and next action.
+
+Phase F4 — Marketplace and booking
+----------------------------------
+
+*   Mentor discovery.
+    
+*   Mentor profiles.
+    
+*   Direct booking.
+    
+*   Smart Match.
+    
+*   Checkout.
+    
+*   Booking status.
+    
+*   Cancellation entry points.
+    
+
+**Exit criteria:** Critical booking and payment journeys work against server-authoritative state.
+
+Phase F5 — Mentor workspace
+---------------------------
+
+*   Mentor dashboard.
+    
+*   Service management.
+    
+*   Availability.
+    
+*   Dispatch offers.
+    
+*   Booking details.
+    
+*   Session console.
+    
+*   Report submission.
+    
+
+**Exit criteria:** Mentors can manage approved services and deliver sessions.
+
+Phase F6 — Admin operations
+---------------------------
+
+*   Verification queue.
+    
+*   Service approvals.
+    
+*   Booking management.
+    
+*   Dispatch monitoring.
+    
+*   Dispute workflow.
+    
+*   Payment reconciliation.
+    
+*   Audit logs.
+    
+
+**Exit criteria:** Authorized staff can operate the marketplace with auditable actions.
+
+Phase F7 — Membership and commercial UX
+---------------------------------------
+
+*   Membership dashboard.
+    
+*   Plan comparison.
+    
+*   Billing status.
+    
+*   Discount display.
+    
+*   Bundle builder.
+    
+*   Billing history.
+    
+
+**Exit criteria:** Membership and bundle prices match backend calculations and approved policy.
+
+Phase F8 — Phase 2 AI experience
+--------------------------------
+
+*   AI tools.
+    
+*   AI Credit wallet.
+    
+*   Credit pack purchase.
+    
+*   Credit transaction history.
+    
+*   AI operation flow.
+    
+*   Cashback display.
+    
+*   Usage limits and error states.
+    
+
+**Exit criteria:** Credit reservations, settlements, refunds and expiry are reflected accurately.
+
+31\. Open frontend decisions
+============================
+
+The following should be finalized during design review rather than silently assumed.
+
+IDDecisionStatusUX-01Final logo, typography and brand paletteOpenUX-02Exact marketing homepage visual directionProposedUX-03Final student sidebar and mobile navigationProposedUX-04Exact onboarding questionsNeeds product reviewUX-05Exact journey stage names and unlock criteriaOpenUX-06Mentor public verification labelsNeeds trust-policy reviewUX-07Exact service-specific report layoutsNeeds rubric definitionUX-08Calendar provider and meeting-link UXIntegration validationUX-09Payment checkout and payout experienceBlocked by provider validationUX-10Exact membership benefits beyond confirmed pricing and discountsOpenUX-11Admin permission matrixNeeds security reviewUX-12Final responsive navigation behaviorProposedUX-13Phase 2 AI feature list and individual pricesDeferredUX-14Final chart and progress visualization styleProposed
+
+32\. Instructions for the AI coding agent
+=========================================
+
+When implementing DreamX frontend:
+
+1.  Read DreamX\_PRD\_v2.0.md before implementing business workflows.
+    
+2.  Read this frontend.md before creating pages or components.
+    
+3.  Read architecture.md, backend.md, api.md and database.md when available.
+    
+4.  Inspect the existing repository before modifying it.
+    
+5.  Follow the established Git and GitHub workflow.
+    
+6.  Verify the current official documentation for Next.js, Supabase and Vercel before using framework-specific or provider-specific features.
+    
+7.  Implement the frontend in the defined phases.
+    
+8.  Do not create every page in one uncontrolled code-generation step.
+    
+9.  Do not invent API routes, database columns or business rules.
+    
+10.  If a required backend contract is missing, document the dependency and ask for clarification.
+    
+11.  Keep UI components reusable but avoid unnecessary abstraction.
+    
+12.  Use realistic test data only in development and clearly label it.
+    
+13.  Never hardcode real student or mentor data.
+    
+14.  Never expose secrets or service-role credentials.
+    
+15.  Test mobile and desktop behavior.
+    
+16.  Do not claim a feature is complete until its acceptance criteria pass.
+    
+17.  Do not implement Phase 2 AI wallet features as live MVP functionality.
+    
+18.  Do not implement unapproved Razorpay Route, escrow or payout assumptions.
+    
+19.  Preserve all confirmed pricing, readiness, refund and Smart Match rules.
+    
+20.  Update documentation when implementation changes a previously approved frontend decision.
+    
+
+Final implementation principle
+------------------------------
+
+DreamX should be built as one coherent product experience, not as a collection of unrelated dashboards.
+
+Every screen should help the user understand their current state, make a confident decision or complete a meaningful career-improvement action.
+
+**The frontend is successful when the student can move from career uncertainty to a clear, evidence-backed next step—and when mentors and administrators can deliver and operate that experience reliably.**
