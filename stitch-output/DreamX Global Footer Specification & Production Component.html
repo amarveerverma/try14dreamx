@@ -1,0 +1,554 @@
+﻿<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_standard" name="shell-type"/><title>DreamX Career Marketplace</title><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base { html, body { margin: 0; padding: 0; } body { overscroll-behavior: none; } main > :first-child { margin-top: 0 !important; } main > :last-child { margin-bottom: 0 !important; } } ::-webkit-scrollbar { display: none; }</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "on-secondary-fixed-variant": "#00522b", "surface-container-high": "#eae7e7", "tertiary-fixed-dim": "#aec6ff", "outline-variant": "#c8c4d6", "primary-fixed": "#e3dfff", "on-error-container": "#93000a", "surface-bright": "#fcf9f8", "on-tertiary-container": "#c1d3ff", "secondary-fixed-dim": "#78db98", "primary-fixed-dim": "#c5c0ff", "on-primary": "#ffffff", "inverse-primary": "#c5c0ff", "surface-container": "#f0eded", "on-secondary-container": "#00723d", "inverse-surface": "#313030", "on-primary-fixed": "#130068", "outline": "#777585", "on-tertiary": "#ffffff", "tertiary": "#00408f", "surface-container-lowest": "#ffffff", "on-primary-fixed-variant": "#3c2cb8", "surface-tint": "#5549d1", "on-error": "#ffffff", "surface-dim": "#dcd9d9", "secondary": "#006d3a", "surface-container-low": "#f6f3f2", "on-surface-variant": "#474554", "tertiary-container": "#1257b8", "tertiary-fixed": "#d8e2ff", "secondary-fixed": "#94f7b2", "surface-container-highest": "#e5e2e1", "on-secondary": "#ffffff", "on-tertiary-fixed": "#001a42", "on-secondary-fixed": "#00210e", "inverse-on-surface": "#f3f0ef", "primary-container": "#5145cd", "primary": "#3828b5", "surface-variant": "#e5e2e1", "background": "#fcf9f8", "surface": "#fcf9f8", "error": "#ba1a1a", "on-background": "#1c1b1b", "on-primary-container": "#d2ceff", "secondary-container": "#91f5b0", "on-tertiary-fixed-variant": "#004396", "on-surface": "#1c1b1b", "error-container": "#ffdad6" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "margin": "2rem", "space-xl": "2.5rem", "margin-mobile": "1rem", "gutter": "1.5rem", "space-lg": "1.5rem", "space-md": "1rem", "space-xs": "0.25rem", "gutter-mobile": "1rem", "space-sm": "0.5rem" }, "fontFamily": { "headline-md": ["Plus Jakarta Sans"], "label-md": ["Inter"], "headline-sm": ["Plus Jakarta Sans"], "metric-val": ["Plus Jakarta Sans"], "label-sm": ["Inter"], "display-lg-mobile": ["Plus Jakarta Sans"], "body-sm": ["Inter"], "headline-lg-mobile": ["Plus Jakarta Sans"], "display-lg": ["Plus Jakarta Sans"], "body-lg": ["Inter"], "title-md": ["Inter"], "body-md": ["Inter"], "headline-lg": ["Plus Jakarta Sans"] }, "fontSize": { "headline-md": ["1.5rem", { "lineHeight": "2rem", "letterSpacing": "-0.01em", "fontWeight": "600" }], "label-md": ["0.875rem", { "lineHeight": "1.25rem", "letterSpacing": "0.01em", "fontWeight": "500" }], "headline-sm": ["1.25rem", { "lineHeight": "1.75rem", "letterSpacing": "-0.01em", "fontWeight": "600" }], "metric-val": ["2rem", { "lineHeight": "2.25rem", "letterSpacing": "-0.02em", "fontWeight": "700" }], "label-sm": ["0.75rem", { "lineHeight": "1rem", "letterSpacing": "0.02em", "fontWeight": "600" }], "display-lg-mobile": ["2.25rem", { "lineHeight": "2.75rem", "letterSpacing": "-0.02em", "fontWeight": "700" }], "body-sm": ["0.875rem", { "lineHeight": "1.25rem", "fontWeight": "400" }], "headline-lg-mobile": ["1.625rem", { "lineHeight": "2.125rem", "letterSpacing": "-0.01em", "fontWeight": "600" }], "display-lg": ["3.25rem", { "lineHeight": "3.75rem", "letterSpacing": "-0.03em", "fontWeight": "700" }], "body-lg": ["1.125rem", { "lineHeight": "1.75rem", "fontWeight": "400" }], "title-md": ["1.125rem", { "lineHeight": "1.625rem", "letterSpacing": "-0.01em", "fontWeight": "600" }], "body-md": ["1rem", { "lineHeight": "1.5rem", "fontWeight": "400" }], "headline-lg": ["2rem", { "lineHeight": "2.5rem", "letterSpacing": "-0.02em", "fontWeight": "600" }] } } } };</script></head><body class="bg-surface font-body-md text-on-surface antialiased"><header class="fixed top-0 left-0 right-0 z-50 bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-16 max-w-7xl mx-auto px-margin flex items-center justify-between"><div class="flex items-center gap-space-lg"><a class="flex items-center gap-space-sm" href="#"><div class="w-9 h-9 rounded-lg bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[20px]">rocket_launch</span></div><span class="font-headline-sm text-headline-sm font-bold tracking-tight text-on-surface">Dream<span class="text-primary">X</span></span></a><nav class="hidden md:flex items-center gap-space-xs p-1" data-active-classes="bg-primary-container text-on-primary-container font-label-md text-label-md rounded-lg"><a aria-current="page" class="px-space-md py-space-sm transition-colors bg-primary-container text-on-primary-container font-label-md text-label-md rounded-lg" data-path="role-tracks" href="#">Role Tracks</a><a class="px-space-md py-space-sm font-label-md text-label-md text-on-surface-variant hover:text-on-surface rounded-lg transition-colors" data-path="hiring-partners" href="#">Hiring Partners</a><a class="px-space-md py-space-sm font-label-md text-label-md text-on-surface-variant hover:text-on-surface rounded-lg transition-colors" data-path="verified-outcomes" href="#">Verified Outcomes</a><a class="px-space-md py-space-sm font-label-md text-label-md text-on-surface-variant hover:text-on-surface rounded-lg transition-colors" data-path="mentorship" href="#">Mentorship</a><a class="px-space-md py-space-sm font-label-md text-label-md text-on-surface-variant hover:text-on-surface rounded-lg transition-colors" data-path="tuition-and-isas" href="#">Tuition &amp; ISAs</a></nav></div><div class="flex items-center gap-space-md"><div class="hidden lg:flex items-center gap-space-xs px-2.5 py-1 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm"><span class="material-symbols-outlined text-[14px]">verified</span><span>NIRF Ranked Partners</span></div><a class="hidden sm:inline-flex items-center px-space-md py-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-label-md transition-colors" data-path="assessment" href="#">Evaluate Profile</a><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="w-full pt-16 bg-surface"><div class="flex flex-col w-full">
+<!-- CONTEXT & ENGINEERING SPECIFICATION HEADER -->
+<section class="w-full bg-surface-container-low py-space-md shadow-sm">
+<div class="max-w-7xl mx-auto px-margin">
+<div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm">
+<span class="flex items-center justify-center w-6 h-6 rounded bg-primary-container text-on-primary-container font-label-sm text-label-sm font-bold">3.0</span>
+<div class="flex items-center gap-2 font-label-md text-label-md text-on-surface">
+<span class="text-on-surface-variant font-medium">SHELL SPECIFICATION</span>
+<span class="text-outline-variant">/</span>
+<span class="font-semibold text-primary">LAYOUT.TSX / FOOTER COMPONENT</span>
+</div>
+</div>
+<!-- Compliance & Token Badges -->
+<div class="flex flex-wrap items-center gap-2">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-high text-on-surface font-label-sm text-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+            PRD V3.0 Aligned
+          </span>
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px] text-tertiary">palette</span>
+            Production Token Stack
+          </span>
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]">gavel</span>
+            DPDP &amp; IT Rules 2021 Compliant
+          </span>
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary-fixed text-on-primary-fixed font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]">schedule</span>
+            INR (₹) • Asia/Kolkata
+          </span>
+</div>
+</div>
+</div>
+</section>
+<!-- LIVE CANONICAL GLOBAL FOOTER COMPONENT (PRD V3.0 CANONICAL RENDER) -->
+<section class="w-full bg-surface-container-lowest py-space-xl">
+<div class="max-w-7xl mx-auto px-margin">
+<div class="mb-space-lg flex items-center justify-between">
+<div>
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-primary font-bold">Component Preview</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface mt-0.5">Live Canonical Global Shell Footer</h2>
+</div>
+<div class="flex items-center gap-2">
+<span class="flex items-center gap-1 px-3 py-1 rounded-full bg-secondary/10 text-secondary font-label-sm text-label-sm font-semibold">
+<span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span> Production Component Active
+          </span>
+</div>
+</div>
+<!-- THE ACTUAL GLOBAL FOOTER SPECIFICATION ENCLOSURE -->
+<footer aria-label="Global Site Footer" class="w-full bg-surface-container rounded-xl shadow-sm p-space-lg lg:p-space-xl overflow-hidden" role="contentinfo">
+<!-- Primary Brand & Mission Row with Grid Directory -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-xl">
+<!-- Brand & Mission Column (Col 1-4 on Desktop) -->
+<div class="lg:col-span-4 flex flex-col justify-between space-y-space-md">
+<div>
+<div class="flex items-center gap-space-sm mb-space-sm">
+<div class="w-10 h-10 rounded-lg bg-primary-container flex items-center justify-center text-on-primary-container shadow-sm">
+<span class="material-symbols-outlined text-[24px]">rocket_launch</span>
+</div>
+<div>
+<div class="flex items-center gap-1.5">
+<span class="font-headline-sm text-headline-sm font-bold tracking-tight text-on-surface">Dream<span class="text-primary-container">X</span></span>
+<span class="px-2 py-0.5 rounded text-[10px] font-bold tracking-wide uppercase bg-secondary-fixed text-on-secondary-fixed">India Alpha</span>
+</div>
+<p class="font-label-sm text-label-sm text-on-surface-variant font-medium">Outcome-Accountable Career Network</p>
+</div>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed mb-space-md">
+                Bridging India’s Tier-1, Tier-2, and Tier-3 engineering talent with Tier-1 GCCs and unicorn roles through verifiable 1:1 mentorship, rubric-backed diagnostics, and 48-hour deliverable SLAs.
+              </p>
+<!-- Operational Status Indicator -->
+<div class="p-space-sm rounded-lg bg-surface-container-low shadow-sm flex items-center gap-space-sm mb-space-md">
+<div class="relative flex h-3 w-3 shrink-0">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span>
+<span class="relative inline-flex rounded-full h-3 w-3 bg-secondary"></span>
+</div>
+<div class="font-label-sm text-label-sm text-on-surface truncate">
+<span class="font-semibold text-secondary">Operating Live:</span> Bengaluru, Hyderabad, Pune, Gurugram • IST (UTC+05:30)
+                </div>
+</div>
+<!-- Trust Accreditation Badges -->
+<div class="flex flex-wrap gap-2">
+<div class="flex items-center gap-1 px-2.5 py-1 rounded bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[15px] text-primary">verified_user</span>
+<span>ISO 27001 Certified</span>
+</div>
+<div class="flex items-center gap-1 px-2.5 py-1 rounded bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[15px] text-secondary">policy</span>
+<span>DPDP Act 2023</span>
+</div>
+<div class="flex items-center gap-1 px-2.5 py-1 rounded bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[15px] text-tertiary">lock</span>
+<span>PCI-DSS L1 256-Bit</span>
+</div>
+</div>
+</div>
+<!-- Regional Currency Footnote -->
+<div class="pt-space-sm">
+<div class="text-xs font-label-sm text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">currency_rupee</span>
+<span>All marketplace fees listed in INR inclusive of 18% GST (Goods and Services Tax).</span>
+</div>
+</div>
+</div>
+<!-- Directory Links Columns (Col 5-12 on Desktop) -->
+<div class="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-lg">
+<!-- Column 1: Marketplace Services & Catalog -->
+<div>
+<div class="flex items-center justify-between mb-space-sm">
+<h4 class="font-label-md text-label-md font-bold uppercase tracking-wider text-on-surface">Services (8)</h4>
+<span class="px-1.5 py-0.5 rounded text-[10px] bg-primary-fixed text-on-primary-fixed font-bold">Standardized</span>
+</div>
+<ul class="space-y-2 font-body-sm text-body-sm text-on-surface-variant">
+<li>
+<a class="hover:text-primary transition-colors flex items-center justify-between group" href="#">
+<span class="truncate">S01 Resume Review</span>
+<span class="font-label-sm text-label-sm text-on-surface font-semibold group-hover:text-primary">₹599</span>
+</a>
+</li>
+<li>
+<a class="hover:text-primary transition-colors flex items-center justify-between group" href="#">
+<span class="truncate">S02 ATS Optimization</span>
+<span class="font-label-sm text-label-sm text-on-surface font-semibold group-hover:text-primary">₹799</span>
+</a>
+</li>
+<li>
+<a class="hover:text-primary transition-colors flex items-center justify-between group" href="#">
+<span class="truncate">S03 LinkedIn Polish</span>
+<span class="font-label-sm text-label-sm text-on-surface font-semibold group-hover:text-primary">₹499</span>
+</a>
+</li>
+<li>
+<a class="hover:text-primary transition-colors flex items-center justify-between group" href="#">
+<span class="truncate">S04 Portfolio Review</span>
+<span class="font-label-sm text-label-sm text-on-surface font-semibold group-hover:text-primary">₹599</span>
+</a>
+</li>
+<li>
+<a class="hover:text-primary transition-colors flex items-center justify-between group" href="#">
+<span class="truncate">S05 Behavioral Mock</span>
+<span class="font-label-sm text-label-sm text-on-surface font-semibold group-hover:text-primary">₹799</span>
+</a>
+</li>
+<li>
+<a class="hover:text-primary transition-colors flex items-center justify-between group" href="#">
+<span class="truncate">S06 Technical Mock</span>
+<span class="font-label-sm text-label-sm text-on-surface font-semibold group-hover:text-primary">₹999</span>
+</a>
+</li>
+<li>
+<a class="hover:text-primary transition-colors flex items-center justify-between group" href="#">
+<span class="truncate">S08 Salary Negotiation</span>
+<span class="font-label-sm text-label-sm text-on-surface font-semibold group-hover:text-primary">₹699</span>
+</a>
+</li>
+<li>
+<a class="hover:text-primary transition-colors flex items-center justify-between group" href="#">
+<span class="truncate">S10 System/Coding Prep</span>
+<span class="font-label-sm text-label-sm text-on-surface font-semibold group-hover:text-primary">₹999</span>
+</a>
+</li>
+</ul>
+</div>
+<!-- Column 2: Career Readiness Platform -->
+<div>
+<h4 class="font-label-md text-label-md font-bold uppercase tracking-wider text-on-surface mb-space-sm">Diagnostic Platform</h4>
+<ul class="space-y-2.5 font-body-sm text-body-sm text-on-surface-variant">
+<li>
+<a class="hover:text-primary transition-colors flex items-center gap-1.5" href="#">
+<span class="material-symbols-outlined text-[16px] text-primary">assessment</span>
+<span>8-D Diagnostic Rubric</span>
+</a>
+</li>
+<li>
+<a class="hover:text-primary transition-colors flex items-center gap-1.5" href="#">
+<span class="material-symbols-outlined text-[16px] text-tertiary">hub</span>
+<span>Smart Match Protocol</span>
+</a>
+</li>
+<li>
+<a class="hover:text-primary transition-colors flex items-center justify-between" href="#">
+<span>3-Service Bundle</span>
+<span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-secondary-fixed text-on-secondary-fixed">-5% Off</span>
+</a>
+</li>
+<li>
+<a class="hover:text-primary transition-colors" href="#">Candidate Ledger (Audited)</a>
+</li>
+<li>
+<a class="hover:text-primary transition-colors" href="#">Verified Mentor Directory</a>
+</li>
+<li>
+<a class="hover:text-primary transition-colors" href="#">GCC Campus Intake Portal</a>
+</li>
+<li>
+<a class="hover:text-primary transition-colors" href="#">Rubric Benchmarks 2026</a>
+</li>
+</ul>
+</div>
+<!-- Column 3: Company & Mentorship -->
+<div>
+<h4 class="font-label-md text-label-md font-bold uppercase tracking-wider text-on-surface mb-space-sm">Company &amp; Mentors</h4>
+<ul class="space-y-2.5 font-body-sm text-body-sm text-on-surface-variant">
+<li>
+<a class="hover:text-primary transition-colors" href="#">About DreamX India</a>
+</li>
+<li>
+<a class="hover:text-primary transition-colors flex items-center gap-1" href="#">
+<span>Apply as Verified Mentor</span>
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+</a>
+</li>
+<li>
+<a class="hover:text-primary transition-colors" href="#">3-Tier Mentor Vetting</a>
+</li>
+<li>
+<a class="hover:text-primary transition-colors" href="#">Mentor Ethics &amp; Integrity</a>
+</li>
+<li>
+<a class="hover:text-primary transition-colors" href="#">Student Outcome Guarantee</a>
+</li>
+<li>
+<a class="hover:text-primary transition-colors" href="#">Careers at DreamX</a>
+</li>
+<li>
+<a class="hover:text-primary transition-colors" href="#">Press &amp; Impact Reports</a>
+</li>
+</ul>
+</div>
+<!-- Column 4: Trust & Compliance -->
+<div>
+<h4 class="font-label-md text-label-md font-bold uppercase tracking-wider text-on-surface mb-space-sm">Trust &amp; Legal</h4>
+<ul class="space-y-2.5 font-body-sm text-body-sm text-on-surface-variant">
+<li>
+<a class="hover:text-primary transition-colors font-medium text-on-surface" href="#">Refund &amp; Cancellation</a>
+</li>
+<li>
+<a class="hover:text-primary transition-colors" href="#">DPDP Act 2023 Privacy</a>
+</li>
+<li>
+<a class="hover:text-primary transition-colors" href="#">Terms of Service (IN)</a>
+</li>
+<li>
+<a class="hover:text-primary transition-colors flex items-center gap-1 text-secondary font-medium" href="#">
+<span class="material-symbols-outlined text-[15px]">timer</span>
+<span>48h SLA Assurance</span>
+</a>
+</li>
+<li>
+<a class="hover:text-primary transition-colors" href="#">Grievance Redressal Policy</a>
+</li>
+<li>
+<a class="hover:text-primary transition-colors" href="#">Student Protection Charter</a>
+</li>
+<li>
+<a class="hover:text-primary transition-colors" href="#">Security Whitepaper</a>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<!-- STATUTORY INDIAN IT RULES 2021 GRIEVANCE REDRESSAL BOX -->
+<div class="mt-space-xl p-space-md lg:p-space-lg rounded-xl bg-surface-container-low shadow-sm">
+<div class="flex flex-col lg:flex-row lg:items-start justify-between gap-space-md">
+<div class="lg:w-2/3">
+<div class="flex items-center gap-2 mb-1">
+<span class="material-symbols-outlined text-[18px] text-primary">gavel</span>
+<span class="font-label-sm text-label-sm font-bold uppercase tracking-wider text-on-surface">
+                  Statutory Compliance: Rule 3(2) of Information Technology (Intermediary Guidelines and Digital Media Ethics Code) Rules, 2021
+                </span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+                In compliance with the Information Technology Act, 2000 and the Digital Personal Data Protection (DPDP) Act, 2023, the details of the designated Nodal Grievance Redressal Officer for user complaints, platform escalations, and refund disputes are provided below.
+              </p>
+<address class="not-italic mt-space-sm font-body-sm text-body-sm grid grid-cols-1 sm:grid-cols-2 gap-2 text-on-surface">
+<div>
+<span class="text-on-surface-variant font-label-sm text-label-sm block">Designated Officer:</span>
+<span class="font-semibold text-on-surface">Adv. Rameshwar Pillai</span>
+<span class="text-xs text-on-surface-variant block">Nodal Grievance &amp; Data Protection Officer</span>
+</div>
+<div>
+<span class="text-on-surface-variant font-label-sm text-label-sm block">Registered Legal Entity:</span>
+<span class="font-semibold text-on-surface">DreamX Technologies India Pvt. Ltd.</span>
+<span class="text-xs text-on-surface-variant block">CIN: U72900KA2024PTC184920</span>
+</div>
+<div class="sm:col-span-2">
+<span class="text-on-surface-variant font-label-sm text-label-sm block">Official Correspondence Address:</span>
+<span class="text-xs text-on-surface-variant">Level 6, Wing B, Prestige Tech Park, Marathahalli-Sarjapur Outer Ring Road, Kadubeesanahalli, Bengaluru, Karnataka 560103, India</span>
+</div>
+</address>
+</div>
+<!-- Grievance SLA Card -->
+<div class="lg:w-1/3 flex flex-col justify-between p-space-sm rounded-lg bg-surface-container-lowest shadow-sm">
+<div>
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant font-semibold block mb-1">Direct Contact &amp; Statutory SLA</span>
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-[16px] text-primary">mail</span>
+<a class="font-label-md text-label-md font-bold text-primary hover:underline" href="mailto:grievance@dreamx.in">grievance@dreamx.in</a>
+</div>
+<div class="space-y-1 text-xs text-on-surface-variant">
+<div class="flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+<span>Acknowledgment SLA: <strong>Within 24 Hours</strong></span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+<span>Resolution SLA: <strong>Within 15 Calendar Days</strong></span>
+</div>
+</div>
+</div>
+<div class="mt-space-sm pt-space-xs">
+<a class="inline-flex items-center justify-center w-full px-3 py-1.5 rounded-md bg-surface-container hover:bg-surface-container-high text-on-surface font-label-sm text-label-sm font-semibold transition-colors" href="#">
+                  File Formal Platform Grievance
+                </a>
+</div>
+</div>
+</div>
+</div>
+<!-- BOTTOM LEGAL & REGIONAL CONTROLS STRIP -->
+<div class="mt-space-xl pt-space-md flex flex-col md:flex-row items-center justify-between gap-space-md">
+<div class="flex flex-col sm:flex-row items-center gap-space-md text-center sm:text-left">
+<p class="font-label-sm text-label-sm text-on-surface-variant">
+              © 2026 DreamX Technologies India Pvt. Ltd. All rights reserved.
+            </p>
+<div class="hidden sm:block w-1 h-1 rounded-full bg-outline-variant"></div>
+<div class="flex items-center gap-3 text-xs font-label-sm text-on-surface-variant">
+<a class="hover:text-on-surface" href="#">Privacy</a>
+<a class="hover:text-on-surface" href="#">Terms</a>
+<a class="hover:text-on-surface" href="#">Refunds</a>
+<a class="hover:text-on-surface" href="#">Sitemap</a>
+</div>
+</div>
+<!-- Currency & Region Selector Interactive Pill -->
+<div class="flex items-center gap-3">
+<div class="flex items-center gap-1 px-3 py-1.5 rounded-full bg-surface-container-lowest text-on-surface font-label-sm text-label-sm shadow-sm cursor-pointer hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-[16px] text-secondary">payments</span>
+<span class="font-bold">INR (₹)</span>
+<span class="text-on-surface-variant">|</span>
+<span>English (IN)</span>
+<span class="material-symbols-outlined text-[14px] text-on-surface-variant">expand_more</span>
+</div>
+<div class="flex items-center gap-1 text-on-surface-variant">
+<a aria-label="DreamX on LinkedIn" class="w-8 h-8 rounded-full bg-surface-container-lowest flex items-center justify-center hover:text-primary shadow-sm transition-colors" href="#">
+<span class="text-xs font-bold">in</span>
+</a>
+<a aria-label="DreamX on X / Twitter" class="w-8 h-8 rounded-full bg-surface-container-lowest flex items-center justify-center hover:text-primary shadow-sm transition-colors" href="#">
+<span class="text-xs font-bold">𝕏</span>
+</a>
+<a aria-label="DreamX Community on Discord" class="w-8 h-8 rounded-full bg-surface-container-lowest flex items-center justify-center hover:text-primary shadow-sm transition-colors" href="#">
+<span class="material-symbols-outlined text-[16px]">forum</span>
+</a>
+</div>
+</div>
+</div>
+</footer>
+</div>
+</section>
+<!-- SPECIFICATION & RESPONSIVE BEHAVIOR MATRIX -->
+<section class="w-full bg-surface py-space-xl">
+<div class="max-w-7xl mx-auto px-margin">
+<div class="mb-space-lg">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-primary font-bold">Responsive Implementation Matrix</span>
+<h3 class="font-headline-md text-headline-md text-on-surface mt-0.5">Desktop vs. Mobile Footprint &amp; Token Architecture</h3>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-2xl mt-1">
+          The layout.tsx shell guarantees absolute regulatory conformity across desktop, tablet, and mobile viewports with zero viewport overflows.
+        </p>
+</div>
+<!-- Bento Comparison Viewports -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg mb-space-xl">
+<!-- Viewport Specification 1: Desktop Master (7 Cols) -->
+<div class="lg:col-span-7 bg-surface-container-low p-space-lg rounded-xl shadow-sm">
+<div class="flex items-center justify-between mb-space-md">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">desktop_mac</span>
+<h4 class="font-title-md text-title-md font-bold text-on-surface">Desktop Master Behavior (≥ 1200px)</h4>
+</div>
+<span class="font-label-sm text-label-sm px-2 py-0.5 rounded bg-surface-container-high text-on-surface font-semibold">12-Column Grid</span>
+</div>
+<div class="space-y-space-sm font-body-sm text-body-sm text-on-surface-variant">
+<div class="p-space-sm rounded-lg bg-surface-container-lowest shadow-sm">
+<span class="font-semibold text-on-surface block mb-0.5">1. Asymmetric Brand-to-Link Partition</span>
+<p class="text-xs text-on-surface-variant">4 columns dedicated to brand mission, trust accreditations, and IST clock status; 8 columns span a 4-subcolumn standardized directory.</p>
+</div>
+<div class="p-space-sm rounded-lg bg-surface-container-lowest shadow-sm">
+<span class="font-semibold text-on-surface block mb-0.5">2. Service Catalog Price Annotations</span>
+<p class="text-xs text-on-surface-variant">Explicit display of all eight core fixed-price services (S01 through S10) with exact INR tariffs to ensure zero-hidden-cost transparency.</p>
+</div>
+<div class="p-space-sm rounded-lg bg-surface-container-lowest shadow-sm">
+<span class="font-semibold text-on-surface block mb-0.5">3. Dedicated IT Rules 2021 Grievance Box</span>
+<p class="text-xs text-on-surface-variant">Structured two-column panel with lawyer name, CIN, physical Bangalore office address, direct mailto, and statutory response SLAs.</p>
+</div>
+</div>
+</div>
+<!-- Viewport Specification 2: Mobile Drawer & Accordion Preview (5 Cols) -->
+<div class="lg:col-span-5 bg-surface-container-low p-space-lg rounded-xl shadow-sm">
+<div class="flex items-center justify-between mb-space-md">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[20px]">smartphone</span>
+<h4 class="font-title-md text-title-md font-bold text-on-surface">Mobile Reflow (&lt; 768px)</h4>
+</div>
+<span class="font-label-sm text-label-sm px-2 py-0.5 rounded bg-secondary-fixed text-on-secondary-fixed font-semibold">Accordion Flow</span>
+</div>
+<!-- Interactive Mobile Accordion Mockup -->
+<div class="rounded-xl bg-surface-container-lowest p-space-md shadow-sm space-y-2">
+<div class="p-2 rounded bg-surface-container flex items-center justify-between cursor-pointer" onclick="this.nextElementSibling.classList.toggle('hidden')">
+<span class="font-label-sm text-label-sm font-bold text-on-surface">Marketplace Services (8)</span>
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant">expand_more</span>
+</div>
+<div class="hidden px-2 py-1 space-y-1 text-xs text-on-surface-variant">
+<div class="flex justify-between"><span>S01 Resume Review</span><span class="font-bold">₹599</span></div>
+<div class="flex justify-between"><span>S06 Tech Mock</span><span class="font-bold">₹999</span></div>
+<div class="flex justify-between"><span>S08 Negotiation</span><span class="font-bold">₹699</span></div>
+</div>
+<div class="p-2 rounded bg-surface-container flex items-center justify-between cursor-pointer" onclick="this.nextElementSibling.classList.toggle('hidden')">
+<span class="font-label-sm text-label-sm font-bold text-on-surface">Diagnostic Platform</span>
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant">expand_more</span>
+</div>
+<div class="hidden px-2 py-1 space-y-1 text-xs text-on-surface-variant">
+<div>8-D Diagnostic Rubric</div>
+<div>Smart Match Protocol</div>
+<div>Candidate Ledger</div>
+</div>
+<div class="p-2 rounded bg-surface-container flex items-center justify-between cursor-pointer" onclick="this.nextElementSibling.classList.toggle('hidden')">
+<span class="font-label-sm text-label-sm font-bold text-on-surface">Legal &amp; Grievance Officer</span>
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant">expand_more</span>
+</div>
+<div class="hidden px-2 py-1 text-xs text-on-surface-variant">
+<span class="block font-medium text-on-surface">Adv. Rameshwar Pillai (Nodal)</span>
+<span class="block text-primary">grievance@dreamx.in</span>
+</div>
+<div class="pt-2 text-center">
+<span class="text-[11px] text-on-surface-variant block font-label-sm">44px minimum thumb target hit zones</span>
+</div>
+</div>
+</div>
+</div>
+<!-- CODE & ARCHITECTURE BLUEPRINT -->
+<div class="w-full bg-surface-container-lowest rounded-xl shadow-sm p-space-lg mb-space-xl">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm mb-space-md">
+<div>
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-primary font-bold">Implementation Contract</span>
+<h4 class="font-title-md text-title-md font-bold text-on-surface">components/layout/GlobalFooter.tsx</h4>
+</div>
+<div class="flex items-center gap-2">
+<span class="px-2.5 py-1 rounded bg-surface-container font-label-sm text-label-sm text-on-surface-variant font-mono">TypeScript / Next.js 14</span>
+<span class="px-2.5 py-1 rounded bg-primary-fixed font-label-sm text-label-sm text-on-primary-fixed font-semibold">Server Component</span>
+</div>
+</div>
+<div class="relative bg-surface-container-high rounded-lg p-space-md overflow-x-auto text-on-surface font-mono text-xs leading-relaxed">
+<pre class="text-on-surface"><code>import React from 'react';
+import Link from 'next/link';
+
+interface FooterRouteGroup {
+  label: string;
+  badge?: string;
+  items: { title: string; href: string; price?: string; isTag?: boolean }[];
+}
+
+export const GlobalFooter: React.FC = () =&gt; {
+  return (
+    &lt;footer 
+      role="contentinfo" 
+      aria-label="Footer Navigation" 
+      className="w-full bg-surface-container-low pt-space-xl pb-space-lg"
+    &gt;
+      &lt;div className="max-w-7xl mx-auto px-margin"&gt;
+        {/* Brand &amp; Mission Matrix */}
+        &lt;div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-space-xl pb-space-xl"&gt;
+          &lt;div className="lg:col-span-4 space-y-space-md"&gt;
+            {/* Identity, ISO 27001, DPDP badges, Real-time IST Status */}
+          &lt;/div&gt;
+
+          {/* Directory Columns */}
+          &lt;div className="lg:col-span-8 grid grid-cols-2 sm:grid-cols-4 gap-space-lg"&gt;
+            {/* S01-S10 Catalog, 8-D Diagnostic, Mentorship, Legal */}
+          &lt;/div&gt;
+        &lt;/div&gt;
+
+        {/* IT Rules 2021 &amp; DPDP Act Grievance Officer Address Box */}
+        &lt;section aria-label="Statutory Grievance Redressal" className="bg-surface-container p-space-md rounded-xl"&gt;
+          &lt;address className="not-italic text-xs text-on-surface"&gt;
+            Adv. Rameshwar Pillai, Nodal Grievance Redressal Officer
+            DreamX Technologies India Pvt. Ltd. | Level 6, Prestige Tech Park, Bengaluru 560103
+            Email: grievance@dreamx.in | 24h Acknowledgment / 15-Day Resolution
+          &lt;/address&gt;
+        &lt;/section&gt;
+
+        {/* Currency Toggle &amp; Legal Strip */}
+        &lt;div className="pt-space-lg flex flex-col sm:flex-row items-center justify-between"&gt;
+          &lt;p className="font-label-sm text-label-sm text-on-surface-variant"&gt;
+            © 2026 DreamX Technologies India Pvt. Ltd. All rights reserved.
+          &lt;/p&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/footer&gt;
+  );
+};</code></pre>
+</div>
+</div>
+<!-- LEGAL CONTRACT & STATUTORY CLAUSES TRIPLE BENTO -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-lg">
+<!-- Policy Card 1 -->
+<div class="p-space-md rounded-xl bg-surface-container-low shadow-sm flex flex-col justify-between">
+<div>
+<div class="flex items-center gap-2 mb-space-xs">
+<span class="material-symbols-outlined text-[18px] text-primary">currency_exchange</span>
+<h5 class="font-title-md text-title-md font-bold text-on-surface">Cancellation &amp; Refund Policy</h5>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed mb-space-sm">
+              Strict 100% automated refund guarantee if canceled &gt;24 hours before a 1:1 session. 80% post-session refund if diagnostic deliverable does not satisfy the published 8-Dimension Rubric standard, substantiated within 48 hours.
+            </p>
+</div>
+<span class="inline-flex items-center gap-1 font-label-sm text-label-sm text-primary font-bold">
+            Read Policy Section 4.2 <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+</span>
+</div>
+<!-- Policy Card 2 -->
+<div class="p-space-md rounded-xl bg-surface-container-low shadow-sm flex flex-col justify-between">
+<div>
+<div class="flex items-center gap-2 mb-space-xs">
+<span class="material-symbols-outlined text-[18px] text-secondary">security</span>
+<h5 class="font-title-md text-title-md font-bold text-on-surface">DPDP Act 2023 Rules</h5>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed mb-space-sm">
+              Resumes, GitHub audit logs, and technical assessment recordings are encrypted in transit and at rest within India (AWS ap-south-1). No candidate data is traded or shared with unverified recruiters.
+            </p>
+</div>
+<span class="inline-flex items-center gap-1 font-label-sm text-label-sm text-secondary font-bold">
+            Data Principal Rights <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+</span>
+</div>
+<!-- Policy Card 3 -->
+<div class="p-space-md rounded-xl bg-surface-container-low shadow-sm flex flex-col justify-between">
+<div>
+<div class="flex items-center gap-2 mb-space-xs">
+<span class="material-symbols-outlined text-[18px] text-tertiary">support_agent</span>
+<h5 class="font-title-md text-title-md font-bold text-on-surface">48h Deliverable SLA</h5>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed mb-space-sm">
+              Every mock interview or resume teardown concludes with an annotated rubric report delivered within 48 hours. Failure to meet the SLA automatically triggers a 50% credit refund to the candidate wallet.
+            </p>
+</div>
+<span class="inline-flex items-center gap-1 font-label-sm text-label-sm text-tertiary font-bold">
+            SLA Ledger Verification <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+</span>
+</div>
+</div>
+</div>
+</section>
+</div></main><footer class="w-full bg-surface-container-low pt-space-xl pb-space-lg"><div class="max-w-7xl mx-auto px-margin"><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-space-xl pb-space-xl"><div class="lg:col-span-2"><div class="flex items-center gap-space-sm mb-space-md"><div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">rocket_launch</span></div><span class="font-headline-sm text-headline-sm font-bold tracking-tight text-on-surface">Dream<span class="text-primary">X</span></span></div><p class="font-body-sm text-body-sm text-on-surface-variant max-w-sm mb-space-lg">Institutional career acceleration engine bridging India's graduates with top tech ecosystems through transparent, outcome-backed pathways and verified industry endorsements.</p><div class="flex items-center gap-space-sm"><div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container text-on-surface-variant font-label-sm text-label-sm"><span class="material-symbols-outlined text-[16px] text-secondary">shield</span>Audited Placement Ledger</div><div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container text-on-surface-variant font-label-sm text-label-sm"><span class="material-symbols-outlined text-[16px] text-primary">lock</span>Zero-Upfront ISAs</div></div></div><div><h4 class="font-label-md text-label-md font-semibold text-on-surface mb-space-md">Career Tracks</h4><ul class="space-y-space-sm font-body-sm text-body-sm"><li class="text-on-surface-variant hover:text-on-surface cursor-pointer">Full-Stack Engineering</li><li class="text-on-surface-variant hover:text-on-surface cursor-pointer">Data Science &amp; MLOps</li><li class="text-on-surface-variant hover:text-on-surface cursor-pointer">Product Management</li><li class="text-on-surface-variant hover:text-on-surface cursor-pointer">DevOps &amp; Cloud Infra</li><li class="text-on-surface-variant hover:text-on-surface cursor-pointer">Enterprise Fintech Ops</li></ul></div><div><h4 class="font-label-md text-label-md font-semibold text-on-surface mb-space-md">Proof &amp; Transparency</h4><ul class="space-y-space-sm font-body-sm text-body-sm"><li class="text-on-surface-variant hover:text-on-surface cursor-pointer">Placement Audit 2024</li><li class="text-on-surface-variant hover:text-on-surface cursor-pointer">Salary Benchmarks (IN)</li><li class="text-on-surface-variant hover:text-on-surface cursor-pointer">Mentor Code of Conduct</li><li class="text-on-surface-variant hover:text-on-surface cursor-pointer">ISA Repayment Calculator</li><li class="text-on-surface-variant hover:text-on-surface cursor-pointer">Regulatory Compliance</li></ul></div><div><h4 class="font-label-md text-label-md font-semibold text-on-surface mb-space-md">Institutional</h4><ul class="space-y-space-sm font-body-sm text-body-sm"><li class="text-on-surface-variant hover:text-on-surface cursor-pointer">Partner Campus Network</li><li class="text-on-surface-variant hover:text-on-surface cursor-pointer">Corporate Hiring Portal</li><li class="text-on-surface-variant hover:text-on-surface cursor-pointer">Accreditation Council</li><li class="text-on-surface-variant hover:text-on-surface cursor-pointer">Security &amp; Data Privacy</li><li class="text-on-surface-variant hover:text-on-surface cursor-pointer">Help Desk &amp; Grievance</li></ul></div></div><div class="pt-space-lg flex flex-col sm:flex-row items-center justify-between gap-space-md bg-surface-container-low"><p class="font-label-sm text-label-sm text-on-surface-variant">© 2025 DreamX Career Marketplace. All metrics independently verified.</p><div class="flex items-center gap-space-lg font-label-sm text-label-sm text-on-surface-variant"><span class="hover:text-on-surface cursor-pointer">Terms of Service</span><span class="hover:text-on-surface cursor-pointer">Privacy Policy</span><span class="hover:text-on-surface cursor-pointer">ISA Disclosure</span><span class="hover:text-on-surface cursor-pointer">Trust &amp; Safety</span></div></div></div></footer></body></html>

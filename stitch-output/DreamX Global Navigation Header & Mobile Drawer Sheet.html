@@ -1,0 +1,684 @@
+﻿<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>DreamX — Design System &amp; UI Kit Board</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#5145CD',
+              700: '#4035B3',
+              900: '#1e1b4b',
+            },
+            neutral: {
+              surface: '#FFFFFF',
+              muted: '#F7F7F8',
+              dim: '#EBEBED',
+              border: '#E7E7EB',
+              textPrimary: '#171717',
+              textSecondary: '#66666F',
+              textMuted: '#8B8B95',
+            },
+            semantic: {
+              success: '#16834A',
+              successBg: '#EBF7EE',
+              warning: '#A7670B',
+              warningBg: '#FEF6E7',
+              danger: '#C43B3B',
+              dangerBg: '#FDF2F2',
+              info: '#2864C5',
+              infoBg: '#EEF4FD',
+            }
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #FAFAFC; }
+    .tnum { font-feature-settings: "tnum"; font-variant-numeric: tabular-nums; }
+  </style>
+<meta content="web_standard" name="shell-type"/></head>
+<body class="text-neutral-textPrimary antialiased min-h-screen pb-24">
+<!-- Header Banner -->
+<header class="bg-white border-b border-neutral-border sticky top-0 z-50 shadow-sm">
+<div class="max-w-7xl mx-auto px-6 h-18 flex items-center justify-between">
+<div class="flex items-center space-x-4">
+<div class="flex items-center space-x-2">
+<div class="w-9 h-9 rounded-xl bg-brand-600 flex items-center justify-center text-white font-extrabold text-xl shadow-sm">D</div>
+<span class="text-xl font-bold tracking-tight text-neutral-textPrimary">Dream<span class="text-brand-600">X</span></span>
+</div>
+<span class="h-5 w-px bg-neutral-border"></span>
+<span class="text-xs font-semibold tracking-wider uppercase px-2.5 py-1 rounded bg-brand-50 text-brand-600 border border-brand-100">
+          UI Kit &amp; Design System v1.0
+        </span>
+</div>
+<div class="flex items-center space-x-4 text-xs font-medium text-neutral-textSecondary">
+<span class="flex items-center gap-1.5 bg-neutral-muted px-3 py-1.5 rounded-md border border-neutral-border">
+<span class="w-2 h-2 rounded-full bg-semantic-success"></span>
+          Production Tokens • India (INR ₹)
+        </span>
+<span class="text-neutral-textMuted">Calm Horizon Archetype</span>
+</div>
+</div>
+</header>
+<main class="max-w-7xl mx-auto px-6 pt-10 space-y-16"><div class="flex flex-col w-full">
+<!-- Top Meta / Intro Bar -->
+<section class="mb-10">
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6">
+<div class="space-y-2">
+<div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary-fixed text-primary font-label-sm text-label-sm tracking-wide">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+          SHELL SPECIFICATION • LAYOUT.TSX
+        </div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Global Navigation &amp; Mobile Sheet</h1>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-3xl">
+          Complete component matrix for DreamX's persistent navigation layer: unauthenticated guest header, authenticated executive/learner sessions, sticky pinned glassmorphism, and the high-conversion mobile accessibility drawer.
+        </p>
+</div>
+<!-- Quick Jump Segment -->
+<div class="flex items-center gap-2 bg-surface-container p-1 rounded-xl">
+<a class="px-3 py-2 rounded-lg bg-surface-container-lowest text-on-surface font-label-md text-label-md shadow-sm transition hover:text-primary" href="#desktop-variants">
+          Desktop States
+        </a>
+<a class="px-3 py-2 rounded-lg text-on-surface-variant font-label-md text-label-md transition hover:text-on-surface" href="#mobile-drawer">
+          Mobile Sheet
+        </a>
+<a class="px-3 py-2 rounded-lg text-on-surface-variant font-label-md text-label-md transition hover:text-on-surface" href="#spec-panel">
+          Dev Tokens &amp; a11y
+        </a>
+</div>
+</div>
+</section>
+<!-- SECTION 1: Desktop Navigation Variants -->
+<section class="space-y-10" id="desktop-variants">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="w-8 h-8 rounded-lg bg-primary-fixed text-primary font-headline-sm text-headline-sm flex items-center justify-center font-bold">01</span>
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface">Desktop Header States (≥ 1024px)</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Structured 12-column grid layout across guest, pinned sticky, and active session modes.</p>
+</div>
+</div>
+<span class="font-label-sm text-label-sm px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant">Breakpoints: lg (1024px), xl (1280px)</span>
+</div>
+<!-- State A: Default Public / Guest State -->
+<div class="bg-surface-container-lowest rounded-2xl p-6 shadow-sm space-y-4">
+<div class="flex items-center justify-between pb-3">
+<div class="flex items-center gap-2">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-primary font-semibold">Variant A</span>
+<span class="text-on-surface-variant font-body-sm text-body-sm">• Public Guest View (Unauthenticated)</span>
+</div>
+<div class="flex items-center gap-2 text-on-surface-variant font-label-sm text-label-sm">
+<span>Container: max-w-7xl</span>
+<span>•</span>
+<span>Base Height: 72px (h-18)</span>
+</div>
+</div>
+<!-- Live Mockup A -->
+<div class="bg-surface-bright rounded-xl p-4 overflow-x-auto shadow-sm">
+<div class="w-full bg-surface-container-lowest rounded-xl px-6 py-4 flex items-center justify-between shadow-sm min-w-[960px]">
+<!-- Brand Logo -->
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-primary-container text-on-primary flex items-center justify-center font-display-lg text-metric-val shadow-sm">
+              D
+            </div>
+<div class="flex flex-col">
+<div class="flex items-center gap-1.5">
+<span class="font-headline-sm text-headline-sm text-on-surface font-bold tracking-tight">Dream<span class="text-primary-container">X</span></span>
+<span class="px-1.5 py-0.5 rounded bg-primary-fixed text-primary font-label-sm text-label-sm font-semibold">PRO</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant tracking-normal">Outcome-Accountable Career Network</span>
+</div>
+</div>
+<!-- Main Nav Links -->
+<nav aria-label="Main Navigation" class="flex items-center gap-7">
+<a class="font-label-md text-label-md text-on-surface font-semibold hover:text-primary transition" href="#">How It Works</a>
+<!-- Dropdown Pill Item -->
+<div class="relative group">
+<button class="flex items-center gap-1.5 font-label-md text-label-md text-on-surface-variant hover:text-primary transition">
+<span>Services</span>
+<span class="material-symbols-outlined text-base">expand_more</span>
+<span class="px-1.5 py-0.2 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-bold">14</span>
+</button>
+</div>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition" href="#">Mentors</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition flex items-center gap-1" href="#">
+<span>Readiness Model</span>
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition" href="#">Membership</a>
+</nav>
+<!-- Right Controls -->
+<div class="flex items-center gap-3.5">
+<!-- Search Trigger -->
+<button aria-label="Search catalog" class="w-9 h-9 rounded-lg bg-surface-container flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition">
+<span class="material-symbols-outlined text-lg">search</span>
+</button>
+<!-- Region Pill -->
+<div class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-surface-container text-on-surface font-label-sm text-label-sm font-semibold">
+<span class="text-base">🇮🇳</span>
+<span>INR (₹)</span>
+</div>
+<!-- Sign In Link -->
+<a class="font-label-md text-label-md text-on-surface font-semibold px-2 hover:text-primary transition" href="#">
+              Sign In
+            </a>
+<!-- Primary CTA -->
+<button class="px-4 py-2 rounded-lg bg-primary-container text-on-primary font-label-md text-label-md font-semibold hover:bg-primary transition shadow-sm flex items-center gap-1.5">
+<span>Get Started</span>
+<span class="material-symbols-outlined text-base">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- State B: Scrolled / Sticky Compact Glassmorphism State -->
+<div class="bg-surface-container-lowest rounded-2xl p-6 shadow-sm space-y-4">
+<div class="flex items-center justify-between pb-3">
+<div class="flex items-center gap-2">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-tertiary font-semibold">Variant B</span>
+<span class="text-on-surface-variant font-body-sm text-body-sm">• Scrolled Pinned Bar (Compact Frost Layer)</span>
+</div>
+<span class="font-label-sm text-label-sm px-2.5 py-1 rounded bg-surface-container text-on-surface-variant">
+          y-offset &gt; 80px • backdrop-blur-md • h-15
+        </span>
+</div>
+<!-- Live Mockup B -->
+<div class="bg-surface-container-low rounded-xl p-8 relative overflow-hidden">
+<!-- Background context dummy text to demonstrate blur -->
+<div class="absolute inset-0 p-6 opacity-30 select-none pointer-events-none flex flex-wrap gap-4 text-on-surface-variant font-body-sm text-body-sm">
+<span>Strategic Placements • Senior Backend Engineering Track • INR 28,00,000 CTC Benchmark • Outcome Assurance Policy • Bangalore Tech Hub • Tier 1 Product Partners</span>
+<span>8-Tier Diagnostic Readiness Assessment • 48h SLA Resume Turnaround • Mock Interview Diagnostic Scores • Verification Ledger #DX-8821</span>
+</div>
+<!-- Sticky Floating Header -->
+<div class="relative max-w-6xl mx-auto bg-surface-bright/90 backdrop-blur-md rounded-2xl px-5 py-2.5 shadow-md flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-lg bg-primary-container text-on-primary flex items-center justify-center font-headline-sm text-headline-sm font-bold">
+              D
+            </div>
+<span class="font-title-md text-title-md text-on-surface font-bold tracking-tight">Dream<span class="text-primary-container">X</span></span>
+</div>
+<div class="flex items-center gap-6">
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary font-medium" href="#">How It Works</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary font-medium" href="#">Services</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary font-medium" href="#">Mentors</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary font-medium" href="#">Readiness Model</a>
+</div>
+<div class="flex items-center gap-3">
+<div class="flex items-center gap-2 text-on-surface-variant font-label-sm text-label-sm bg-surface-container px-2.5 py-1 rounded-md">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span>184 Mentors Online</span>
+</div>
+<button class="px-3.5 py-1.5 rounded-lg bg-primary-container text-on-primary font-label-sm text-label-sm font-semibold hover:bg-primary transition shadow-sm">
+              Apply Now
+            </button>
+</div>
+</div>
+</div>
+</div>
+<!-- State C: Authenticated Session (Learner / Fellow View) -->
+<div class="bg-surface-container-lowest rounded-2xl p-6 shadow-sm space-y-4">
+<div class="flex items-center justify-between pb-3">
+<div class="flex items-center gap-2">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-secondary font-semibold">Variant C</span>
+<span class="text-on-surface-variant font-body-sm text-body-sm">• Authenticated Candidate / Member Session</span>
+</div>
+<div class="flex items-center gap-2 text-on-surface-variant font-label-sm text-label-sm">
+<span class="px-2 py-0.5 rounded bg-secondary-container text-on-secondary-container font-semibold">Cohort 14 Active</span>
+<span>Role: SDE-2 Fellow</span>
+</div>
+</div>
+<!-- Live Mockup C -->
+<div class="bg-surface-bright rounded-xl p-4 overflow-x-auto shadow-sm">
+<div class="w-full bg-surface-container-lowest rounded-xl px-6 py-3.5 flex items-center justify-between shadow-sm min-w-[960px]">
+<div class="flex items-center gap-8">
+<!-- Brand -->
+<div class="flex items-center gap-2.5">
+<div class="w-9 h-9 rounded-xl bg-primary-container text-on-primary flex items-center justify-center font-title-md text-title-md font-bold">
+                D
+              </div>
+<span class="font-title-md text-title-md text-on-surface font-bold">Dream<span class="text-primary-container">X</span></span>
+</div>
+<!-- Workspace Context Switcher -->
+<div class="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-surface-container">
+<span class="material-symbols-outlined text-sm text-primary">school</span>
+<span class="font-label-sm text-label-sm text-on-surface font-semibold">Track: Fullstack Systems</span>
+<span class="material-symbols-outlined text-sm text-on-surface-variant">unfold_more</span>
+</div>
+<!-- Candidate Workspace Nav -->
+<nav class="flex items-center gap-6">
+<a class="font-label-md text-label-md text-primary font-semibold relative py-1" href="#">
+                Dashboard
+                <span class="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full"></span>
+</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface" href="#">Curriculum &amp; Labs</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface flex items-center gap-1.5" href="#">
+<span>1:1 Sessions</span>
+<span class="w-2 h-2 rounded-full bg-error"></span>
+</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface" href="#">Partner Referrals</a>
+</nav>
+</div>
+<!-- User Controls -->
+<div class="flex items-center gap-4">
+<!-- Readiness Score Indicator -->
+<div class="flex items-center gap-2 bg-surface-container px-3 py-1.5 rounded-lg">
+<div class="text-right">
+<div class="font-label-sm text-label-sm text-on-surface-variant leading-none">Readiness</div>
+<div class="font-label-md text-label-md text-on-surface font-bold leading-tight">84 / 100</div>
+</div>
+<!-- Mini SVG Radial -->
+<svg class="w-7 h-7 text-secondary" viewbox="0 0 36 36">
+<path class="text-surface-variant" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="4"></path>
+<path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-dasharray="84, 100" stroke-linecap="round" stroke-width="4"></path>
+</svg>
+</div>
+<!-- Notifications -->
+<button aria-label="View notifications" class="relative w-9 h-9 rounded-lg bg-surface-container flex items-center justify-center text-on-surface-variant hover:text-on-surface">
+<span class="material-symbols-outlined text-lg">notifications</span>
+<span class="absolute top-1.5 right-1.5 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<!-- Profile Menu -->
+<div class="flex items-center gap-2.5 pl-2 cursor-pointer">
+<div class="w-9 h-9 rounded-full bg-surface-container overflow-hidden flex items-center justify-center font-bold text-primary text-body-sm">
+<img class="w-full h-full object-cover" data-alt="Professional studio portrait of an Indian software engineer with soft studio lighting, clean background, confident friendly expression, modern tech workspace aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCpuQeYmJsFa9ltprcnEpM5954OmCC8mJjd9J_rjGeToXnBz0R3tCw-BP8pfMZErtKB6If3WJ39LKjPgb-kc8OOj8G1PvlPa1HEOEO-cO3UlyuVXLrPWPPwl1DBkASThTrxqC1Y1RjPHctiSVEm_fC8tPgTBziK7QZ5r1c6W9LLHk3HztE1DWBFy-sxwqDhzQ-wpoiToHaO29vFmdtnPlHrABW-xvZcY1tFP0VrXGFc"/>
+</div>
+<div class="flex flex-col text-left">
+<div class="flex items-center gap-1">
+<span class="font-label-sm text-label-sm font-semibold text-on-surface">Arjun Nair</span>
+<span class="material-symbols-outlined text-xs text-on-surface-variant">check_circle</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant text-[11px] leading-tight">Pro Plan • 5% off</span>
+</div>
+<span class="material-symbols-outlined text-sm text-on-surface-variant">keyboard_arrow_down</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- SECTION 2: Interactive Mobile Navigation Drawer Showcase -->
+<section class="mt-16 space-y-8" id="mobile-drawer">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="w-8 h-8 rounded-lg bg-secondary-container text-on-secondary-container font-headline-sm text-headline-sm flex items-center justify-center font-bold">02</span>
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface">Mobile Navigation Drawer Specification (&lt; 768px)</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Slide-out sheet with high-density target geometry, quick currency toggle, and legal grievance tags.</p>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-full bg-secondary"></span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">WCAG 2.1 AA Compliant (48px Touch Zones)</span>
+</div>
+</div>
+<!-- Dual Layout Viewport: Mobile Trigger Shell + Open Drawer Side-by-Side -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+<!-- Column 1: Mobile Header Bar (Closed State Presentation) -->
+<div class="lg:col-span-5 space-y-6">
+<div class="bg-surface-container-lowest rounded-2xl p-6 shadow-sm space-y-4">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-primary font-semibold">Viewport Frame</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">390px × 844px (iPhone 14 / Standard Mobile)</span>
+</div>
+<!-- Smartphone Shell Simulation (Header Closed) -->
+<div class="bg-surface-container rounded-3xl p-3 shadow-inner max-w-sm mx-auto">
+<div class="bg-surface-bright rounded-2xl overflow-hidden shadow-sm">
+<!-- Mobile Bar -->
+<div class="bg-surface-container-lowest px-4 py-3 flex items-center justify-between shadow-xs">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 rounded-lg bg-primary-container text-on-primary flex items-center justify-center font-bold text-body-md">
+                    D
+                  </div>
+<span class="font-title-md text-title-md text-on-surface font-bold">Dream<span class="text-primary-container">X</span></span>
+</div>
+<div class="flex items-center gap-2">
+<button class="w-9 h-9 rounded-lg bg-surface-container flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined text-lg">search</span>
+</button>
+<button aria-label="Open Navigation Drawer" class="w-9 h-9 rounded-lg bg-primary-fixed text-primary flex items-center justify-center font-semibold hover:bg-primary hover:text-on-primary transition" id="open-drawer-btn">
+<span class="material-symbols-outlined text-xl">menu</span>
+</button>
+</div>
+</div>
+<!-- Fake Page Body -->
+<div class="p-4 space-y-3">
+<div class="h-28 rounded-xl bg-surface-container-low p-3 flex flex-col justify-end">
+<span class="font-label-sm text-label-sm text-secondary font-semibold">Outcome Guarantee</span>
+<span class="font-title-md text-title-md text-on-surface font-bold">Accelerate your career in 90 days</span>
+</div>
+<div class="h-10 rounded-lg bg-surface-container"></div>
+<div class="h-10 rounded-lg bg-surface-container"></div>
+<p class="font-body-sm text-body-sm text-on-surface-variant text-center pt-2">Tap hamburger icon above to open sheet preview.</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Value Callout Card -->
+<div class="bg-surface-container-low rounded-2xl p-5 space-y-3">
+<div class="flex items-center gap-2 text-primary">
+<span class="material-symbols-outlined text-lg">verified</span>
+<span class="font-label-sm text-label-sm font-semibold uppercase tracking-wider">Drawer Value Architecture</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+            Unlike standard navigation menus, the DreamX mobile drawer integrates a persistent trust badge, instant INR/USD currency switch, 48-hour SLA deliverable counter, and statutory Indian IT compliance metadata in a single scrollable drawer.
+          </p>
+</div>
+</div>
+<!-- Column 2: Open Mobile Sheet Overlay Simulation -->
+<div class="lg:col-span-7 bg-inverse-surface/60 rounded-3xl p-4 sm:p-8 flex justify-center items-center backdrop-blur-xs min-h-[740px]">
+<!-- Sheet Container -->
+<div class="w-full max-w-md bg-surface-container-lowest rounded-2xl shadow-xl flex flex-col overflow-hidden animate-in">
+<!-- Sheet Header -->
+<div class="px-5 py-4 bg-surface-bright flex items-center justify-between">
+<div class="flex items-center gap-2.5">
+<div class="w-8 h-8 rounded-xl bg-primary-container text-on-primary flex items-center justify-center font-bold text-headline-sm">
+                D
+              </div>
+<div class="flex flex-col">
+<span class="font-title-md text-title-md text-on-surface font-bold leading-tight">Dream<span class="text-primary-container">X</span></span>
+<span class="font-label-sm text-label-sm text-on-surface-variant text-[11px]">v1.0 • India Hub</span>
+</div>
+</div>
+<!-- Region + Dismiss -->
+<div class="flex items-center gap-2">
+<span class="px-2 py-1 rounded bg-surface-container font-label-sm text-label-sm text-on-surface font-medium flex items-center gap-1">
+<span>🇮🇳</span>
+<span>INR ₹</span>
+</span>
+<button aria-label="Close Drawer" class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant hover:text-on-surface transition">
+<span class="material-symbols-outlined text-base">close</span>
+</button>
+</div>
+</div>
+<!-- Highlight Banner inside Drawer -->
+<div class="bg-primary-fixed/60 px-5 py-3 flex items-center gap-3">
+<span class="material-symbols-outlined text-primary text-xl">verified_user</span>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-primary font-bold">Outcome-Accountable Guarantee</span>
+<span class="font-body-sm text-body-sm text-on-primary-fixed-variant text-[12px] leading-tight">Verified Indian Mentors • 48h Deliverables</span>
+</div>
+</div>
+<!-- Drawer Navigation Stack (Interactive Touch Zones) -->
+<div class="px-4 py-4 space-y-1.5 flex-1 overflow-y-auto max-h-[380px]">
+<a class="flex items-center justify-between p-3 rounded-xl hover:bg-surface-container transition group" href="#">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-lg bg-surface-container flex items-center justify-center text-on-surface-variant group-hover:bg-primary-fixed group-hover:text-primary transition">
+<span class="material-symbols-outlined text-lg">route</span>
+</div>
+<div>
+<div class="font-title-md text-title-md text-on-surface font-semibold group-hover:text-primary transition">How It Works</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant text-[12px]">The 90-day structured roadmap</div>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant text-base">chevron_right</span>
+</a>
+<a class="flex items-center justify-between p-3 rounded-xl bg-surface-container-low transition group" href="#">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-lg bg-primary-fixed text-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-lg">category</span>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<span class="font-title-md text-title-md text-on-surface font-semibold">Services &amp; Catalog</span>
+<span class="px-1.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm text-[10px] font-bold">14 NEW</span>
+</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant text-[12px]">Mock interviews, resume audit &amp; referrals</div>
+</div>
+</div>
+<span class="material-symbols-outlined text-primary text-base">expand_more</span>
+</a>
+<!-- Nested Services Submenu Preview -->
+<div class="pl-12 pr-2 py-1 space-y-1">
+<a class="block py-1.5 px-3 rounded-lg text-on-surface-variant hover:text-primary font-label-sm text-label-sm hover:bg-surface-container" href="#">
+                Resume Diagnostic &amp; ATS Rewrite
+              </a>
+<a class="block py-1.5 px-3 rounded-lg text-on-surface-variant hover:text-primary font-label-sm text-label-sm hover:bg-surface-container" href="#">
+                1:1 System Design with Staff Eng
+              </a>
+<a class="block py-1.5 px-3 rounded-lg text-on-surface-variant hover:text-primary font-label-sm text-label-sm hover:bg-surface-container" href="#">
+                Salary Negotiation &amp; Offer Benchmark
+              </a>
+</div>
+<a class="flex items-center justify-between p-3 rounded-xl hover:bg-surface-container transition group" href="#">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-lg bg-surface-container flex items-center justify-center text-on-surface-variant group-hover:bg-primary-fixed group-hover:text-primary transition">
+<span class="material-symbols-outlined text-lg">supervisor_account</span>
+</div>
+<div>
+<div class="font-title-md text-title-md text-on-surface font-semibold group-hover:text-primary transition">Verified Mentors</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant text-[12px]">Top 1% leaders from Google, Uber &amp; Swiggy</div>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant text-base">chevron_right</span>
+</a>
+<a class="flex items-center justify-between p-3 rounded-xl hover:bg-surface-container transition group" href="#">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-lg bg-surface-container flex items-center justify-center text-on-surface-variant group-hover:bg-primary-fixed group-hover:text-primary transition">
+<span class="material-symbols-outlined text-lg">radar</span>
+</div>
+<div>
+<div class="font-title-md text-title-md text-on-surface font-semibold group-hover:text-primary transition">8-Dimension Readiness</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant text-[12px]">Take the free algorithmic assessment</div>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant text-base">chevron_right</span>
+</a>
+<a class="flex items-center justify-between p-3 rounded-xl hover:bg-surface-container transition group" href="#">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-lg bg-surface-container flex items-center justify-center text-on-surface-variant group-hover:bg-primary-fixed group-hover:text-primary transition">
+<span class="material-symbols-outlined text-lg">card_membership</span>
+</div>
+<div>
+<div class="font-title-md text-title-md text-on-surface font-semibold group-hover:text-primary transition">Membership &amp; Bundles</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant text-[12px]">Lifetime network &amp; career guarantee</div>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant text-base">chevron_right</span>
+</a>
+</div>
+<!-- Drawer Footer & Auth CTAs -->
+<div class="p-5 bg-surface-bright space-y-3">
+<div class="grid grid-cols-2 gap-2">
+<button class="w-full py-2.5 rounded-lg bg-surface-container text-on-surface font-label-md text-label-md font-semibold hover:bg-surface-container-high transition">
+                Sign In
+              </button>
+<button class="w-full py-2.5 rounded-lg bg-primary-container text-on-primary font-label-md text-label-md font-semibold hover:bg-primary transition shadow-sm">
+                Get Started
+              </button>
+</div>
+<!-- Regulatory & Timezone Footnote -->
+<div class="flex items-center justify-between pt-2 text-on-surface-variant font-label-sm text-label-sm text-[11px]">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-xs">gavel</span>
+                IT Rules 2021 Grievance Officer
+              </span>
+<span>Asia/Kolkata (IST)</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- SECTION 3: Developer & Design Tokens Annotation Panel -->
+<section class="mt-16 space-y-8" id="spec-panel">
+<div class="flex items-center gap-3">
+<span class="w-8 h-8 rounded-lg bg-surface-variant text-on-surface-variant font-headline-sm text-headline-sm flex items-center justify-center font-bold">03</span>
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface">layout.tsx Implementation Matrix</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Production Next.js App Router guidelines, accessibility contracts, and z-index stratification.</p>
+</div>
+</div>
+<!-- 3-Column Bento Architecture -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Card 1: Breakpoint & Responsiveness -->
+<div class="bg-surface-container-lowest rounded-2xl p-6 shadow-sm space-y-4">
+<div class="flex items-center gap-2 text-primary">
+<span class="material-symbols-outlined">devices</span>
+<h3 class="font-title-md text-title-md font-bold text-on-surface">Breakpoint Standards</h3>
+</div>
+<div class="space-y-3">
+<div class="p-3 rounded-lg bg-surface-container-low space-y-1">
+<div class="flex justify-between items-center">
+<span class="font-label-sm text-label-sm font-bold text-on-surface">Desktop (≥ 1024px)</span>
+<span class="font-label-sm text-label-sm text-secondary font-semibold">lg:flex</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Full horizontal nav links, search bar, regional INR currency pill, sign-in, and primary CTA.</p>
+</div>
+<div class="p-3 rounded-lg bg-surface-container-low space-y-1">
+<div class="flex justify-between items-center">
+<span class="font-label-sm text-label-sm font-bold text-on-surface">Tablet (768px - 1023px)</span>
+<span class="font-label-sm text-label-sm text-tertiary font-semibold">md:hidden</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Hides secondary link labels; collapses catalog to icon pills. Hamburger drawer available as secondary fallback.</p>
+</div>
+<div class="p-3 rounded-lg bg-surface-container-low space-y-1">
+<div class="flex justify-between items-center">
+<span class="font-label-sm text-label-sm font-bold text-on-surface">Mobile (&lt; 768px)</span>
+<span class="font-label-sm text-label-sm text-primary font-semibold">block</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Compact logo + search icon + hamburger trigger. Drawer expands to 85vw (max-w-md).</p>
+</div>
+</div>
+</div>
+<!-- Card 2: A11y & ARIA Spec -->
+<div class="bg-surface-container-lowest rounded-2xl p-6 shadow-sm space-y-4">
+<div class="flex items-center gap-2 text-secondary">
+<span class="material-symbols-outlined">accessibility_new</span>
+<h3 class="font-title-md text-title-md font-bold text-on-surface">Accessibility Contract</h3>
+</div>
+<div class="space-y-2.5 font-body-sm text-body-sm text-on-surface-variant">
+<div class="flex items-start gap-2">
+<span class="material-symbols-outlined text-sm text-secondary mt-1">check_circle</span>
+<div>
+<strong class="text-on-surface font-label-md text-label-md">aria-expanded:</strong>
+              Dynamic boolean tied to hamburger state; reflects sheet visibility.
+            </div>
+</div>
+<div class="flex items-start gap-2">
+<span class="material-symbols-outlined text-sm text-secondary mt-1">check_circle</span>
+<div>
+<strong class="text-on-surface font-label-md text-label-md">Focus Trapping:</strong>
+              Drawer traps Tab focus on mount; auto-focuses first focusable link.
+            </div>
+</div>
+<div class="flex items-start gap-2">
+<span class="material-symbols-outlined text-sm text-secondary mt-1">check_circle</span>
+<div>
+<strong class="text-on-surface font-label-md text-label-md">ESC Listener:</strong>
+              Listens for <code class="px-1 py-0.5 rounded bg-surface-container font-mono text-xs">Escape</code> key to collapse drawer and return focus to trigger button.
+            </div>
+</div>
+<div class="flex items-start gap-2">
+<span class="material-symbols-outlined text-sm text-secondary mt-1">check_circle</span>
+<div>
+<strong class="text-on-surface font-label-md text-label-md">role="dialog" &amp; aria-modal:</strong>
+              Prevents screen reader traversal into obscured canvas elements behind overlay.
+            </div>
+</div>
+</div>
+</div>
+<!-- Card 3: Layering & Tokens -->
+<div class="bg-surface-container-lowest rounded-2xl p-6 shadow-sm space-y-4">
+<div class="flex items-center gap-2 text-tertiary">
+<span class="material-symbols-outlined">layers</span>
+<h3 class="font-title-md text-title-md font-bold text-on-surface">Z-Index &amp; Token Map</h3>
+</div>
+<div class="space-y-2">
+<div class="flex items-center justify-between p-2 rounded bg-surface-container-low font-label-sm text-label-sm">
+<span class="font-mono text-on-surface">Header Pinned</span>
+<span class="px-2 py-0.5 rounded bg-surface-container text-on-surface-variant font-mono">z-40 (sticky)</span>
+</div>
+<div class="flex items-center justify-between p-2 rounded bg-surface-container-low font-label-sm text-label-sm">
+<span class="font-mono text-on-surface">Drawer Backdrop</span>
+<span class="px-2 py-0.5 rounded bg-surface-container text-on-surface-variant font-mono">z-50 (inset-0)</span>
+</div>
+<div class="flex items-center justify-between p-2 rounded bg-surface-container-low font-label-sm text-label-sm">
+<span class="font-mono text-on-surface">Drawer Sheet</span>
+<span class="px-2 py-0.5 rounded bg-surface-container text-on-surface-variant font-mono">z-50 (slide-in)</span>
+</div>
+<div class="flex items-center justify-between p-2 rounded bg-surface-container-low font-label-sm text-label-sm">
+<span class="font-mono text-on-surface">Brand Indigo Token</span>
+<span class="px-2 py-0.5 rounded bg-primary-fixed text-primary font-mono font-semibold">#5145CD / primary-container</span>
+</div>
+<div class="flex items-center justify-between p-2 rounded bg-surface-container-low font-label-sm text-label-sm">
+<span class="font-mono text-on-surface">Surface Tint</span>
+<span class="px-2 py-0.5 rounded bg-surface-container text-on-surface-variant font-mono">#FCF9F8 / surface-bright</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Code Blueprint Preview for Next.js layout.tsx -->
+<div class="bg-inverse-surface rounded-2xl p-6 text-inverse-on-surface space-y-4 shadow-md">
+<div class="flex items-center justify-between pb-3">
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-error"></span>
+<span class="w-3 h-3 rounded-full bg-secondary-container"></span>
+<span class="w-3 h-3 rounded-full bg-secondary"></span>
+<span class="ml-2 font-mono text-xs text-outline-variant font-semibold">app/layout.tsx (Shell Architecture Blueprint)</span>
+</div>
+<span class="font-mono text-xs text-surface-tint">Next.js 14 App Router + Tailwind</span>
+</div>
+<pre class="font-mono text-xs overflow-x-auto text-surface-container leading-relaxed"><code>export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
+
+  return (
+    &lt;html lang="en" className="h-full"&gt;
+      &lt;body className="bg-surface font-sans text-on-surface antialiased min-h-screen"&gt;
+        {/* Sticky Shell Navigation Header */}
+        &lt;header className="sticky top-0 z-40 w-full bg-surface-bright/90 backdrop-blur-md shadow-xs"&gt;
+          &lt;div className="max-w-7xl mx-auto px-6 h-18 flex items-center justify-between"&gt;
+            &lt;DreamXLogo /&gt;
+            &lt;DesktopNav className="hidden lg:flex" /&gt;
+            &lt;HeaderActionGroup onMobileToggle={() =&gt; setIsMobileOpen(true)} /&gt;
+          &lt;/div&gt;
+        &lt;/header&gt;
+
+        {/* Mobile Accessible Navigation Drawer Sheet */}
+        &lt;MobileNavDrawer 
+          isOpen={isMobileOpen} 
+          onClose={() =&gt; setIsMobileOpen(false)} 
+          region="INR (₹)" 
+        /&gt;
+
+        {/* Slot for page-level views */}
+        &lt;main className="max-w-7xl mx-auto px-6 py-10"&gt;{children}&lt;/main&gt;
+      &lt;/body&gt;
+    &lt;/html&gt;
+  );
+}</code></pre>
+</div>
+</section>
+<!-- Interactive Script for Micro-interactions -->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const openBtn = document.getElementById('open-drawer-btn');
+      if (openBtn) {
+        openBtn.addEventListener('click', () => {
+          const sheetElem = document.getElementById('mobile-drawer');
+          if (sheetElem) {
+            sheetElem.scrollIntoView({ behavior: 'smooth' });
+          }
+        });
+      }
+    });
+  </script>
+</div></main>
+</body></html>

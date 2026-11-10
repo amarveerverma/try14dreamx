@@ -1,0 +1,659 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DreamX — Design System & UI Kit Board</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#5145CD',
+              700: '#4035B3',
+              900: '#1e1b4b',
+            },
+            neutral: {
+              surface: '#FFFFFF',
+              muted: '#F7F7F8',
+              dim: '#EBEBED',
+              border: '#E7E7EB',
+              textPrimary: '#171717',
+              textSecondary: '#66666F',
+              textMuted: '#8B8B95',
+            },
+            semantic: {
+              success: '#16834A',
+              successBg: '#EBF7EE',
+              warning: '#A7670B',
+              warningBg: '#FEF6E7',
+              danger: '#C43B3B',
+              dangerBg: '#FDF2F2',
+              info: '#2864C5',
+              infoBg: '#EEF4FD',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #FAFAFC; }
+    .tnum { font-feature-settings: "tnum"; font-variant-numeric: tabular-nums; }
+  </style>
+</head>
+<body class="text-neutral-textPrimary antialiased min-h-screen pb-24">
+
+  <!-- Header Banner -->
+  <header class="bg-white border-b border-neutral-border sticky top-0 z-50 shadow-sm">
+    <div class="max-w-7xl mx-auto px-6 h-18 flex items-center justify-between">
+      <div class="flex items-center space-x-4">
+        <div class="flex items-center space-x-2">
+          <div class="w-9 h-9 rounded-xl bg-brand-600 flex items-center justify-center text-white font-extrabold text-xl shadow-sm">D</div>
+          <span class="text-xl font-bold tracking-tight text-neutral-textPrimary">Dream<span class="text-brand-600">X</span></span>
+        </div>
+        <span class="h-5 w-px bg-neutral-border"></span>
+        <span class="text-xs font-semibold tracking-wider uppercase px-2.5 py-1 rounded bg-brand-50 text-brand-600 border border-brand-100">
+          UI Kit & Design System v1.0
+        </span>
+      </div>
+      <div class="flex items-center space-x-4 text-xs font-medium text-neutral-textSecondary">
+        <span class="flex items-center gap-1.5 bg-neutral-muted px-3 py-1.5 rounded-md border border-neutral-border">
+          <span class="w-2 h-2 rounded-full bg-semantic-success"></span>
+          Production Tokens • India (INR ₹)
+        </span>
+        <span class="text-neutral-textMuted">Calm Horizon Archetype</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-6 pt-10 space-y-16">
+
+    <!-- Section 1: Overview & Foundation -->
+    <section>
+      <div class="mb-6">
+        <h1 class="text-3xl font-extrabold text-neutral-textPrimary tracking-tight">Design Tokens & Component Kit</h1>
+        <p class="text-neutral-textSecondary text-sm mt-1 max-w-3xl">
+          Standardized atomic design foundation for DreamX Career Success Marketplace. Built strictly according to the PRD V3.0 guidelines, supporting accessible contrast ratios, tabular Indian Rupee typography, and deterministic UI states.
+        </p>
+      </div>
+
+      <!-- Color Tokens Grid -->
+      <div class="bg-white rounded-2xl p-8 border border-neutral-border shadow-sm space-y-8">
+        <div>
+          <h2 class="text-lg font-bold text-neutral-textPrimary flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-brand-600"></span> 1. Color Palette Tokens
+          </h2>
+          <p class="text-xs text-neutral-textSecondary mt-0.5">Primary brand, neutral surfaces, and semantic feedback systems.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <!-- Primary Brand -->
+          <div class="space-y-3">
+            <span class="text-xs font-bold uppercase tracking-wider text-neutral-textMuted">Brand Colors</span>
+            <div class="space-y-2">
+              <div class="p-3 rounded-xl bg-brand-600 text-white flex items-center justify-between shadow-sm">
+                <div>
+                  <p class="text-xs font-bold">Primary Brand</p>
+                  <p class="text-[11px] font-mono opacity-80">#5145CD</p>
+                </div>
+                <span class="text-[10px] bg-white/20 px-2 py-0.5 rounded font-mono">brand-600</span>
+              </div>
+              <div class="p-3 rounded-xl bg-brand-700 text-white flex items-center justify-between">
+                <div>
+                  <p class="text-xs font-bold">Primary Hover</p>
+                  <p class="text-[11px] font-mono opacity-80">#4035B3</p>
+                </div>
+                <span class="text-[10px] bg-white/20 px-2 py-0.5 rounded font-mono">brand-700</span>
+              </div>
+              <div class="p-3 rounded-xl bg-brand-50 text-brand-900 border border-brand-100 flex items-center justify-between">
+                <div>
+                  <p class="text-xs font-bold">Brand Light / Tint</p>
+                  <p class="text-[11px] font-mono opacity-80">#EEF2FF</p>
+                </div>
+                <span class="text-[10px] bg-brand-100 text-brand-700 px-2 py-0.5 rounded font-mono">brand-50</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Neutrals -->
+          <div class="space-y-3">
+            <span class="text-xs font-bold uppercase tracking-wider text-neutral-textMuted">Neutral System</span>
+            <div class="space-y-2">
+              <div class="p-3 rounded-xl bg-neutral-textPrimary text-white flex items-center justify-between">
+                <div>
+                  <p class="text-xs font-bold">Text Primary</p>
+                  <p class="text-[11px] font-mono opacity-80">#171717</p>
+                </div>
+                <span class="text-[10px] bg-white/20 px-2 py-0.5 rounded font-mono">neutral-900</span>
+              </div>
+              <div class="p-3 rounded-xl bg-neutral-textSecondary text-white flex items-center justify-between">
+                <div>
+                  <p class="text-xs font-bold">Text Secondary</p>
+                  <p class="text-[11px] font-mono opacity-80">#66666F</p>
+                </div>
+                <span class="text-[10px] bg-white/20 px-2 py-0.5 rounded font-mono">neutral-600</span>
+              </div>
+              <div class="p-3 rounded-xl bg-neutral-muted text-neutral-textPrimary border border-neutral-border flex items-center justify-between">
+                <div>
+                  <p class="text-xs font-bold">Surface Muted</p>
+                  <p class="text-[11px] font-mono text-neutral-textSecondary">#F7F7F8</p>
+                </div>
+                <span class="text-[10px] bg-neutral-dim text-neutral-textSecondary px-2 py-0.5 rounded font-mono">surface-muted</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Semantic System -->
+          <div class="space-y-3 col-span-2">
+            <span class="text-xs font-bold uppercase tracking-wider text-neutral-textMuted">Semantic Status Tokens</span>
+            <div class="grid grid-cols-2 gap-2">
+              <div class="p-3 rounded-xl bg-semantic-successBg text-semantic-success border border-emerald-200 flex items-center justify-between">
+                <div>
+                  <p class="text-xs font-bold">Success / Confirmed</p>
+                  <p class="text-[11px] font-mono">#16834A</p>
+                </div>
+                <span class="text-xs font-bold">✓</span>
+              </div>
+              <div class="p-3 rounded-xl bg-semantic-warningBg text-semantic-warning border border-amber-200 flex items-center justify-between">
+                <div>
+                  <p class="text-xs font-bold">Warning / Attention</p>
+                  <p class="text-[11px] font-mono">#A7670B</p>
+                </div>
+                <span class="text-xs font-bold">!</span>
+              </div>
+              <div class="p-3 rounded-xl bg-semantic-dangerBg text-semantic-danger border border-red-200 flex items-center justify-between">
+                <div>
+                  <p class="text-xs font-bold">Danger / SLA Alert</p>
+                  <p class="text-[11px] font-mono">#C43B3B</p>
+                </div>
+                <span class="text-xs font-bold">✕</span>
+              </div>
+              <div class="p-3 rounded-xl bg-semantic-infoBg text-semantic-info border border-blue-200 flex items-center justify-between">
+                <div>
+                  <p class="text-xs font-bold">Info / In Progress</p>
+                  <p class="text-[11px] font-mono">#2864C5</p>
+                </div>
+                <span class="text-xs font-bold">ℹ</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 2: Typography & INR Price Conventions -->
+    <section class="bg-white rounded-2xl p-8 border border-neutral-border shadow-sm space-y-6">
+      <div class="flex items-center justify-between border-b border-neutral-border pb-4">
+        <div>
+          <h2 class="text-lg font-bold text-neutral-textPrimary flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-brand-600"></span> 2. Typography & Tabular INR (₹) Pricing
+          </h2>
+          <p class="text-xs text-neutral-textSecondary mt-0.5">Plus Jakarta Sans font stack with fixed-width numerals for financial clarity.</p>
+        </div>
+        <span class="text-xs font-mono bg-neutral-muted px-2.5 py-1 rounded text-neutral-textSecondary border border-neutral-border">
+          font-feature-settings: "tnum"
+        </span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+        <div class="space-y-4">
+          <div class="border-l-4 border-brand-600 pl-4 py-1">
+            <span class="text-xs text-neutral-textMuted uppercase font-bold tracking-wider">Display H1 (30px / 36px - Bold)</span>
+            <h1 class="text-3xl font-extrabold text-neutral-textPrimary tracking-tight mt-0.5">Outcome-Accountable Mentorship</h1>
+          </div>
+          <div class="border-l-4 border-neutral-border pl-4 py-1">
+            <span class="text-xs text-neutral-textMuted uppercase font-bold tracking-wider">Heading H2 (22px / 28px - Semibold)</span>
+            <h2 class="text-xl font-bold text-neutral-textPrimary mt-0.5">8-Dimension Career Readiness Matrix</h2>
+          </div>
+          <div class="border-l-4 border-neutral-border pl-4 py-1">
+            <span class="text-xs text-neutral-textMuted uppercase font-bold tracking-wider">Body Regular (14px / 20px)</span>
+            <p class="text-sm text-neutral-textSecondary mt-0.5">
+              Diagnostic assessment tailored to Tier-1 and Tier-2 Indian engineering graduates seeking SDE and APM opportunities.
+            </p>
+          </div>
+        </div>
+
+        <!-- INR Pricing Showcase -->
+        <div class="bg-neutral-muted p-6 rounded-xl border border-neutral-border space-y-4">
+          <p class="text-xs font-bold uppercase tracking-wider text-neutral-textSecondary">Tabular INR Launch Catalog Display</p>
+          <div class="space-y-3">
+            <div class="flex items-center justify-between p-3 bg-white rounded-lg border border-neutral-border">
+              <span class="text-sm font-medium text-neutral-textPrimary">S06 Technical Mock Interview</span>
+              <div class="text-right">
+                <span class="text-sm font-bold text-neutral-textPrimary tnum">₹949</span>
+                <span class="text-xs text-neutral-textMuted line-through ml-1 tnum">₹999</span>
+                <span class="text-[10px] bg-brand-50 text-brand-600 font-bold px-1.5 py-0.5 rounded ml-1">Pro 5%</span>
+              </div>
+            </div>
+            <div class="flex items-center justify-between p-3 bg-white rounded-lg border border-neutral-border">
+              <span class="text-sm font-medium text-neutral-textPrimary">S01 Resume Review (45 min)</span>
+              <div class="text-right">
+                <span class="text-sm font-bold text-neutral-textPrimary tnum">₹569</span>
+                <span class="text-xs text-neutral-textMuted line-through ml-1 tnum">₹599</span>
+              </div>
+            </div>
+            <div class="flex items-center justify-between p-3 bg-white rounded-lg border border-neutral-border">
+              <span class="text-sm font-medium text-neutral-textPrimary">Custom 3-Service Bundle (Absorbed by DreamX)</span>
+              <div class="text-right">
+                <span class="text-sm font-bold text-semantic-success tnum">₹2,277</span>
+                <span class="text-[10px] bg-emerald-50 text-semantic-success font-semibold px-1.5 py-0.5 rounded ml-1">5% Off</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 3: Interactive Buttons & Actions -->
+    <section class="bg-white rounded-2xl p-8 border border-neutral-border shadow-sm space-y-6">
+      <div class="border-b border-neutral-border pb-4">
+        <h2 class="text-lg font-bold text-neutral-textPrimary flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-brand-600"></span> 3. Button Component Family
+        </h2>
+        <p class="text-xs text-neutral-textSecondary mt-0.5">Primary conversion, secondary navigation, ghost actions, destructive cancellation, and loading states.</p>
+      </div>
+
+      <div class="grid grid-cols-2 md:grid-cols-6 gap-4 items-center">
+        <!-- Primary -->
+        <div class="space-y-1.5 text-center">
+          <button class="w-full h-11 px-4 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm transition-all shadow-sm active:scale-95">
+            Book Session
+          </button>
+          <span class="text-[11px] font-mono text-neutral-textMuted block">Primary</span>
+        </div>
+
+        <!-- Secondary -->
+        <div class="space-y-1.5 text-center">
+          <button class="w-full h-11 px-4 rounded-xl bg-brand-50 hover:bg-brand-100 text-brand-600 font-semibold text-sm transition-all border border-brand-100 active:scale-95">
+            Explore Services
+          </button>
+          <span class="text-[11px] font-mono text-neutral-textMuted block">Secondary</span>
+        </div>
+
+        <!-- Outline -->
+        <div class="space-y-1.5 text-center">
+          <button class="w-full h-11 px-4 rounded-xl bg-white hover:bg-neutral-muted text-neutral-textPrimary font-semibold text-sm transition-all border border-neutral-border active:scale-95">
+            View Details
+          </button>
+          <span class="text-[11px] font-mono text-neutral-textMuted block">Outline</span>
+        </div>
+
+        <!-- Ghost -->
+        <div class="space-y-1.5 text-center">
+          <button class="w-full h-11 px-4 rounded-xl hover:bg-neutral-muted text-neutral-textSecondary hover:text-neutral-textPrimary font-semibold text-sm transition-all">
+            Cancel
+          </button>
+          <span class="text-[11px] font-mono text-neutral-textMuted block">Ghost</span>
+        </div>
+
+        <!-- Destructive / Danger -->
+        <div class="space-y-1.5 text-center">
+          <button class="w-full h-11 px-4 rounded-xl bg-semantic-dangerBg hover:bg-red-100 text-semantic-danger border border-red-200 font-semibold text-sm transition-all">
+            Cancel Booking
+          </button>
+          <span class="text-[11px] font-mono text-neutral-textMuted block">Destructive</span>
+        </div>
+
+        <!-- Disabled / Loading -->
+        <div class="space-y-1.5 text-center">
+          <button disabled class="w-full h-11 px-4 rounded-xl bg-brand-600/70 text-white font-semibold text-sm flex items-center justify-center gap-2 cursor-not-allowed">
+            <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+            </svg>
+            <span>Holding...</span>
+          </button>
+          <span class="text-[11px] font-mono text-neutral-textMuted block">Loading State</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 4: Form Inputs & Indian Localization -->
+    <section class="bg-white rounded-2xl p-8 border border-neutral-border shadow-sm space-y-6">
+      <div class="border-b border-neutral-border pb-4">
+        <h2 class="text-lg font-bold text-neutral-textPrimary flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-brand-600"></span> 4. Form Controls & India Localization
+        </h2>
+        <p class="text-xs text-neutral-textSecondary mt-0.5">Form fields with explicit +91 mobile support, dropdowns, and validation states.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <!-- Text Input -->
+        <div class="space-y-1.5">
+          <label class="text-xs font-bold text-neutral-textPrimary">Student Full Name</label>
+          <input type="text" value="Ananya Sharma" class="w-full h-11 px-3.5 rounded-xl border border-neutral-border bg-white text-sm text-neutral-textPrimary focus:outline-none focus:ring-2 focus:ring-brand-600 focus:border-brand-600" />
+          <p class="text-[11px] text-neutral-textMuted">Matches student ID verification record</p>
+        </div>
+
+        <!-- India Phone Input (+91) -->
+        <div class="space-y-1.5">
+          <label class="text-xs font-bold text-neutral-textPrimary">WhatsApp / Mobile (+91)</label>
+          <div class="flex rounded-xl border border-neutral-border overflow-hidden focus-within:ring-2 focus-within:ring-brand-600">
+            <span class="bg-neutral-muted px-3 flex items-center text-xs font-semibold text-neutral-textSecondary border-r border-neutral-border">
+              🇮🇳 +91
+            </span>
+            <input type="tel" value="98765 43210" class="w-full h-11 px-3 bg-white text-sm text-neutral-textPrimary focus:outline-none font-mono" />
+          </div>
+          <p class="text-[11px] text-neutral-textMuted">For atomic slot confirmation SMS</p>
+        </div>
+
+        <!-- Dropdown Select -->
+        <div class="space-y-1.5">
+          <label class="text-xs font-bold text-neutral-textPrimary">Primary Target Goal</label>
+          <select class="w-full h-11 px-3 rounded-xl border border-neutral-border bg-white text-sm text-neutral-textPrimary focus:outline-none focus:ring-2 focus:ring-brand-600">
+            <option>Associate Product Manager / SDE-1</option>
+            <option>Backend Engineer (Go / Java / Distributed)</option>
+            <option>Data Scientist / Applied AI</option>
+          </select>
+          <p class="text-[11px] text-neutral-textMuted">Calibrates 8-dimension rubric</p>
+        </div>
+
+        <!-- Textarea -->
+        <div class="space-y-1.5">
+          <label class="text-xs font-bold text-neutral-textPrimary">Preparation Notes for Mentor</label>
+          <textarea rows="1" class="w-full h-11 px-3 py-2.5 rounded-xl border border-neutral-border bg-white text-xs text-neutral-textPrimary focus:outline-none focus:ring-2 focus:ring-brand-600 resize-none">Focus on System Design edge-cases...</textarea>
+          <p class="text-[11px] text-neutral-textMuted">Shared 15 mins prior to call</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 5: Badges & Trust Labels -->
+    <section class="bg-white rounded-2xl p-8 border border-neutral-border shadow-sm space-y-6">
+      <div class="border-b border-neutral-border pb-4">
+        <h2 class="text-lg font-bold text-neutral-textPrimary flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-brand-600"></span> 5. Verification Badges & Membership Pills
+        </h2>
+        <p class="text-xs text-neutral-textSecondary mt-0.5">Trust signals strictly aligned with PRD V3.0 three-tier verification rules.</p>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-4">
+        <!-- Verified Mentor Badges -->
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-semantic-success border border-emerald-200">
+          <svg class="w-3.5 h-3.5 text-semantic-success" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+          Verified Identity
+        </span>
+
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-brand-600 border border-indigo-200">
+          <svg class="w-3.5 h-3.5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+          Tech Lead Verified
+        </span>
+
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-200">
+          <svg class="w-3.5 h-3.5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+          Executive Verified
+        </span>
+
+        <!-- Membership Pills -->
+        <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-brand-600 text-white shadow-xs">
+          ★ Pro Plan • 5% Off
+        </span>
+
+        <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-neutral-900 text-amber-300 shadow-xs border border-amber-400/30">
+          👑 Elite Member • 10% Off
+        </span>
+
+        <!-- Operational Status -->
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-amber-50 text-semantic-warning border border-amber-200">
+          <span class="w-1.5 h-1.5 rounded-full bg-semantic-warning"></span>
+          Wave 2 Active (30m)
+        </span>
+
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-emerald-50 text-semantic-success border border-emerald-200">
+          <span class="w-1.5 h-1.5 rounded-full bg-semantic-success"></span>
+          Delivered within 48h SLA
+        </span>
+      </div>
+    </section>
+
+    <!-- Section 6: Base Cards & Skeletons -->
+    <section class="space-y-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-xl font-extrabold text-neutral-textPrimary tracking-tight">6. Card Shells & Diagnostic Skeletons</h2>
+          <p class="text-xs text-neutral-textSecondary mt-0.5">Reusable containers for metrics, mentor booking holds, and skeleton loading states.</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Base Service Card -->
+        <div class="bg-white rounded-2xl p-6 border border-neutral-border shadow-sm flex flex-col justify-between hover:border-brand-500 transition-all">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-bold uppercase tracking-wider text-brand-600 bg-brand-50 px-2.5 py-0.5 rounded">Code: S06</span>
+              <span class="text-xs text-neutral-textMuted">60 Mins • 1:1 Live</span>
+            </div>
+            <h3 class="text-base font-bold text-neutral-textPrimary">Technical Mock Interview</h3>
+            <p class="text-xs text-neutral-textSecondary mt-1.5 line-clamp-2">
+              High-concurrency distributed algorithms, system architecture design, and real-time live code complexity analysis.
+            </p>
+            <div class="mt-4 p-3 rounded-xl bg-neutral-muted border border-neutral-border">
+              <p class="text-[11px] font-semibold text-neutral-textPrimary">Guaranteed Deliverable:</p>
+              <p class="text-[11px] text-neutral-textSecondary">Structured 8-dimension rubric scorecard within 48 hours.</p>
+            </div>
+          </div>
+          <div class="mt-6 pt-4 border-t border-neutral-border flex items-center justify-between">
+            <div>
+              <span class="text-lg font-bold text-neutral-textPrimary tnum">₹949</span>
+              <span class="text-xs text-neutral-textMuted line-through ml-1 tnum">₹999</span>
+            </div>
+            <button class="h-9 px-4 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-xs transition-all">
+              Book Slot
+            </button>
+          </div>
+        </div>
+
+        <!-- Metric Stat Card -->
+        <div class="bg-white rounded-2xl p-6 border border-neutral-border shadow-sm flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-semibold text-neutral-textSecondary">Career Composite Score</span>
+              <span class="text-xs font-bold text-semantic-warning bg-amber-50 px-2 py-0.5 rounded">Needs Attention</span>
+            </div>
+            <div class="flex items-baseline gap-2 mt-1">
+              <span class="text-4xl font-extrabold text-neutral-textPrimary tracking-tight tnum">68</span>
+              <span class="text-sm font-semibold text-neutral-textMuted">/ 100</span>
+            </div>
+            <p class="text-xs text-neutral-textSecondary mt-2">
+              Grounded in 6 of 8 assessed dimensions. Critical deficits identified in live interview execution.
+            </p>
+            <!-- Progress Bar -->
+            <div class="w-full bg-neutral-dim h-2 rounded-full mt-4 overflow-hidden">
+              <div class="bg-brand-600 h-2 rounded-full" style="width: 68%"></div>
+            </div>
+          </div>
+          <div class="mt-6 pt-3 border-t border-neutral-border flex items-center justify-between text-xs">
+            <span class="text-neutral-textMuted">Updated 14h ago</span>
+            <a href="#" class="text-brand-600 font-bold hover:underline">View Rubric →</a>
+          </div>
+        </div>
+
+        <!-- Loading Skeleton Card -->
+        <div class="bg-white rounded-2xl p-6 border border-neutral-border shadow-sm animate-pulse space-y-4">
+          <div class="flex justify-between items-center">
+            <div class="h-4 bg-neutral-dim rounded w-1/4"></div>
+            <div class="h-4 bg-neutral-dim rounded w-1/3"></div>
+          </div>
+          <div class="h-6 bg-neutral-dim rounded w-3/4"></div>
+          <div class="space-y-2">
+            <div class="h-3 bg-neutral-dim rounded w-full"></div>
+            <div class="h-3 bg-neutral-dim rounded w-5/6"></div>
+          </div>
+          <div class="h-16 bg-neutral-muted rounded-xl"></div>
+          <div class="pt-4 border-t border-neutral-border flex justify-between items-center">
+            <div class="h-5 bg-neutral-dim rounded w-1/3"></div>
+            <div class="h-9 bg-neutral-dim rounded-xl w-24"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 7: Global Header & Footer Previews -->
+    <section class="space-y-6 pt-6 border-t border-neutral-border">
+      <div>
+        <h2 class="text-2xl font-extrabold text-neutral-textPrimary tracking-tight">7. Global Shell Architecture Previews</h2>
+        <p class="text-xs text-neutral-textSecondary mt-0.5">Canonical header, footer with Indian compliance notices, 404 page, and error boundary.</p>
+      </div>
+
+      <!-- Preview Box: Header -->
+      <div class="bg-neutral-muted rounded-2xl p-6 border border-neutral-border space-y-3">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold uppercase tracking-wider text-neutral-textSecondary">Global Navigation Header (layout.tsx)</span>
+          <span class="text-xs font-mono text-neutral-textMuted">Desktop & Mobile Breakpoint</span>
+        </div>
+        <div class="bg-white rounded-xl border border-neutral-border overflow-hidden shadow-xs">
+          <!-- Actual Header Component -->
+          <div class="px-6 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-8">
+              <div class="flex items-center space-x-2">
+                <div class="w-8 h-8 rounded-lg bg-brand-600 flex items-center justify-center text-white font-extrabold text-lg">D</div>
+                <span class="text-lg font-bold tracking-tight text-neutral-textPrimary">Dream<span class="text-brand-600">X</span></span>
+              </div>
+              <nav class="hidden md:flex items-center space-x-6 text-sm font-semibold text-neutral-textSecondary">
+                <a href="#" class="hover:text-brand-600 transition-colors">How It Works</a>
+                <a href="#" class="hover:text-brand-600 transition-colors">Services</a>
+                <a href="#" class="hover:text-brand-600 transition-colors">Mentors</a>
+                <a href="#" class="hover:text-brand-600 transition-colors">Readiness Model</a>
+                <a href="#" class="hover:text-brand-600 transition-colors">Membership</a>
+              </nav>
+            </div>
+            <div class="flex items-center space-x-3">
+              <button class="text-sm font-semibold text-neutral-textSecondary hover:text-neutral-textPrimary px-3 py-1.5">Sign In</button>
+              <button class="h-9 px-4 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-xs transition-all shadow-xs">
+                Get Started
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Preview Box: Global Footer -->
+      <div class="bg-neutral-muted rounded-2xl p-6 border border-neutral-border space-y-3">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold uppercase tracking-wider text-neutral-textSecondary">Global Platform Footer (layout.tsx)</span>
+          <span class="text-xs font-mono text-neutral-textMuted">Includes IT Rules Compliance & Grievance Contact</span>
+        </div>
+        <div class="bg-white rounded-xl border border-neutral-border p-8 shadow-xs space-y-8">
+          <div class="grid grid-cols-1 md:grid-cols-5 gap-8">
+            <div class="md:col-span-2 space-y-3">
+              <div class="flex items-center space-x-2">
+                <div class="w-7 h-7 rounded-lg bg-brand-600 flex items-center justify-center text-white font-bold text-base">D</div>
+                <span class="text-base font-bold text-neutral-textPrimary">Dream<span class="text-brand-600">X</span></span>
+              </div>
+              <p class="text-xs text-neutral-textSecondary max-w-sm leading-relaxed">
+                India's outcome-accountable career success marketplace. Diagnostic assessments, vetted mentors from top tech companies, and enforceable 48-hour deliverable SLAs.
+              </p>
+              <div class="pt-2">
+                <span class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-neutral-textSecondary bg-neutral-muted px-2.5 py-1 rounded border border-neutral-border">
+                  🇮🇳 Operating in India • INR (₹) • Asia/Kolkata
+                </span>
+              </div>
+            </div>
+            <div>
+              <p class="text-xs font-bold text-neutral-textPrimary uppercase tracking-wider mb-3">Platform</p>
+              <ul class="space-y-2 text-xs text-neutral-textSecondary">
+                <li><a href="#" class="hover:text-brand-600">How It Works</a></li>
+                <li><a href="#" class="hover:text-brand-600">8-Dimension Matrix</a></li>
+                <li><a href="#" class="hover:text-brand-600">Custom 3-Service Bundle</a></li>
+                <li><a href="#" class="hover:text-brand-600">Smart Match Protocol</a></li>
+              </ul>
+            </div>
+            <div>
+              <p class="text-xs font-bold text-neutral-textPrimary uppercase tracking-wider mb-3">Services</p>
+              <ul class="space-y-2 text-xs text-neutral-textSecondary">
+                <li><a href="#" class="hover:text-brand-600">Technical Mock Interview</a></li>
+                <li><a href="#" class="hover:text-brand-600">ATS Resume Teardown</a></li>
+                <li><a href="#" class="hover:text-brand-600">Behavioral STAR Rounds</a></li>
+                <li><a href="#" class="hover:text-brand-600">Salary Negotiation</a></li>
+              </ul>
+            </div>
+            <div>
+              <p class="text-xs font-bold text-neutral-textPrimary uppercase tracking-wider mb-3">Trust & Compliance</p>
+              <ul class="space-y-2 text-xs text-neutral-textSecondary">
+                <li><a href="#" class="hover:text-brand-600">Terms of Service</a></li>
+                <li><a href="#" class="hover:text-brand-600">Privacy Notice (DPDP)</a></li>
+                <li><a href="#" class="hover:text-brand-600">Cancellation & Refund Policy</a></li>
+                <li><a href="#" class="hover:text-brand-600 font-semibold text-brand-600">Grievance Officer Contact</a></li>
+              </ul>
+            </div>
+          </div>
+          <div class="pt-6 border-t border-neutral-border flex flex-col md:flex-row items-center justify-between text-xs text-neutral-textMuted gap-4">
+            <p>© 2026 DreamX Technologies India Pvt. Ltd. All rights reserved.</p>
+            <p class="text-[11px]">In compliance with Information Technology (Intermediary Guidelines) Rules, 2021.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Preview Box: 404 & Error Boundary Screens -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- 404 Preview -->
+        <div class="bg-neutral-muted rounded-2xl p-6 border border-neutral-border space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold uppercase tracking-wider text-neutral-textSecondary">404 Not Found Page (/not-found)</span>
+            <span class="text-xs font-mono text-neutral-textMuted">Error 404</span>
+          </div>
+          <div class="bg-white rounded-xl border border-neutral-border p-8 text-center space-y-4 shadow-xs">
+            <div class="w-14 h-14 bg-brand-50 text-brand-600 rounded-2xl mx-auto flex items-center justify-center font-extrabold text-2xl border border-brand-100">
+              404
+            </div>
+            <div>
+              <h3 class="text-base font-bold text-neutral-textPrimary">Page Not Found</h3>
+              <p class="text-xs text-neutral-textSecondary mt-1 max-w-xs mx-auto">
+                The career route or mentor profile you were looking for doesn't exist or has moved.
+              </p>
+            </div>
+            <div class="pt-2 flex justify-center gap-3">
+              <a href="#" class="h-9 px-4 rounded-xl bg-brand-600 text-white font-semibold text-xs inline-flex items-center hover:bg-brand-700">
+                Back to Services
+              </a>
+              <a href="#" class="h-9 px-4 rounded-xl bg-white border border-neutral-border text-neutral-textPrimary font-semibold text-xs inline-flex items-center hover:bg-neutral-muted">
+                Search Mentors
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Application Error Preview -->
+        <div class="bg-neutral-muted rounded-2xl p-6 border border-neutral-border space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold uppercase tracking-wider text-neutral-textSecondary">App Error Boundary (/error)</span>
+            <span class="text-xs font-mono text-neutral-textMuted">Error 500 / Runtime</span>
+          </div>
+          <div class="bg-white rounded-xl border border-neutral-border p-8 text-center space-y-4 shadow-xs">
+            <div class="w-14 h-14 bg-semantic-dangerBg text-semantic-danger rounded-2xl mx-auto flex items-center justify-center font-extrabold text-2xl border border-red-200">
+              !
+            </div>
+            <div>
+              <h3 class="text-base font-bold text-neutral-textPrimary">Something went wrong</h3>
+              <p class="text-xs text-neutral-textSecondary mt-1 max-w-xs mx-auto">
+                An unexpected system exception occurred while loading this view. Your booking or payment state is completely safe.
+              </p>
+            </div>
+            <div class="pt-2 flex justify-center gap-3">
+              <button class="h-9 px-4 rounded-xl bg-brand-600 text-white font-semibold text-xs inline-flex items-center hover:bg-brand-700">
+                Try Again
+              </button>
+              <a href="#" class="h-9 px-4 rounded-xl bg-white border border-neutral-border text-neutral-textPrimary font-semibold text-xs inline-flex items-center hover:bg-neutral-muted">
+                Contact Support (support@dreamx.in)
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</body>
+</html>

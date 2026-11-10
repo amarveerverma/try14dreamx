@@ -1,26 +1,53 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #fafafc;
+    --foreground: #171717;
+
+    /* DreamX Design System Tokens */
+    --brand-50: #eef2ff;
+    --brand-100: #e0e7ff;
+    --brand-500: #6366f1;
+    --brand-600: #5145cd;
+    --brand-700: #4035b3;
+    --brand-900: #1e1b4b;
+
+    /* Neutrals */
+    --surface: #ffffff;
+    --surface-muted: #f7f7f8;
+    --surface-dim: #ebebed;
+    --surface-container-high: #eae7e7;
+    --border: #e7e7eb;
+    --text-primary: #171717;
+    --text-secondary: #66666f;
+    --text-muted: #8b8b95;
+
+    /* Semantic status colors */
+    --semantic-success: #16834a;
+    --semantic-success-bg: #ebf7ee;
+    --semantic-warning: #a7670b;
+    --semantic-warning-bg: #fef6e7;
+    --semantic-danger: #c43b3b;
+    --semantic-danger-bg: #fdf2f2;
+    --semantic-info: #2864c5;
+    --semantic-info-bg: #eef4fd;
+
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    -webkit-font-smoothing: antialiased;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Tabular numerals for consistent Indian Rupee financial displays */
+.tnum {
+  font-feature-settings: "tnum";
+  font-variant-numeric: tabular-nums;
 }

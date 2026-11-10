@@ -1,0 +1,386 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>DreamX Implementation Plan</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one reading column; phase cards with a header strip, two content columns and a meta footer; a week-scaled timeline near the top. */
+:root{
+  --bg:#F2F4F7; --surface:#FFFFFF; --ink:#14202E; --muted:#55657A; --line:#D5DCE5;
+  --accent:#1E4FD6; --accent-soft:#E3EAFB;
+  --warn:#9A5200; --warn-soft:#FFEFD6;
+  --block:#B42318; --block-soft:#FDE7E4;
+  --ok:#1B7A4B; --ok-soft:#DDF3E6;
+  --f-display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --f-body:"Instrument Sans","Segoe UI",system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F161F; --surface:#17212D; --ink:#E6ECF3; --muted:#98A7B9; --line:#2A3846;
+    --accent:#7FA2FF; --accent-soft:#1D2B4D;
+    --warn:#F0A64A; --warn-soft:#3A2A12;
+    --block:#FF8A7D; --block-soft:#3D1C19;
+    --ok:#5ED39A; --ok-soft:#153325;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F161F; --surface:#17212D; --ink:#E6ECF3; --muted:#98A7B9; --line:#2A3846;
+  --accent:#7FA2FF; --accent-soft:#1D2B4D;
+  --warn:#F0A64A; --warn-soft:#3A2A12;
+  --block:#FF8A7D; --block-soft:#3D1C19;
+  --ok:#5ED39A; --ok-soft:#153325;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55;
+  padding-block:40px 72px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:44px}
+h1,h2,h3{font-family:var(--f-display);margin:0;text-wrap:balance;line-height:1.15}
+h1{font-size:clamp(30px,5vw,46px);font-weight:700;letter-spacing:-0.02em}
+h2{font-size:24px;font-weight:700;letter-spacing:-0.01em}
+h3{font-size:18px;font-weight:600}
+p{margin:0}
+.mono{font-family:var(--f-mono);font-size:12.5px}
+.label{font-size:11.5px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:600}
+a{color:var(--accent)}
+header{display:flex;flex-direction:column;gap:14px}
+.meta{display:flex;flex-wrap:wrap;gap:8px 18px;color:var(--muted);font-size:13px}
+.lede{max-width:68ch;color:var(--muted);font-size:16px}
+nav{display:flex;flex-wrap:wrap;gap:8px}
+nav a{font-size:13px;text-decoration:none;color:var(--ink);border:1px solid var(--line);background:var(--surface);padding:5px 12px;border-radius:999px}
+nav a:hover,nav a:focus-visible{border-color:var(--accent);color:var(--accent);outline:none}
+section{display:flex;flex-direction:column;gap:16px;min-width:0}
+.note{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:16px 18px;max-width:78ch}
+.note.warn{background:var(--warn-soft);border-color:transparent;color:var(--ink)}
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;padding:0;margin:0;list-style:none}
+.rules li{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:14px 16px;min-width:0}
+.rules b{display:block;margin-bottom:2px}
+/* timeline */
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
+.gantt{display:grid;grid-template-columns:200px repeat(37,minmax(16px,1fr));min-width:820px;align-items:center;row-gap:6px;padding:14px 14px 16px}
+.gantt .rowlab{grid-column:1;font-size:12.5px;padding-right:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gantt .tick{font-family:var(--f-mono);font-size:11px;color:var(--muted);border-left:1px solid var(--line);padding-left:3px;height:18px}
+.bar{height:16px;border-radius:3px;background:var(--accent)}
+.bar.gated{background:var(--warn)}
+.bar.track{background:transparent;border:1.5px dashed var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:12.5px;color:var(--muted)}
+.legend i{display:inline-block;width:18px;height:10px;border-radius:2px;vertical-align:middle;margin-right:6px;background:var(--accent)}
+.legend i.g{background:var(--warn)}
+.legend i.t{background:transparent;border:1.5px dashed var(--muted)}
+/* phases */
+.phases{display:flex;flex-direction:column;gap:18px}
+.phase{background:var(--surface);border:1px solid var(--line);border-radius:8px;overflow:hidden;min-width:0}
+.phead{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;padding:16px 20px;border-bottom:1px solid var(--line)}
+.pid{font-family:var(--f-mono);font-size:12px;font-weight:500;background:var(--accent-soft);color:var(--accent);padding:3px 8px;border-radius:4px}
+.phead h3{flex:1 1 260px}
+.weeks{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.pill{font-size:11.5px;font-weight:600;padding:2px 9px;border-radius:999px;white-space:nowrap}
+.pill.gated{background:var(--warn-soft);color:var(--warn)}
+.pill.blocker{background:var(--block-soft);color:var(--block)}
+.pill.ok{background:var(--ok-soft);color:var(--ok)}
+.goal{padding:14px 20px 0;color:var(--muted);max-width:80ch}
+.cols{display:grid;grid-template-columns:3fr 2fr;gap:22px;padding:16px 20px}
+.cols>div{min-width:0}
+.cols h4{margin:0 0 8px;font-size:11.5px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:600}
+.cols ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:5px}
+.exit ul{list-style:none;padding:0}
+.exit li{position:relative;padding-left:22px}
+.exit li::before{content:"";position:absolute;left:0;top:.35em;width:12px;height:12px;border:1.5px solid var(--ok);border-radius:3px}
+.pmeta{display:flex;flex-wrap:wrap;gap:6px 22px;padding:12px 20px;background:var(--bg);border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
+.pmeta b{color:var(--ink);font-weight:600}
+.pmeta span{min-width:0}
+/* tables */
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;vertical-align:top;padding:10px 14px;border-bottom:1px solid var(--line)}
+th{font-size:11.5px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:600;background:var(--bg)}
+td.id{font-family:var(--f-mono);font-size:12.5px;white-space:nowrap}
+.check{display:flex;gap:10px;align-items:flex-start}
+.check input{margin-top:4px;accent-color:var(--accent);width:16px;height:16px}
+.check label{cursor:pointer}
+.brief{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin:0;padding:0;list-style:none;counter-reset:b}
+.brief li{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px 14px;counter-increment:b}
+.brief li::before{content:counter(b);font-family:var(--f-mono);font-size:12px;color:var(--accent);display:block;margin-bottom:4px}
+footer{color:var(--muted);font-size:13px;max-width:78ch}
+@media (max-width:720px){
+  .cols{grid-template-columns:1fr}
+  .phead,.cols,.goal,.pmeta{padding-left:16px;padding-right:16px}
+}
+@media (prefers-reduced-motion:no-preference){nav a{transition:border-color .15s,color .15s}}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+</style>
+
+<div class="wrap">
+<header>
+  <span class="label">Implementation plan · based on PRD V3.0 and frontend.md</span>
+  <h1>DreamX Implementation Plan</h1>
+  <p class="lede">The order of work for building DreamX, an India-first career services marketplace. It follows the PRD's own sequence: specifications first, then GitHub, Vercel and Supabase, then features, with paid launch held behind the payment, legal and privacy gates.</p>
+  <div class="meta"><span>Prepared 7 November 2026</span><span>PRD V3.0 dated 6 November 2026</span><span>INR · Asia/Kolkata</span></div>
+  <nav aria-label="Sections">
+    <a href="#rules">Ground rules</a><a href="#timeline">Timeline</a><a href="#phases">Phases</a><a href="#frontend">Frontend track</a><a href="#kickoff">Phase kickoff brief</a><a href="#gates">Launch gates</a><a href="#decisions">Open decisions</a><a href="#phase2">Phase 2</a>
+  </nav>
+</header>
+
+<section id="rules">
+  <h2>Ground rules</h2>
+  <ul class="rules">
+    <li><b>No coding before approved specs.</b> The PRD says implementation starts only after the supporting specifications, validation gates and phase plan are approved (PRD §28).</li>
+    <li><b>Founder approves each phase.</b> Before each phase starts, the team presents the kickoff brief below and waits for approval.</li>
+    <li><b>Conflicts stop the work.</b> If documents or integrations disagree, record an OPEN DECISION and get approval. Nothing is changed silently.</li>
+    <li><b>No workarounds for blocked items.</b> No self-built escrow, wallet or split-settlement stand-in while payment validation (V-01 to V-04) is open.</li>
+    <li><b>Done means evidenced.</b> A feature is complete only with tests, negative security tests where relevant, audit events and a preview deployment (PRD §21.2).</li>
+    <li><b>No secrets in chat or Git.</b> Credentials live in Vercel and Supabase environment settings. Service-role keys never reach browser code.</li>
+  </ul>
+  <p class="note warn"><b>About the durations.</b> Week counts below are PROPOSED. They assume a small team of two to three engineers plus the founder, and they must be re-baselined at the end of Phase 0 once the specifications exist.</p>
+</section>
+
+<section id="timeline">
+  <h2>Timeline</h2>
+  <div class="scroll" role="img" aria-label="Timeline of phases P0 to P14 across about 37 weeks, with parallel validation and mentor sourcing tracks"><div class="gantt" id="gantt"></div></div>
+  <div class="legend"><span><i></i>Build phase</span><span><i class="g"></i>Gated by an external decision</span><span><i class="t"></i>Parallel track, not engineering</span></div>
+  <p class="note">Payment (P7) is the critical path. Smart Match, memberships and refunds all depend on it, and it cannot start until the provider and legal evidence for V-01 to V-04 is on file. If that evidence is late, the team continues with P8 design work and P9 to P12 items that do not need money movement, and the pilot falls back to non-transactional flows (discovery, waitlist, assessment).</p>
+</section>
+
+<section id="phases">
+  <h2>Phases</h2>
+  <div class="phases" id="phaseList"></div>
+</section>
+
+<section id="frontend">
+  <h2>Frontend track (Stitch and Antigravity)</h2>
+  <p class="lede">frontend.md defines its own sequence, F0 to F8. It runs alongside the backend phases above and does not replace them. The table shows which backend phase each frontend phase waits for.</p>
+  <div class="scroll"><table>
+    <thead><tr><th>Frontend phase</th><th>Built in plan phase</th><th>What changes from frontend.md</th></tr></thead>
+    <tbody>
+      <tr><td class="id">F0 Foundation</td><td class="id">P1, P2</td><td>Agree brand, palette and type (UX-01, UX-02) before any Stitch screen is generated. Otherwise Stitch invents the brand. Commit DESIGN.md and design tokens first.</td></tr>
+      <tr><td class="id">F1 Public site and auth</td><td class="id">P3</td><td>No change. Prices come from one server-side config, never typed into components.</td></tr>
+      <tr><td class="id">F2 Role shells and onboarding</td><td class="id">P2, P3, P5</td><td>Student and mentor shells come early. Mentor verification screens wait for P5.</td></tr>
+      <tr><td class="id">F3 Student career experience</td><td class="id">P3, P4, P9</td><td>Dashboard, discovery, readiness and journey follow P4. The report pages move to P9 and show empty states until reports exist.</td></tr>
+      <tr><td class="id">F4 Marketplace and booking</td><td class="id">P6, P7, P8</td><td>Mentor discovery and direct booking in P6, built against the test-mode payment adapter. Real checkout waits for P7 (UX-09 is blocked). Smart Match screens in P8.</td></tr>
+      <tr><td class="id">F5 Mentor workspace</td><td class="id">P5, P8, P9</td><td>Services and availability in P5, dispatch offers in P8, session console and report submission in P9.</td></tr>
+      <tr><td class="id">F6 Admin operations</td><td class="id">P5, P7, P8, P11, P12</td><td><b>Split, not one phase.</b> The verification queue and service approvals are needed in P5, or no mentor can be approved. Payments view comes in P7, dispatch monitoring in P8, disputes in P11, audit logs and the rest in P12.</td></tr>
+      <tr><td class="id">F7 Membership and bundles</td><td class="id">P10</td><td>No change. The UI shows server-returned amounts only.</td></tr>
+      <tr><td class="id">F8 AI and credits</td><td class="id">Phase 2</td><td>Not built. Keep the wallet route and AI navigation out of the MVP build.</td></tr>
+    </tbody>
+  </table></div>
+  <ul class="rules">
+    <li><b>One Stitch project per area.</b> Use separate projects for public and student, mentor, and admin. Generate one screen group at a time and paste only the matching sections of frontend.md plus the tokens.</li>
+    <li><b>Ask for every state.</b> Prompt for loading, empty, error and slot-held states. Mockups show only the happy path unless asked.</li>
+    <li><b>Label sample data.</b> The 68/100 readiness score in frontend.md is an illustration. Tell Stitch to mark placeholders as samples and show an unassessed state for new users.</li>
+    <li><b>Port, don't paste.</b> Antigravity converts each approved screen into Next.js App Router components with TypeScript and Tailwind. Server data, auth and prices come from Supabase, not from Stitch code.</li>
+    <li><b>One branch per frontend phase.</b> Open a pull request, check the Vercel preview on a phone-sized screen, then merge. This keeps each phase reviewable.</li>
+    <li><b>Fix the PRD reference.</b> frontend.md points to PRD v2.0. Change it to V3.0, including agent instruction 1, and re-read it against V3.0 before P0 sign-off.</li>
+  </ul>
+</section>
+
+<section id="kickoff">
+  <h2>Phase kickoff brief</h2>
+  <p class="lede">Every phase opens with the same one-page brief, taken from PRD §28. The founder approves it before work starts.</p>
+  <ol class="brief">
+    <li><b>Files reviewed</b><br>The PRD sections and specs the phase relies on.</li>
+    <li><b>Changes proposed</b><br>Modules, tables, routes and screens to be added.</li>
+    <li><b>Dependencies</b><br>Earlier phases, open decisions and validation items.</li>
+    <li><b>External dashboard setup</b><br>Accounts, domains, OAuth and provider configuration the founder must do.</li>
+    <li><b>Credentials required</b><br>Which values are needed, and where they will be stored. Never pasted into chat.</li>
+    <li><b>Verification steps</b><br>Tests to run, preview links and the evidence that proves the exit criteria.</li>
+    <li><b>Approved screens</b><br>The Stitch screens for this phase, including empty, loading and error states.</li>
+  </ol>
+</section>
+
+<section id="gates">
+  <h2>Paid launch gates</h2>
+  <p class="lede">These are the conditions from PRD §22.3. Tick them as evidence is filed. Ticks are saved in this browser only.</p>
+  <div class="scroll"><table>
+    <thead><tr><th>Done</th><th>Gate</th><th>Built or decided in</th><th>Validation items</th></tr></thead>
+    <tbody id="gateRows"></tbody>
+  </table></div>
+</section>
+
+<section id="decisions">
+  <h2>Open decisions by phase</h2>
+  <p class="lede">The numbers refer to the list in PRD §27. Each decision has to be made before the phase that needs it can finish its design.</p>
+  <div class="scroll"><table>
+    <thead><tr><th>Needed before</th><th>Decision (PRD §27 number)</th></tr></thead>
+    <tbody id="decRows"></tbody>
+  </table></div>
+</section>
+
+<section id="phase2">
+  <h2>Phase 2: AI co-pilot and credits</h2>
+  <div class="note">
+    <p>Phase 2 starts only after the pilot results are reviewed and the founder gives separate approval. It covers the AI career co-pilot, AI resume, LinkedIn and portfolio tools, interview practice, and the credit economy (₹1 = 10 credits, monthly allowances, credit packs, cashback, an immutable ledger with atomic reservations, cost alerts at 70, 85 and 95 percent, and per-feature pause controls).</p>
+    <p style="margin-top:10px">Its own <span class="mono">ai.md</span> specification, evaluation plan and provider validation come first. Nothing from Phase 2 is built during P0 to P14, though the schema should not make it hard to add later.</p>
+  </div>
+</section>
+
+<footer>This plan sequences the work described in the DreamX PRD V3.0. It does not change any confirmed decision, and it does not certify that any provider, legal or tax requirement has been validated.</footer>
+</div>
+
+<script>
+var TOTAL = 37;
+var PHASES = [
+ {id:"P0", t:"Specifications and validation kickoff", w:[1,4],
+  goal:"Turn the PRD into reviewable engineering specs and start every external validation that has a long lead time.",
+  del:["architecture.md, frontend.md, backend.md, api.md and database.md (ai.md waits for Phase 2)","ER diagrams, RLS and permission matrix, and state machines for booking, payment, Smart Match, refund and membership","Test strategy and a traceability map from each PRD-* requirement ID to design, code, migration and test","Start the external work: payment provider and legal structure (V-01 to V-04), CA review of GST and TDS (V-05, V-06), consumer terms (V-07), privacy counsel (V-08), mentor agreement (V-09), identity vendor (V-10)","Triage the open decisions in PRD §27 by the phase that needs each"],
+  exit:["Founder approves the specs and this phase plan","Every validation item has a named owner and a target date","Durations re-baselined from the approved specs"],
+  ref:"§24, §27, §28, Appendix A", dep:"None", appr:"Founder approves specs before any code"},
+ {id:"P1", t:"Repository and environments", w:[5,6],
+  goal:"Set up the delivery pipeline in the order the PRD requires: GitHub, then Vercel, then Supabase.",
+  del:["Git repository with .gitignore, environment template and secret policy; initial commit pushed to GitHub","Next.js App Router, TypeScript and Tailwind scaffold with a modular-monolith folder layout","Vercel connected to the repository with preview and production deployments","Supabase projects connected for development, preview or staging, and production, each with its own credentials","Auth redirect and callback URLs set per environment; migrations committed to Git","CI running lint, type check and tests on every pull request"],
+  exit:["A pull request produces a working preview deployment","Production is isolated from preview and development","A rollback has been rehearsed once","No secret appears in the repository or the client bundle","V-17 is recorded as complete"],
+  ref:"§17.4, V-17", dep:"P0 approved", appr:"Needs Vercel and Supabase account setup by the founder"},
+ {id:"P2", t:"Platform foundations", w:[6,9],
+  goal:"Build the shared services every feature depends on, so later phases cannot bypass them.",
+  del:["Supabase Auth with cookie-based server rendering and Google sign-in (V-11, V-12)","Roles, server-side permission checks and the RLS baseline; no self-assigned mentor or admin roles","Audit log with reason codes for sensitive actions","Private storage buckets with signed URLs and server-side file validation (V-15)","Notification engine: in-app and transactional email, idempotent and retryable (V-16)","Background job and scheduler mechanism with retries and idempotency (V-19)","Error monitoring with sensitive-data scrubbing (V-18)","Shared utilities: money in integer paise, UTC timestamps with Asia/Kolkata display","Admin shell with permission-checked routes"],
+  exit:["Tests prove a student cannot reach another student's data or promote their own role","Service-role key exists only on the server","A test job retries without creating duplicates","A test error reaches monitoring with personal data removed","V-11, V-12, V-15, V-16, V-18 and V-19 recorded"],
+  ref:"§15, §17, §18, §19", dep:"P1", appr:"Decide the scheduler mechanism (open decision 15) and the admin role matrix (12)"},
+ {id:"P3", t:"Public site, catalogue and student onboarding", w:[9,11],
+  goal:"Let a visitor understand the services, sign up and describe their career goal.",
+  del:["Marketing pages and the service catalogue S01 to S10 with the fields required by PRD §6.1","Server-side price records; the client never submits a final price","Student signup, onboarding, profile and career goal capture, including segment (student, fresh graduate, early career, career switcher)","Privacy notice and consent capture at signup"],
+  exit:["Each service shows duration, price and deliverable before purchase","Price shown comes from the server record","A new student can finish onboarding on a phone"],
+  ref:"§4, §6, §18.4", dep:"P2", appr:"Pricing stays PROPOSED until V-22 is complete"},
+ {id:"P4", t:"Readiness assessment and career journey", w:[10,13],
+  goal:"Give students an evidence-informed picture of their gaps and a short list of reasoned next steps.",
+  del:["Eight-dimension assessment with the 0 to 5 scale and the four segment weight tables","Deterministic, versioned scoring: Readiness = Σ(weight × score / 5) × 100, with proportional redistribution when Portfolio does not apply","Evidence references, assessor, rubric version, date and evidence coverage stored with every score","Preserved history; score private by default; reassessment requests","Deterministic recommendations that state the reason, such as the highest weighted gap","Journey view with completed actions and assessment changes"],
+  exit:["Tests confirm each segment's weights total 100 percent","The same inputs always give the same score","Missing scores are never silently treated as zero","The page states the score is not a hiring probability"],
+  ref:"§8", dep:"P3", appr:"Rubric wording approved by the founder"},
+ {id:"P5", t:"Mentor onboarding and trust", w:[11,15],
+  goal:"Admit only verified mentors, and approve each service one at a time.",
+  del:["Mentor application with profile, experience, domains and requested services","Identity verification through the chosen vendor (V-10), with minimal evidence stored","Professional and experience review queue for verification reviewers","Separate approval or rejection for each requested service","Public mentor profile with honest verification labels; private evidence never shown","Availability rules, timezone handling and price configuration (open decision 6)","Mentor quality metrics collected from day one: response time, attendance, report timeliness"],
+  exit:["An applicant cannot accept a paid booking","Approval of one service does not approve another","Every admin view of identity evidence is logged","Work-email OTP alone never grants approval"],
+  ref:"§9", dep:"P2", appr:"Needs V-10 vendor decision and V-09 mentor agreement before paid activation"},
+ {id:"P6", t:"Discovery and direct booking", w:[15,18],
+  goal:"Let a student find a mentor, hold a slot and reach checkout without any possibility of double booking.",
+  del:["Discovery by goal, service, skills, availability, price and verification label","Slot generation, time-limited holds and safe release on expiry","Atomic slot claim using database constraints and transactions","Booking state machine; only a verified payment event can confirm a booking","Pre-session information collection","Payment adapter interface, with a test-mode implementation used only in non-production environments"],
+  exit:["A concurrency test with parallel claims on one slot produces exactly one winner","Expired holds release the slot","A client cannot set a booking to confirmed","The test-mode adapter cannot be enabled in production"],
+  ref:"§10.1, §10.2, §10.4, §16.1", dep:"P3, P5", appr:"Reschedule limits (open decision 3) needed for the booking design"},
+ {id:"P7", t:"Payments, refunds and mentor settlement", w:[17,21], gated:true,
+  goal:"Collect payment and settle mentors through an arrangement the provider and legal advisers have confirmed in writing.",
+  del:["Real provider adapter behind the interface built in P6","Signature-verified, idempotent, replay-safe webhooks","Separate states for payment capture, booking confirmation, refund initiation, refund completion and settlement","Checkout showing list price, selected discount, tax or fees, and final amount","Fee, commission and payout records following the signed commercial model","Provider reconciliation report"],
+  exit:["Replayed or invalid webhooks create no duplicate payment or booking","Sandbox flow works end to end: pay, confirm, refund, reconcile","Refund timing copy matches what the provider has confirmed","Finance can reconcile a day's payments against the provider"],
+  ref:"§13, V-01 to V-06", dep:"P6, written evidence for V-01 to V-04", appr:"LAUNCH BLOCKER. Do not start until the evidence is on file."},
+ {id:"P8", t:"Smart Match", w:[20,22],
+  goal:"Offer deterministic matching with a clear fallback when no mentor accepts.",
+  del:["Request form with preferred time windows","Candidate selection using service approval, availability, domain fit, quality signals and load; match reasons and configuration version stored","Wave 1 dispatch; Wave 2 after 30 minutes","At two hours with no acceptance, the student chooses an open slot or a full refund","Atomic acceptance: one winner, and the other mentors see an already-accepted message","Notifications at each step"],
+  exit:["Two simultaneous acceptances give one confirmed booking","The system never reschedules a student on its own","Timers survive a restart and run once","The refund path works with the P7 provider model"],
+  ref:"§10.3, §10.4", dep:"P6, P7, V-19", appr:"If the provider cannot support the hold and refund path, adapt the flow and document it first"},
+ {id:"P9", t:"Session delivery and reports", w:[22,25],
+  goal:"Run the session and deliver a useful, service-specific report within 48 hours.",
+  del:["Calendar and meeting link creation (V-13, V-14) and reminders","Attendance events, including join times, and session exceptions","Service-specific report templates, authored by mentors, with versions and timestamps","48-hour report target with mentor reminders and an operations queue for late reports","Secure web view and PDF of the report for the student","Student feedback, journey updates and voluntary outcome tracking labelled self-reported"],
+  exit:["A late report triggers a reminder and appears in the operations queue","A student can open only their own reports","Report revisions keep earlier versions","Calendar failure never reverses a confirmed booking"],
+  ref:"§11", dep:"P6, P7", appr:"Calendar and meeting method (open decision 16) and report templates (10)"},
+ {id:"P10", t:"Memberships, discounts and bundles", w:[24,27], gated:true,
+  goal:"Add Pro and Elite plans and the three-service bundle without discount stacking.",
+  del:["Plans: Free, Pro (₹199 monthly or ₹1,788 yearly) and Elite (₹399 monthly or ₹4,188 yearly)","Subscription states derived from verified provider events, never from the browser","Discount selection: 5 percent Pro, 10 percent Elite, 5 percent for any three eligible services; apply only the better one","Checkout showing amount due today, renewal date and what cancellation does","Bundle redemption and expiry once the rules are approved"],
+  exit:["Tests cover discount selection with every combination, in integer paise","Entitlements follow verified subscription state","Mentor payout uses the original list price as approved"],
+  ref:"§7", dep:"P7", appr:"Needs decisions 7, 8 and 9 and provider support for recurring billing"},
+ {id:"P11", t:"Cancellation, refunds, disputes and support", w:[25,28], gated:true,
+  goal:"Apply the refund baseline consistently and make every exception reviewable.",
+  del:["Policy engine: cancel at least one hour before for 100 percent refund; issue reported within 48 hours after the session; 80 percent refund when substantiated","Mentor cancel and mentor no-show paths where the student chooses a reschedule or a full refund","Dispute evidence view built from booking, payment, attendance and report records","Support tickets with a named owner","Dual approval for high-impact financial actions","Published customer and mentor terms matching the engine"],
+  exit:["Every scenario in PRD §12.2 has a test","No automatic reschedule happens","Each refund shows separate initiated and completed states","Support channel and hours are visible to users"],
+  ref:"§12, §15.2", dep:"P7, P9", appr:"Needs decisions 1, 2, 3 and 13, plus V-07, V-20 and V-21"},
+ {id:"P12", t:"Operations console and analytics", w:[26,29],
+  goal:"Give operations, reviewers and finance the queues and measures they need to run the marketplace.",
+  del:["Queues for verification, booking and Smart Match exceptions, refunds, disputes and late reports","Separate ops, reviewer, finance and super-admin permissions","Audit log review and data export or deletion request handling","Funnel and marketplace metrics, each with a written numerator, denominator and exclusions","Self-reported outcomes kept apart from verified outcomes"],
+  exit:["Each role sees only what its permissions allow","Every metric has a definition on file","Small-sample outcome percentages are not published"],
+  ref:"§15, §20", dep:"P8 to P11", appr:"Final admin role matrix and dual-approval thresholds"},
+ {id:"P13", t:"Hardening and launch readiness", w:[29,31],
+  goal:"Prove the system is safe and recoverable before real users and real money.",
+  del:["Security review of auth, RLS, files and admin permissions, with negative tests for cross-student and cross-mentor access","Privacy workflows: soft delete at once, personal data purge targeted within 30 days, retention schedule applied","Accessibility review against the PRD's baseline","Performance baseline: p75 LCP and API latency","Backup, restore and rollback drills; incident response plan; monitoring alerts","Final policies and agreements published"],
+  exit:["Every item in the launch gate table has evidence","A restore drill has succeeded","No sensitive data appears in logs"],
+  ref:"§18, §19, §21, §22.3", dep:"P12, V-05 to V-09", appr:"Founder signs off the launch gate table"},
+ {id:"P14", t:"Controlled pilot", w:[32,37],
+  goal:"Learn whether students, mentors and operations hold up in practice, starting with Software Engineering, Data Science / AI and Product Management.",
+  del:["Pilot design: location, cohort size, mentor count, service mix and length (open decision 14)","Mentor onboarding for the three launch domains","Daily review of bookings, reports, refunds and support","Measurement against the pilot questions in PRD §22.2","Go or no-go review against metrics set before the pilot begins"],
+  exit:["Pilot metrics reviewed against pre-agreed targets","Pricing and unit economics re-checked (V-22)","Decision recorded: expand, adjust or pause"],
+  ref:"§22", dep:"P13", appr:"If the payment gate is unmet, run a non-transactional pilot only"}
+];
+var FE = {P1:"F0",P2:"F0, F2",P3:"F1, F2, F3",P4:"F3",P5:"F2, F5, F6",P6:"F4",P7:"F4, F6",P8:"F4, F5, F6",P9:"F3, F5",P10:"F7",P11:"F6",P12:"F6"};
+var TRACKS = [
+ {t:"Frontend design in Stitch", w:[5,30]},
+ {t:"Validation and legal (V-01 to V-10)", w:[1,31]},
+ {t:"Mentor sourcing", w:[8,32]}
+];
+var GATES = [
+ ["Written confirmation of a compliant payment collection and mentor settlement arrangement","P7","V-01, V-02, V-03, V-04"],
+ ["Legal and tax review: GST, TDS, invoicing, consumer terms, mentor agreements","P0 to P13","V-05, V-06, V-07, V-09"],
+ ["Privacy review and required policies","P3, P13","V-08"],
+ ["Verified mentor onboarding and service approval working","P5","V-10"],
+ ["Service scope, cancellation, refund and support policies published","P11","V-07, V-20, V-21"],
+ ["Payment reconciliation and refund operations tested end to end","P7, P11","V-01"],
+ ["Security review of auth, RLS, files and admin permissions","P13","V-11, V-15"],
+ ["Production monitoring, backups and incident response in place","P13","V-18"],
+ ["Pilot acceptance against defined metrics","P14","V-22"]
+];
+var DECISIONS = [
+ ["P2","Background job and scheduler mechanism (15); admin role matrix and dual-approval thresholds (12)"],
+ ["P5","Identity verification vendor and evidence policy (11); mentor price flexibility (6)"],
+ ["P6","Rescheduling limits and who is responsible (3)"],
+ ["P7","Payment provider and settlement structure (17); commission and gateway-fee allocation (4); payout cadence and statement format (5)"],
+ ["P9","Calendar and meeting method and OAuth scopes (16); report templates and any admin review (10)"],
+ ["P10","Custom bundle eligibility and partial redemption or refund (7); Elite benefits beyond the discount (8); membership grace period, proration and renewal failure (9)"],
+ ["P11","No-show grace periods (1); late arrival and shortened sessions (2); support channel, hours and response target (13)"],
+ ["P14","Pilot location, cohort size, mentor count and duration (14)"]
+];
+
+function esc(s){return s;}
+function ul(a){return "<ul>"+a.map(function(x){return "<li>"+x+"</li>";}).join("")+"</ul>";}
+
+(function buildGantt(){
+  var g = document.getElementById("gantt");
+  var html = '<div></div>';
+  for (var i=1;i<=TOTAL;i++){
+    html += (i%4===1) ? '<div class="tick">'+i+'</div>' : '<div></div>';
+  }
+  function row(label, w, cls){
+    return '<div class="rowlab" title="'+label+'">'+label+'</div><div class="bar '+cls+'" style="grid-column:'+(w[0]+1)+' / '+(w[1]+2)+'"></div>';
+  }
+  PHASES.forEach(function(p){ html += row(p.id+" "+p.t, p.w, p.gated?"gated":""); });
+  TRACKS.forEach(function(t){ html += row(t.t, t.w, "track"); });
+  g.innerHTML = html;
+  var h = g.querySelector(".tick");
+  g.insertAdjacentHTML("afterbegin","");
+})();
+
+(function buildPhases(){
+  var out = PHASES.map(function(p){
+    var pills = "";
+    if (p.id==="P7") pills = '<span class="pill blocker">Launch blocker</span>';
+    else if (p.gated) pills = '<span class="pill gated">Needs decisions</span>';
+    return '<article class="phase" id="'+p.id.toLowerCase()+'">'
+      + '<div class="phead"><span class="pid">'+p.id+'</span><h3>'+p.t+'</h3>'+pills+'<span class="weeks">Weeks '+p.w[0]+' to '+p.w[1]+'</span></div>'
+      + '<p class="goal">'+p.goal+'</p>'
+      + '<div class="cols"><div><h4>Deliverables</h4>'+ul(p.del)+'</div><div class="exit"><h4>Exit criteria</h4>'+ul(p.exit)+'</div></div>'
+      + '<div class="pmeta"><span><b>PRD</b> '+p.ref+'</span>'+(FE[p.id]?'<span><b>Frontend</b> '+FE[p.id]+'</span>':'')+'<span><b>Depends on</b> '+p.dep+'</span><span><b>Approval</b> '+p.appr+'</span></div>'
+      + '</article>';
+  }).join("");
+  document.getElementById("phaseList").innerHTML = out;
+})();
+
+(function buildGates(){
+  var KEY = "dreamx-gates";
+  var saved = {};
+  try { saved = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch(e) {}
+  var rows = GATES.map(function(g,i){
+    var id = "gate"+i;
+    return '<tr><td><span class="check"><input type="checkbox" id="'+id+'" data-i="'+i+'"'+(saved[i]?" checked":"")+' aria-label="Mark gate done"></span></td>'
+      + '<td><label for="'+id+'">'+g[0]+'</label></td><td class="id">'+g[1]+'</td><td class="id">'+g[2]+'</td></tr>';
+  }).join("");
+  var tb = document.getElementById("gateRows");
+  tb.innerHTML = rows;
+  tb.addEventListener("change", function(e){
+    var t = e.target;
+    if (!t || !t.matches("input[type=checkbox]")) return;
+    saved[t.getAttribute("data-i")] = t.checked;
+    try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch(err) {}
+  });
+})();
+
+(function buildDecisions(){
+  document.getElementById("decRows").innerHTML = DECISIONS.map(function(d){
+    return '<tr><td class="id">'+d[0]+'</td><td>'+d[1]+'</td></tr>';
+  }).join("");
+})();
+</script>
+
+</body></html>
