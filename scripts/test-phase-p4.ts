@@ -244,8 +244,9 @@ async function runTests() {
   console.log('\nGroup 7: Supabase Readiness & Journey Tables');
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const isMock = !supabaseKey || supabaseKey.includes('mock');
 
-  if (supabaseUrl && supabaseKey) {
+  if (supabaseUrl && supabaseKey && !isMock) {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Verify readiness_assessments table is accessible
