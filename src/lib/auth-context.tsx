@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { createClient } from "./supabase/client";
 
 export type UserRole = "student" | "mentor" | "admin";
 export type MembershipTier = "free" | "pro" | "elite";
@@ -12,6 +13,7 @@ export interface UserProfile {
   role: UserRole;
   avatar?: string;
   phone?: string;
+  segment?: string | null;
 }
 
 export interface MembershipState {
@@ -26,11 +28,22 @@ interface AuthContextType {
   user: UserProfile | null;
   role: UserRole | null;
   isAuthenticated: boolean;
+  isLoading: boolean;
   membership: MembershipState;
   login: (role: UserRole, email?: string, name?: string) => void;
-  logout: () => void;
+  logout: () => Promise<void>;
+  signInWithEmail: (email: string, password: string) => Promise<{ success: boolean; error?: string; role?: UserRole }>;
+  signUpWithEmail: (
+    email: string,
+    password: string,
+    fullName: string,
+    role: UserRole,
+    phone?: string
+  ) => Promise<{ success: boolean; error?: string }>;
+  signInWithGoogle: () => Promise<void>;
   upgradeMembership: (tier: "pro" | "elite", annual?: boolean) => void;
   cancelMembership: () => void;
+  refreshProfile: () => Promise<void>;
 }
 
 const defaultMembership: MembershipState = {
@@ -42,40 +55,168 @@ const defaultMembership: MembershipState = {
 const AuthContext = React.createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  // Candidate DX-8421 session state (Default: Free tier, not hardcoded Pro)
-  const [user, setUser] = React.useState<UserProfile | null>(() => {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("dreamx_user");
-      if (stored) {
-        try {
-          return JSON.parse(stored);
-        } catch {
-          // ignore
-        }
-      }
-    }
-    return {
-      id: "dx-8421",
-      name: "Candidate",
-      email: "candidate@dreamx.in",
-      role: "student",
-    };
-  });
+  const [user, setUser] = React.useState<UserProfile | null>(null);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [membership, setMembership] = React.useState<MembershipState>(defaultMembership);
 
-  const [membership, setMembership] = React.useState<MembershipState>(() => {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("dreamx_membership");
-      if (stored) {
-        try {
-          return JSON.parse(stored);
-        } catch {
-          // ignore
+  const supabase = React.useMemo(() => createClient(), []);
+
+  // Fetch profile from public.profiles
+  const fetchProfile = React.useCallback(async (userId: string, authUserEmail?: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, full_name, email, role, avatar_url, phone, segment")
+        .eq("id", userId)
+        .maybeSingle();
+
+      if (!error && data) {
+        const profile: UserProfile = {
+          id: data.id,
+          name: data.full_name || "User",
+          email: data.email || authUserEmail || "",
+          role: (data.role as UserRole) || "student",
+          avatar: data.avatar_url || undefined,
+          phone: data.phone || undefined,
+          segment: data.segment || null,
+        };
+        setUser(profile);
+        if (typeof window !== "undefined") {
+          localStorage.setItem("dreamx_user", JSON.stringify(profile));
         }
+        return;
+      }
+    } catch (err) {
+      console.warn("Could not fetch remote profile:", err);
+    }
+
+    // Fallback if profile row is not yet indexed
+    if (authUserEmail) {
+      const fallbackProfile: UserProfile = {
+        id: userId,
+        name: authUserEmail.split("@")[0],
+        email: authUserEmail,
+        role: "student",
+      };
+      setUser(fallbackProfile);
+    }
+  }, [supabase]);
+
+  // Initial Auth session detection
+  React.useEffect(() => {
+    async function initAuth() {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          await fetchProfile(session.user.id, session.user.email);
+        } else {
+          // Check local prototype session
+          const stored = localStorage.getItem("dreamx_user");
+          if (stored) {
+            try {
+              setUser(JSON.parse(stored));
+            } catch {
+              // ignore
+            }
+          }
+        }
+      } catch (err) {
+        console.warn("Auth initialization error:", err);
+      } finally {
+        setIsLoading(false);
       }
     }
-    // Default to FREE tier
-    return defaultMembership;
-  });
+
+    initAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (session?.user) {
+          await fetchProfile(session.user.id, session.user.email);
+        } else if (event === "SIGNED_OUT") {
+          setUser(null);
+          localStorage.removeItem("dreamx_user");
+        }
+      }
+    );
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [supabase, fetchProfile]);
+
+  const signInWithEmail = async (email: string, password: string) => {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+
+      if (data.user) {
+        await fetchProfile(data.user.id, data.user.email);
+        // Determine role for routing
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", data.user.id)
+          .maybeSingle();
+
+        return { success: true, role: (profile?.role as UserRole) || "student" };
+      }
+
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: err instanceof Error ? err.message : "Authentication failed" };
+    }
+  };
+
+  const signUpWithEmail = async (
+    email: string,
+    password: string,
+    fullName: string,
+    role: UserRole,
+    phone?: string
+  ) => {
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+            role,
+            phone,
+          },
+        },
+      });
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+
+      if (data.user) {
+        await fetchProfile(data.user.id, data.user.email);
+      }
+
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: err instanceof Error ? err.message : "Registration failed" };
+    }
+  };
+
+  const signInWithGoogle = async () => {
+    const origin = typeof window !== "undefined" ? window.location.origin : "http://localhost:3000";
+    await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${origin}/verify-email`,
+      },
+    });
+  };
 
   const login = (role: UserRole, email = "candidate@dreamx.in", name = "Candidate") => {
     const newUser: UserProfile = {
@@ -90,7 +231,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch {
+      // ignore
+    }
     setUser(null);
     setMembership(defaultMembership);
     if (typeof window !== "undefined") {
@@ -100,24 +246,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const upgradeMembership = (tier: "pro" | "elite", annual = false) => {
-    const discount = tier === "elite" ? 10 : 5;
-    const newMembership: MembershipState = {
+    const discountPercent = tier === "elite" ? 10 : 5;
+    const renewal = new Date();
+    if (annual) {
+      renewal.setFullYear(renewal.getFullYear() + 1);
+    } else {
+      renewal.setMonth(renewal.getMonth() + 1);
+    }
+
+    const nextMembership: MembershipState = {
       tier,
       status: "active",
-      discountPercent: discount,
+      discountPercent,
       annualBilling: annual,
-      renewalDate: annual ? "November 2027" : "December 2026",
+      renewalDate: renewal.toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      }),
     };
-    setMembership(newMembership);
+
+    setMembership(nextMembership);
     if (typeof window !== "undefined") {
-      localStorage.setItem("dreamx_membership", JSON.stringify(newMembership));
+      localStorage.setItem("dreamx_membership", JSON.stringify(nextMembership));
     }
   };
 
   const cancelMembership = () => {
     setMembership(defaultMembership);
     if (typeof window !== "undefined") {
-      localStorage.setItem("dreamx_membership", JSON.stringify(defaultMembership));
+      localStorage.removeItem("dreamx_membership");
+    }
+  };
+
+  const refreshProfile = async () => {
+    if (user?.id) {
+      await fetchProfile(user.id, user.email);
     }
   };
 
@@ -127,11 +291,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user,
         role: user?.role || null,
         isAuthenticated: !!user,
+        isLoading,
         membership,
         login,
         logout,
+        signInWithEmail,
+        signUpWithEmail,
+        signInWithGoogle,
         upgradeMembership,
         cancelMembership,
+        refreshProfile,
       }}
     >
       {children}

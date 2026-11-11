@@ -2,6 +2,8 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -14,27 +16,41 @@ import {
 } from "lucide-react";
 
 export default function LoginPage() {
+  const router = useRouter();
+  const { signInWithEmail, signInWithGoogle } = useAuth();
   const [role, setRole] = React.useState<"seeker" | "mentor">("seeker");
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
 
-    // Mock auth transition (to be connected with Supabase in backend phase)
-    setTimeout(() => {
+    if (!email || !password) {
+      setError("Please enter your registered email and password.");
       setIsLoading(false);
-      // Client-side demo feedback
-      if (!email || !password) {
-        setError("Please enter your registered email and password.");
-      } else {
-        window.location.href = role === "mentor" ? "/mentor" : "/dashboard";
-      }
-    }, 700);
+      return;
+    }
+
+    const res = await signInWithEmail(email, password);
+    setIsLoading(false);
+
+    if (!res.success) {
+      setError(res.error || "Invalid email or password. Please try again.");
+      return;
+    }
+
+    // Role-based redirect
+    if (res.role === "mentor" || role === "mentor") {
+      router.push("/mentor");
+    } else if (res.role === "admin") {
+      router.push("/admin");
+    } else {
+      router.push("/dashboard");
+    }
   };
 
   return (
@@ -93,7 +109,8 @@ export default function LoginPage() {
           <div>
             <button
               type="button"
-              className="w-full h-11 px-4 rounded-xl border border-[#e7e7eb] bg-white hover:bg-[#fafafc] text-xs font-bold text-[#171717] flex items-center justify-center gap-2.5 transition-colors shadow-xs"
+              onClick={() => signInWithGoogle()}
+              className="w-full h-11 px-4 rounded-xl border border-[#e7e7eb] bg-white hover:bg-[#fafafc] text-xs font-bold text-[#171717] flex items-center justify-center gap-2.5 transition-colors shadow-xs cursor-pointer"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24">
                 <path d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z" fill="#4285F4" />

@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -54,8 +55,10 @@ export default function OnboardingWizardPage() {
 
   // STEP 4: Resume Upload
   const [resumeFile, setResumeFile] = React.useState<{ name: string; size: string } | null>(null);
+  const [rawFile, setRawFile] = React.useState<File | null>(null);
   const [isEvaluating, setIsEvaluating] = React.useState(false);
   const [evaluationDone, setEvaluationDone] = React.useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   // Quick Pre-fill trigger (Demo helper)
@@ -70,6 +73,7 @@ export default function OnboardingWizardPage() {
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setRawFile(file);
       const sizeStr =
         file.size > 1024 * 1024
           ? (file.size / (1024 * 1024)).toFixed(1) + " MB"
@@ -82,6 +86,7 @@ export default function OnboardingWizardPage() {
     e.preventDefault();
     const file = e.dataTransfer.files?.[0];
     if (file) {
+      setRawFile(file);
       const sizeStr =
         file.size > 1024 * 1024
           ? (file.size / (1024 * 1024)).toFixed(1) + " MB"
@@ -117,8 +122,43 @@ export default function OnboardingWizardPage() {
     }, 1200);
   };
 
-  const handleFinish = () => {
-    router.push("/dashboard");
+  const handleFinish = async () => {
+    setIsSubmitting(true);
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+
+      // Map career stage to candidate_segment enum
+      let segment: "student" | "fresh_graduate" | "early_career" | "career_switcher" = "student";
+      if (careerStage === "fresh-grad") segment = "fresh_graduate";
+      else if (careerStage === "early-career") segment = "early_career";
+      else if (careerStage === "career-switcher") segment = "career_switcher";
+
+      if (user?.id) {
+        // 1. Update profile in Supabase
+        await supabase
+          .from("profiles")
+          .update({
+            segment,
+            target_role: targetRole,
+            target_company_tier: selectedCompanies.join(", "),
+            bio: `${degree || "Degree Candidate"} @ ${university || "University"} (${gradYear || "2026"}). Skills: ${skills.join(", ")}`,
+          })
+          .eq("id", user.id);
+
+        // 2. Upload resume to private bucket if provided
+        if (rawFile) {
+          await supabase.storage
+            .from("resumes")
+            .upload(`${user.id}/resume.pdf`, rawFile, { upsert: true });
+        }
+      }
+    } catch (err) {
+      console.warn("Could not save onboarding to Supabase:", err);
+    } finally {
+      setIsSubmitting(false);
+      router.push("/dashboard");
+    }
   };
 
   // Readiness calculation preview
@@ -671,8 +711,8 @@ export default function OnboardingWizardPage() {
                   <Button variant="ghost" onClick={() => setStep(3)}>
                     <ArrowLeft className="w-4 h-4 mr-1" /> Back
                   </Button>
-                  <Button size="lg" onClick={handleFinish} className="shadow-md">
-                    <span>Complete & Launch Workspace</span>
+                  <Button size="lg" onClick={handleFinish} disabled={isSubmitting} className="shadow-md">
+                    <span>{isSubmitting ? "Saving Profile..." : "Complete & Launch Workspace"}</span>
                     <ArrowRight className="w-4 h-4 ml-1" />
                   </Button>
                 </div>

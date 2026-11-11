@@ -1,6 +1,6 @@
 /**
  * DreamX Supabase Database TypeScript Definitions
- * Phase P2 Platform Foundations
+ * Adheres strictly to @supabase/supabase-js GenericTable structure with Relationships.
  */
 
 export type Json =
@@ -64,6 +64,7 @@ export interface Database {
           bio?: string | null;
           updated_at?: string;
         };
+        Relationships: [];
       };
       mentor_profiles: {
         Row: {
@@ -119,6 +120,7 @@ export interface Database {
           reviews_count?: number;
           updated_at?: string;
         };
+        Relationships: [];
       };
       audit_logs: {
         Row: {
@@ -143,7 +145,18 @@ export interface Database {
           ip_address?: string | null;
           created_at?: string;
         };
-        Update: never; // Audit logs are immutable
+        Update: {
+          id?: string;
+          actor_id?: string | null;
+          action?: string;
+          target_type?: string;
+          target_id?: string;
+          reason_code?: string | null;
+          metadata?: Json;
+          ip_address?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
       };
       notifications: {
         Row: {
@@ -169,7 +182,82 @@ export interface Database {
         Update: {
           read?: boolean;
         };
+        Relationships: [];
       };
+      services: {
+        Row: {
+          id: string;
+          code: ServiceCode;
+          slug: string;
+          title: string;
+          short_description: string;
+          full_description: string;
+          category: string;
+          duration_minutes: number;
+          list_paise: number;
+          deliverable: string;
+          sla_hours: number;
+          format: string;
+          popular: boolean;
+          prerequisites: string[];
+          rubric_criteria: string[];
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id: string;
+          code: ServiceCode;
+          slug: string;
+          title: string;
+          short_description: string;
+          full_description: string;
+          category: string;
+          duration_minutes: number;
+          list_paise: number;
+          deliverable: string;
+          sla_hours?: number;
+          format: string;
+          popular?: boolean;
+          prerequisites?: string[];
+          rubric_criteria?: string[];
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          code?: ServiceCode;
+          slug?: string;
+          title?: string;
+          short_description?: string;
+          full_description?: string;
+          category?: string;
+          duration_minutes?: number;
+          list_paise?: number;
+          deliverable?: string;
+          sla_hours?: number;
+          format?: string;
+          popular?: boolean;
+          prerequisites?: string[];
+          rubric_criteria?: string[];
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+    };
+    Views: {
+      [_ in never]: never;
+    };
+    Functions: {
+      [_ in never]: never;
+    };
+    Enums: {
+      user_role: UserRole;
+      candidate_segment: CandidateSegment;
+      verification_status: VerificationStatus;
+      service_code: ServiceCode;
+    };
+    CompositeTypes: {
+      [_ in never]: never;
     };
   };
 }

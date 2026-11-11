@@ -3,6 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PhoneInput } from "@/components/ui/phone-input";
@@ -17,6 +18,7 @@ import {
 
 export default function SignUpPage() {
   const router = useRouter();
+  const { signUpWithEmail, signInWithGoogle } = useAuth();
   const [role, setRole] = React.useState<"student" | "mentor">("student");
   const [name, setName] = React.useState("");
   const [email, setEmail] = React.useState("");
@@ -26,22 +28,37 @@ export default function SignUpPage() {
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
     if (!acceptedTerms) {
-      setError("Please accept the Terms of Service and Privacy Policy.");
+      setError("Please accept the Terms of Service and Privacy Policy under DPDP Act 2023.");
+      return;
+    }
+
+    if (!name.trim()) {
+      setError("Please enter your full name.");
+      return;
+    }
+
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters long.");
       return;
     }
 
     setIsLoading(true);
 
-    setTimeout(() => {
-      setIsLoading(false);
-      // Route to email verification step
-      router.push(`/verify-email?email=${encodeURIComponent(email)}&role=${role}`);
-    }, 700);
+    const res = await signUpWithEmail(email, password, name, role, phone);
+    setIsLoading(false);
+
+    if (!res.success) {
+      setError(res.error || "Failed to create account. Please check your credentials.");
+      return;
+    }
+
+    // Route to email verification step
+    router.push(`/verify-email?email=${encodeURIComponent(email)}&role=${role}`);
   };
 
   return (
@@ -99,7 +116,8 @@ export default function SignUpPage() {
           <div>
             <button
               type="button"
-              className="w-full h-11 px-4 rounded-xl border border-[#e7e7eb] bg-white hover:bg-[#fafafc] text-xs font-bold text-[#171717] flex items-center justify-center gap-2.5 transition-colors shadow-xs"
+              onClick={() => signInWithGoogle()}
+              className="w-full h-11 px-4 rounded-xl border border-[#e7e7eb] bg-white hover:bg-[#fafafc] text-xs font-bold text-[#171717] flex items-center justify-center gap-2.5 transition-colors shadow-xs cursor-pointer"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24">
                 <path d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z" fill="#4285F4" />
