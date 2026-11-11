@@ -32,6 +32,7 @@ export default function StudentDashboardLayout({
 
   const navItems = [
     { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
+    { name: "Career Journey", href: "/dashboard/journey", icon: Compass },
     { name: "8-Axis Readiness", href: "/dashboard/readiness", icon: Target },
     { name: "My Bookings & SLAs", href: "/dashboard/bookings", icon: Calendar, badge: "Active" },
     { name: "Diagnostic Reports", href: "/dashboard/reports", icon: FileCheck },

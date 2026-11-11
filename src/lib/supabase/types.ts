@@ -243,6 +243,73 @@ export interface Database {
         };
         Relationships: [];
       };
+      readiness_assessments: {
+        Row: {
+          id: string;
+          user_id: string;
+          overall_score: number;
+          segment: CandidateSegment;
+          rubric_version: string;
+          evidence_coverage: number;
+          dimension_scores: Json;
+          assessor_id: string | null;
+          is_private: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          overall_score: number;
+          segment: CandidateSegment;
+          rubric_version?: string;
+          evidence_coverage?: number;
+          dimension_scores: Json;
+          assessor_id?: string | null;
+          is_private?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          overall_score?: number;
+          segment?: CandidateSegment;
+          rubric_version?: string;
+          evidence_coverage?: number;
+          dimension_scores?: Json;
+          assessor_id?: string | null;
+          is_private?: boolean;
+        };
+        Relationships: [];
+      };
+      career_journey_events: {
+        Row: {
+          id: string;
+          user_id: string;
+          title: string;
+          description: string;
+          category: string;
+          metadata: Json;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          title: string;
+          description: string;
+          category: string;
+          metadata?: Json;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          title?: string;
+          description?: string;
+          category?: string;
+          metadata?: Json;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;

@@ -103,7 +103,9 @@ export default function StudentDashboardPage() {
 
             <div className="pt-3 border-t border-[#f7f7f8] flex items-center justify-between text-xs">
               <span className="text-[#66666f]">Offer Readiness Target: 85+</span>
-              <span className="text-[#5145cd] font-semibold">View Rubric</span>
+              <Link href="/dashboard/readiness" className="text-[#5145cd] font-semibold hover:underline">
+                View Rubric
+              </Link>
             </div>
           </Card>
 
@@ -177,11 +179,18 @@ export default function StudentDashboardPage() {
                 Objective 0 to 5 observable rubric scores mapped from verified mentor sessions.
               </p>
             </div>
-            <Link href="/services">
-              <Button variant="outline" size="sm">
-                Take Diagnostic Intervention
-              </Button>
-            </Link>
+            <div className="flex items-center gap-2">
+              <Link href="/dashboard/readiness">
+                <Button variant="outline" size="sm">
+                  Calibrate 8-Axis Model
+                </Button>
+              </Link>
+              <Link href="/services">
+                <Button size="sm">
+                  Book Diagnostic Session
+                </Button>
+              </Link>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
