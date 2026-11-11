@@ -3,151 +3,130 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import {
-  Menu,
-  X,
-  ArrowRight,
-  ShieldCheck,
-} from "lucide-react";
+import { useAuth } from "@/lib/auth-context";
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
-  const [scrolled, setScrolled] = React.useState(false);
   const pathname = usePathname();
-
-  React.useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 40);
-    };
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  const { user } = useAuth();
 
   const navLinks = [
     { name: "How It Works", href: "/how-it-works" },
-    { name: "Services", href: "/services", badge: "10" },
+    { name: "Services", href: "/services" },
     { name: "Mentors", href: "/mentors" },
+    { name: "Readiness Model", href: "/dashboard/readiness" },
     { name: "Membership", href: "/membership" },
   ];
 
   return (
     <>
-      <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-200 ${
-          scrolled
-            ? "bg-white/95 backdrop-blur-md shadow-sm border-b border-[#e7e7eb] py-2.5"
-            : "bg-white/80 backdrop-blur-sm border-b border-[#e7e7eb] py-3.5"
-        }`}
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+      <header className="fixed top-0 left-0 right-0 w-full z-50 bg-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] border-b border-surface-container">
+        <div className="h-20 max-w-7xl mx-auto px-6 lg:px-12 flex items-center justify-between gap-6">
           {/* Brand Logo */}
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-xl bg-[#5145cd] text-white flex items-center justify-center font-bold text-xl shadow-sm transition-transform group-hover:scale-105">
+          <Link href="/" className="flex items-center gap-3 shrink-0">
+            <div className="w-9 h-9 rounded-lg bg-primary-container flex items-center justify-center text-on-primary font-bold text-lg font-heading shadow-xs">
               D
             </div>
             <div className="flex flex-col">
-              <div className="flex items-center gap-1.5">
-                <span className="text-xl font-extrabold tracking-tight text-[#171717]">
-                  Dream<span className="text-[#5145cd]">X</span>
-                </span>
-                <span className="px-1.5 py-0.5 rounded bg-[#eef2ff] text-[#5145cd] text-[10px] font-bold tracking-wider uppercase">
-                  India
-                </span>
-              </div>
-              <span className="text-[11px] font-medium text-[#66666f] tracking-normal hidden sm:block">
-                Outcome-Accountable Career Network
+              <span className="font-bold text-lg text-on-surface tracking-tight leading-none font-heading">
+                Dream<span className="text-primary">X</span>
+              </span>
+              <span className="text-[10px] text-outline tracking-wider uppercase scale-90 origin-left mt-0.5 font-semibold">
+                Career Acceleration
               </span>
             </div>
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center gap-8" aria-label="Main Navigation">
+          <nav className="hidden xl:flex items-center gap-7" aria-label="Main Navigation">
             {navLinks.map((link) => {
               const isActive = pathname === link.href;
               return (
                 <Link
                   key={link.name}
                   href={link.href}
-                  className={`text-sm font-semibold transition-colors flex items-center gap-1.5 ${
+                  className={`text-sm transition-colors ${
                     isActive
-                      ? "text-[#5145cd]"
-                      : "text-[#66666f] hover:text-[#171717]"
+                      ? "text-on-surface font-bold"
+                      : "text-on-surface-variant hover:text-on-surface font-medium"
                   }`}
                 >
                   {link.name}
-                  {link.badge && (
-                    <span className="px-1.5 py-0.5 rounded-full bg-[#ebf7ee] text-[#16834a] text-[10px] font-bold">
-                      {link.badge}
-                    </span>
-                  )}
                 </Link>
               );
             })}
           </nav>
 
           {/* Right Action Controls */}
-          <div className="flex items-center gap-3">
-            {/* India Region Pill */}
-            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#f7f7f8] border border-[#e7e7eb] text-xs font-semibold text-[#171717]">
-              <span>🇮🇳</span>
-              <span className="tnum">INR (₹)</span>
-            </div>
+          <div className="flex items-center gap-4 shrink-0">
+            {user ? (
+              <Link
+                href="/dashboard"
+                className="hidden sm:inline-flex text-xs font-bold text-on-surface hover:text-primary transition-colors px-3 py-2"
+              >
+                Dashboard
+              </Link>
+            ) : (
+              <Link
+                href="/login"
+                className="hidden sm:inline-flex text-xs font-bold text-on-surface-variant hover:text-on-surface transition-colors px-3 py-2"
+              >
+                Sign In
+              </Link>
+            )}
 
-            {/* Sign In */}
             <Link
-              href="/login"
-              className="text-sm font-semibold text-[#171717] hover:text-[#5145cd] px-2 transition-colors hidden sm:inline-block"
+              href="/signup"
+              className="inline-flex items-center justify-center bg-primary text-on-primary text-xs font-bold px-5 py-2.5 rounded-lg shadow-[0_1px_3px_0_rgba(23,23,23,0.04)] hover:bg-primary-container hover:text-on-primary-container transition-colors"
             >
-              Sign In
+              Get Started
             </Link>
 
-            {/* Primary CTA */}
-            <Link href="/signup">
-              <Button size="sm" className="hidden sm:inline-flex">
-                <span>Get Started</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Button>
+            <Link
+              href={user ? "/dashboard" : "/login"}
+              className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0 text-on-primary"
+              title={user?.name || "Account"}
+            >
+              <span className="material-symbols-outlined text-[18px]">person</span>
             </Link>
 
             {/* Mobile Hamburger Toggle */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2 rounded-lg text-[#66666f] hover:text-[#171717] hover:bg-[#f7f7f8] focus:outline-none"
+              className="xl:hidden p-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container focus:outline-none"
               aria-label="Toggle mobile menu"
             >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              <span className="material-symbols-outlined text-[24px]">
+                {mobileMenuOpen ? "close" : "menu"}
+              </span>
             </button>
           </div>
         </div>
       </header>
 
-      {/* Mobile Drawer Sheet */}
+      {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-40 lg:hidden flex">
-          {/* Backdrop */}
+        <div className="fixed inset-0 z-40 xl:hidden flex">
           <div
             className="fixed inset-0 bg-black/40 backdrop-blur-xs transition-opacity"
             onClick={() => setMobileMenuOpen(false)}
           />
-
-          {/* Drawer content */}
-          <div className="relative ml-auto w-full max-w-sm bg-white h-full shadow-2xl p-6 flex flex-col justify-between z-50 overflow-y-auto">
+          <div className="relative ml-auto w-full max-w-sm bg-surface h-full shadow-2xl p-6 flex flex-col justify-between z-50 overflow-y-auto">
             <div className="space-y-6">
-              <div className="flex items-center justify-between pb-4 border-b border-[#e7e7eb]">
+              <div className="flex items-center justify-between pb-4 border-b border-surface-container">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-[#5145cd] text-white flex items-center justify-center font-bold">
+                  <div className="w-8 h-8 rounded-lg bg-primary text-on-primary flex items-center justify-center font-bold">
                     D
                   </div>
-                  <span className="font-bold text-lg text-[#171717]">
-                    Dream<span className="text-[#5145cd]">X</span>
+                  <span className="font-bold text-lg text-on-surface font-heading">
+                    Dream<span className="text-primary">X</span>
                   </span>
                 </div>
                 <button
                   onClick={() => setMobileMenuOpen(false)}
-                  className="p-1.5 rounded-md text-[#66666f] hover:bg-[#f7f7f8]"
+                  className="p-1.5 rounded-md text-on-surface-variant hover:bg-surface-container"
                 >
-                  <X className="w-5 h-5" />
+                  <span className="material-symbols-outlined text-lg">close</span>
                 </button>
               </div>
 
@@ -158,43 +137,28 @@ export function Header() {
                     key={link.name}
                     href={link.href}
                     onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-semibold text-[#171717] hover:bg-[#f7f7f8]"
+                    className="px-3 py-2 rounded-lg text-sm font-semibold text-on-surface hover:bg-surface-container transition-colors"
                   >
-                    <span>{link.name}</span>
-                    {link.badge && (
-                      <span className="px-2 py-0.5 rounded-full bg-[#ebf7ee] text-[#16834a] text-xs font-bold">
-                        {link.badge}
-                      </span>
-                    )}
+                    {link.name}
                   </Link>
                 ))}
               </nav>
-
-              {/* Region & Trust Note */}
-              <div className="p-3.5 rounded-xl bg-[#f7f7f8] border border-[#e7e7eb] space-y-2">
-                <div className="flex items-center justify-between text-xs font-semibold text-[#171717]">
-                  <span>Currency: INR (₹)</span>
-                  <span className="text-[#16834a] flex items-center gap-1">
-                    <ShieldCheck className="w-3.5 h-3.5" /> India Alpha
-                  </span>
-                </div>
-                <p className="text-[11px] text-[#66666f] leading-normal">
-                  All fees inclusive of 18% GST. Standardized 48h report turnaround SLA.
-                </p>
-              </div>
             </div>
 
-            {/* Bottom Actions */}
-            <div className="space-y-3 pt-6 border-t border-[#e7e7eb]">
-              <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="w-full block">
-                <Button variant="outline" className="w-full">
-                  Sign In
-                </Button>
+            <div className="pt-6 border-t border-surface-container space-y-3">
+              <Link
+                href="/login"
+                onClick={() => setMobileMenuOpen(false)}
+                className="w-full block py-2.5 text-center text-xs font-bold text-on-surface bg-surface-container hover:bg-surface-container-high rounded-lg transition-colors"
+              >
+                Sign In
               </Link>
-              <Link href="/signup" onClick={() => setMobileMenuOpen(false)} className="w-full block">
-                <Button variant="primary" className="w-full">
-                  Get Started
-                </Button>
+              <Link
+                href="/signup"
+                onClick={() => setMobileMenuOpen(false)}
+                className="w-full block py-2.5 text-center text-xs font-bold text-on-primary bg-primary hover:bg-primary-container rounded-lg transition-colors shadow-xs"
+              >
+                Get Started — Free Check
               </Link>
             </div>
           </div>

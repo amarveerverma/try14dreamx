@@ -41,10 +41,10 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
         />
       </head>
-      <body className="min-h-full flex flex-col bg-[#fafafc] text-[#171717] font-sans">
+      <body className="min-h-full flex flex-col bg-surface text-on-surface font-sans">
         <AuthProvider>
           <Header />
-          <main className="flex-1 w-full pt-16 sm:pt-20 flex flex-col">
+          <main className="flex-1 w-full pt-20 flex flex-col">
             {children}
           </main>
           <Footer />
