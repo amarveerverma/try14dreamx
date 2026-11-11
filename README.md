@@ -1,4 +1,14 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# DreamX (CM-IN) — Outcome-Accountable Career Network
+
+An India-first, outcome-accountable career success marketplace built with Next.js 16 (Turbopack), Tailwind CSS, Supabase, and Vercel.
+
+## Verification & Environments
+- **Environment:** Production & Preview deployments configured via Vercel
+- **Database:** Supabase PostgreSQL 17.11 with Row-Level Security (RLS)
+- **Timezone:** `Asia/Kolkata` (IST)
+- **Currency:** Indian Rupee (`₹` INR) in integer paise
+
+---
 
 ## Getting Started
 
