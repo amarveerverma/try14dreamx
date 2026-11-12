@@ -524,7 +524,7 @@ export function HowItWorksClient() {
                 <div className="flex items-center justify-between text-[11px] text-outline-variant">
                   <span>ESCROW TRANSACTION LEDGER</span>
                   <div className="flex items-center gap-2">
-                    <span className="text-secondary-fixed">LIVE DEMO PROTOCOL</span>
+                    <span className="text-secondary-fixed">LIVE ESCROW PROTOCOL</span>
                     <button
                       type="button"
                       onClick={copyLedgerSnippet}

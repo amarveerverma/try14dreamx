@@ -12,9 +12,7 @@ export default function MentorOnboardingPage() {
   const [idType, setIdType] = React.useState("aadhaar");
   const [idNumber, setIdNumber] = React.useState("•••• •••• 8912");
   const [showId, setShowId] = React.useState(false);
-  const [uploadedBadge, setUploadedBadge] = React.useState<string | null>(
-    "Google_L5_Staff_ID_Badge.pdf (2.4 MB)"
-  );
+  const [uploadedBadge, setUploadedBadge] = React.useState<string | null>(null);
   const [weeklyHours, setWeeklyHours] = React.useState("6");
   const [saving, setSaving] = React.useState(false);
   const [successNotice, setSuccessNotice] = React.useState(false);
@@ -314,23 +312,37 @@ export default function MentorOnboardingPage() {
                     </button>
                   </div>
                 ) : (
-                  <div className="border-2 border-dashed border-[#c8c4d6] hover:border-[#5145cd] rounded-xl p-8 text-center space-y-2 cursor-pointer bg-[#fcf9f8] transition-colors">
+                  <div className="relative border-2 border-dashed border-[#c8c4d6] hover:border-[#5145cd] rounded-xl p-8 text-center space-y-2 bg-[#fcf9f8] transition-colors">
+                    <input
+                      type="file"
+                      id="badge-upload-input"
+                      accept=".pdf,.png,.jpg,.jpeg"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          setUploadedBadge(`${file.name} (${(file.size / (1024 * 1024)).toFixed(1)} MB)`);
+                        }
+                      }}
+                      className="sr-only"
+                    />
                     <div className="w-12 h-12 rounded-full bg-[#e3dfff] text-[#5145cd] flex items-center justify-center mx-auto">
                       <span className="material-symbols-outlined text-[24px]">cloud_upload</span>
                     </div>
                     <div className="text-xs font-bold text-[#1c1b1b]">
-                      Drag and drop your work proof here, or <span className="text-[#5145cd] underline">browse files</span>
+                      Drag and drop your work proof here, or{" "}
+                      <label htmlFor="badge-upload-input" className="text-[#5145cd] underline cursor-pointer hover:text-[#3828b5]">
+                        browse files
+                      </label>
                     </div>
                     <p className="text-[11px] text-[#777585]">
                       Supported formats: PDF, PNG, JPG (Corporate ID Badge front &amp; back, recent Offer Letter, or Form 16)
                     </p>
-                    <button
-                      type="button"
-                      onClick={() => setUploadedBadge("Google_L5_Staff_ID_Badge.pdf (2.4 MB)")}
-                      className="mt-2 px-3 py-1.5 rounded-lg bg-white border border-[#e7e7eb] text-xs font-bold text-[#1c1b1b]"
+                    <label
+                      htmlFor="badge-upload-input"
+                      className="inline-block mt-2 px-4 py-2 rounded-lg bg-white border border-[#e7e7eb] hover:bg-[#f6f3f2] text-xs font-bold text-[#1c1b1b] cursor-pointer shadow-xs"
                     >
-                      Select Sample ID Badge
-                    </button>
+                      Browse Document
+                    </label>
                   </div>
                 )}
                 <p className="text-[11px] text-[#777585]">
