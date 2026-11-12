@@ -2,734 +2,937 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useAuth } from "@/lib/auth-context";
 
-interface Mentor {
+interface ServiceCardData {
   id: string;
+  code: string;
+  slug: string;
   name: string;
-  role: string;
-  company: string;
-  experience: string;
-  rating: number;
-  reviewsCount: number;
-  initials: string;
-  avatarBg: string;
-  badges: string[];
-  approvedServices: string;
-  bio: string;
-  nextSlot: string;
-  startingPrice: number;
-  domain: "engineering" | "product" | "data";
+  duration: string;
+  durationMins: number;
+  category: "resume-profile" | "tech-drills" | "behavioral" | "career-strategy";
+  badge: string;
+  badgeStyle?: string;
+  isPopular?: boolean;
+  tagline: string;
+  deliverableTitle: string;
+  deliverableDesc: string;
+  deliverableIcon: string;
+  linkedWeight: string;
+  deliverableBg?: string;
+  deliverableTextColor?: string;
+  deliverableIconColor?: string;
+  receives: string[];
+  price: number;
+  mentorTag: string;
 }
 
-const MENTORS_LIST: Mentor[] = [
+const SERVICES_DATA: ServiceCardData[] = [
   {
-    id: "mentor-rahul",
-    name: "Rahul Verma",
-    role: "Staff Engineer",
-    company: "Swiggy",
-    experience: "7 Years Exp • Ex-Flipkart",
-    rating: 4.95,
-    reviewsCount: 42,
-    initials: "RV",
-    avatarBg: "bg-primary-fixed text-primary",
-    badges: ["Verified Identity", "Tech Lead Verified"],
-    approvedServices: "Approved for: S01, S06, S10",
-    bio: "Specializes in high-throughput distributed systems, algorithmic concurrency, and backend architecture round calibration.",
-    nextSlot: "Tomorrow, 4:00 PM IST",
-    startingPrice: 599,
-    domain: "engineering",
+    id: "s01",
+    code: "S01",
+    slug: "s01-resume-review",
+    name: "Resume Review",
+    duration: "45 min",
+    durationMins: 45,
+    category: "resume-profile",
+    badge: "Core Baseline",
+    tagline: "Comprehensive line-by-line critique to transform duty-focused resumes into verified quantitative impact statements.",
+    deliverableTitle: "Deliverable SLA (48 Hours)",
+    deliverableDesc: "48h PDF + Action Checklist & ATS Benchmark",
+    deliverableIcon: "description",
+    linkedWeight: "Linked: Resume Readiness (15% Weight)",
+    receives: [
+      "Line-by-line annotation of work experience and project bullets",
+      "XYZ impact formula conversion (Accomplished [X] measured by [Y] by doing [Z])",
+      "ATS parsing check across standard enterprise scanners",
+    ],
+    price: 599,
+    mentorTag: "Tier-1 GCC Mentors",
   },
   {
-    id: "mentor-sneha",
-    name: "Sneha Rao",
-    role: "Principal PM",
-    company: "Razorpay",
-    experience: "9 Years Exp • Ex-Paytm, IIT-B",
-    rating: 4.98,
-    reviewsCount: 68,
-    initials: "SR",
-    avatarBg: "bg-secondary-fixed text-secondary",
-    badges: ["Verified Identity", "Executive Verified"],
-    approvedServices: "Approved for: S07, S08, S09",
-    bio: "APM/PM hiring panelist with focus on product sense, estimation metrics, go-to-market strategies, and STAR narrative construction.",
-    nextSlot: "Friday, 6:30 PM IST",
-    startingPrice: 499,
-    domain: "product",
+    id: "s02",
+    code: "S02",
+    slug: "s02-ats-optimization",
+    name: "ATS Resume Optimization",
+    duration: "45 min",
+    durationMins: 45,
+    category: "resume-profile",
+    badge: "High Conversion",
+    badgeStyle: "bg-secondary/10 text-secondary",
+    tagline: "Algorithm-level tailoring aligning target job descriptions with keyword taxonomy and parseable schema.",
+    deliverableTitle: "Deliverable SLA (48 Hours)",
+    deliverableDesc: "48h Annotated ATS Audit & Keyword Map Report",
+    deliverableIcon: "analytics",
+    linkedWeight: "Linked: Resume & Technical Skills",
+    receives: [
+      "Keyword density & frequency alignment against 3 target job descriptions",
+      "JD semantic match score benchmark (Target >85% match)",
+      "Layout & typography restructuring eliminating unparseable tables/columns",
+    ],
+    price: 799,
+    mentorTag: "ATS Benchmark Certified",
   },
   {
-    id: "mentor-tanmay",
-    name: "Tanmay Bhattacharya",
-    role: "Senior Software Engineer",
-    company: "Google",
-    experience: "5 Years Exp • Core Infrastructure",
-    rating: 4.92,
-    reviewsCount: 35,
-    initials: "TB",
-    avatarBg: "bg-tertiary-fixed text-tertiary",
-    badges: ["Verified Identity", "Algorithms Specialist"],
-    approvedServices: "Approved for: S06, S10",
-    bio: "Rigorous DSA and System Design mock rounds. Specializes in graph algorithms, dynamic programming edge-cases, and Google rubric standards.",
-    nextSlot: "Saturday, 11:00 AM IST",
-    startingPrice: 999,
-    domain: "engineering",
+    id: "s03",
+    code: "S03",
+    slug: "s03-linkedin-review",
+    name: "LinkedIn Profile Review",
+    duration: "30 min",
+    durationMins: 30,
+    category: "resume-profile",
+    badge: "Quick Impact",
+    badgeStyle: "bg-tertiary-fixed text-on-tertiary-fixed-variant",
+    tagline: "Transform your profile into an inbound recruiter magnet with search indexing and high-converting bio architecture.",
+    deliverableTitle: "Deliverable SLA (48 Hours)",
+    deliverableDesc: "48h Profile Optimization Blueprint (PDF)",
+    deliverableIcon: "feed",
+    linkedWeight: "Linked: LinkedIn Readiness (8–10% Weight)",
+    receives: [
+      "Recruiter search Boolean visibility audit and SEO indexing score",
+      "Custom Headline, About Section, and Featured Carousel copy templates",
+      "Experience section reorganization highlighting ownership",
+    ],
+    price: 499,
+    mentorTag: "Talent Acquisition Leads",
   },
   {
-    id: "mentor-pooja",
-    name: "Pooja Sundaram",
-    role: "Engineering Manager",
-    company: "Intuit",
-    experience: "11 Years Exp • Hiring Committee Lead",
-    rating: 5.0,
-    reviewsCount: 54,
-    initials: "PS",
-    avatarBg: "bg-primary-container text-on-primary-container",
-    badges: ["Verified Identity", "Hiring Committee Veteran"],
-    approvedServices: "Approved for: S04, S05, S06",
-    bio: "Chaired 150+ software engineering debriefs. Guides early talent on cross-functional alignment, code cleanliness, and behavioral mastery.",
-    nextSlot: "Sunday, 2:00 PM IST",
-    startingPrice: 799,
-    domain: "engineering",
+    id: "s04",
+    code: "S04",
+    slug: "s04-portfolio-review",
+    name: "Portfolio Review",
+    duration: "45 min",
+    durationMins: 45,
+    category: "resume-profile",
+    badge: "Proof of Work",
+    tagline: "Rigorous inspection of personal projects, code repositories, architecture diagrams, and deployment artifacts.",
+    deliverableTitle: "Deliverable SLA (48 Hours)",
+    deliverableDesc: "48h Project Teardown Report & GitHub Rubric",
+    deliverableIcon: "terminal",
+    linkedWeight: "Linked: Portfolio Readiness (5–15% Weight)",
+    receives: [
+      "GitHub repo code audit (modularization, commit discipline, testing coverage)",
+      "System README revision with architecture diagrams & trade-off logs",
+      "Live deployment validation (monitoring, CI/CD pipeline, performance audit)",
+    ],
+    price: 599,
+    mentorTag: "Principal Engineers",
+  },
+  {
+    id: "s05",
+    code: "S05",
+    slug: "s05-behavioral-mock",
+    name: "Behavioral Mock Interview",
+    duration: "60 min",
+    durationMins: 60,
+    category: "behavioral",
+    badge: "Amazon/GCC Bar",
+    badgeStyle: "bg-secondary-fixed text-on-secondary-fixed",
+    tagline: "High-intensity scenario grilling benchmarked against Amazon Leadership Principles and GCC cultural bars.",
+    deliverableTitle: "Deliverable SLA (48 Hours)",
+    deliverableDesc: "48h Behavioral Scorecard (6 Rubric Dimensions)",
+    deliverableIcon: "psychology",
+    linkedWeight: "Linked: Communication & Confidence",
+    receives: [
+      "STAR (Situation-Task-Action-Result) response structuring drill",
+      "Red-flag elimination (rambling, lack of ownership, defensive posture)",
+      "6-point executive presence & articulation benchmark score",
+    ],
+    price: 799,
+    mentorTag: "Engineering Managers",
+  },
+  {
+    id: "s06",
+    code: "S06",
+    slug: "s06-technical-mock",
+    name: "Technical Mock Interview",
+    duration: "60 min",
+    durationMins: 60,
+    category: "tech-drills",
+    badge: "Tier-1 Standard",
+    badgeStyle: "bg-primary-fixed text-on-primary-fixed",
+    isPopular: true,
+    tagline: "Live simulation of System Design, API architecture, concurrency scenarios, and real-time trade-off drills.",
+    deliverableTitle: "Deliverable SLA (48 Hours)",
+    deliverableDesc: "Comprehensive 8-Dimension Technical Scorecard",
+    deliverableIcon: "assessment",
+    deliverableBg: "bg-primary-fixed/20",
+    deliverableTextColor: "text-primary",
+    deliverableIconColor: "text-primary",
+    linkedWeight: "Linked: Technical & Interview Skills (35% Combined)",
+    receives: [
+      "Whiteboard architecture breakdown with horizontal scaling constraints",
+      "Tier-1 hire / no-hire rubric calibration from FAANG/Unicorn tech leads",
+      "Actionable 14-day technical remediation syllabus with resources",
+    ],
+    price: 999,
+    mentorTag: "Staff & Principal SDEs Only",
+  },
+  {
+    id: "s07",
+    code: "S07",
+    slug: "s07-career-consultation",
+    name: "Career Consultation",
+    duration: "30 min",
+    durationMins: 30,
+    category: "career-strategy",
+    badge: "Clarity Session",
+    tagline: "High-focus diagnostic triage to untangle role transitions, toxic work environments, and career stalls.",
+    deliverableTitle: "Deliverable SLA (48 Hours)",
+    deliverableDesc: "48h 30-Day Focus Action Plan (PDF)",
+    deliverableIcon: "explore",
+    linkedWeight: "Linked: Career Planning Readiness",
+    receives: [
+      "Role viability assessment across Startups vs. GCCs vs. Service giants",
+      "Immediate resume & portfolio prioritization triage",
+      "Target company whitelist based on candidate's current capability index",
+    ],
+    price: 499,
+    mentorTag: "Veteran Engineering Leads",
+  },
+  {
+    id: "s08",
+    code: "S08",
+    slug: "s08-salary-negotiation",
+    name: "Salary Negotiation",
+    duration: "30 min",
+    durationMins: 30,
+    category: "career-strategy",
+    badge: "High ROI",
+    badgeStyle: "bg-secondary/10 text-secondary",
+    tagline: "Tactical counter-offer framing, base vs. variable analysis, and ESOP valuation calculations for Indian tech offers.",
+    deliverableTitle: "Deliverable SLA (48 Hours)",
+    deliverableDesc: "48h Counter-Offer Strategy Document & Scripts",
+    deliverableIcon: "payments",
+    linkedWeight: "Linked: Career Planning & Confidence",
+    receives: [
+      "Band benchmarking across Bangalore/NCR/Hyderabad tech markets",
+      "Word-for-word counter-offer emails and HR negotiation call scripts",
+      "ESOP cliff and strike price liquidation sensitivity breakdown",
+    ],
+    price: 699,
+    mentorTag: "Avg. +28% Delta Achieved",
+  },
+  {
+    id: "s09",
+    code: "S09",
+    slug: "s09-career-roadmap",
+    name: "Career Roadmap Session",
+    duration: "60 min",
+    durationMins: 60,
+    category: "career-strategy",
+    badge: "Long-term Growth",
+    tagline: "Architecting your next 6-12 months of skill acquisition, capstone projects, and promotion readiness.",
+    deliverableTitle: "Deliverable SLA (48 Hours)",
+    deliverableDesc: "48h Milestone Matrix & Learning Syllabus (PDF)",
+    deliverableIcon: "alt_route",
+    linkedWeight: "Linked: Career Planning & Tech Skills",
+    receives: [
+      "6-month structured engineering milestone roadmap with weekly sprint gates",
+      "Recommended production capstone specifications (architecture & load expectations)",
+      "Promotion ladder criteria (SDE-1 to SDE-2 expectation matrix)",
+    ],
+    price: 799,
+    mentorTag: "Directors & Lead Architects",
+  },
+  {
+    id: "s10",
+    code: "S10",
+    slug: "s10-coding-interview",
+    name: "Coding Interview Preparation",
+    duration: "60 min",
+    durationMins: 60,
+    category: "tech-drills",
+    badge: "DSA & Algorithms",
+    badgeStyle: "bg-tertiary-fixed text-on-tertiary-fixed-variant",
+    tagline: "Live algorithmic problem-solving with rigorous focus on time-space complexity and edge-case handling.",
+    deliverableTitle: "Deliverable SLA (48 Hours)",
+    deliverableDesc: "48h Code Review Notes & Pattern Reference Sheet",
+    deliverableIcon: "code",
+    linkedWeight: "Linked: Technical Skills (20% Weight)",
+    receives: [
+      "Two medium-to-hard LeetCode style problems solved under live time pressure",
+      "Algorithmic pattern recognition cheat sheet tailored to your gaps",
+      "Clean-code audit: idiomatic syntax, modularity, and defensive assertions",
+    ],
+    price: 999,
+    mentorTag: "Competitive Programmers & SDEs",
   },
 ];
 
-export default function ServicesDiscoverPage() {
-  const { membership } = useAuth();
-  const isPro = membership?.tier === "pro" || membership?.tier === "elite";
+export default function ServicesCatalogPage() {
+  const [searchQuery, setSearchQuery] = React.useState("");
+  const [selectedCategory, setSelectedCategory] = React.useState<string>("all");
+  const [selectedDuration, setSelectedDuration] = React.useState<string>("all");
+  const [selectedTargetStage, setSelectedTargetStage] = React.useState<string>("all");
+  const [selectedServices, setSelectedServices] = React.useState<ServiceCardData[]>([]);
+  const [isModalOpen, setIsModalOpen] = React.useState(false);
 
-  const [activeGoal, setActiveGoal] = React.useState<string>("all");
-  const [activeDomain, setActiveDomain] = React.useState<"engineering" | "product" | "data">("engineering");
-  const [searchQuery, setSearchQuery] = React.useState<string>("");
-  const [experienceFilter, setExperienceFilter] = React.useState<string>("");
+  const searchInputRef = React.useRef<HTMLInputElement>(null);
 
-  const filteredMentors = React.useMemo(() => {
-    return MENTORS_LIST.filter((mentor) => {
-      const matchDomain = mentor.domain === activeDomain;
-      const matchSearch =
-        mentor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        mentor.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        mentor.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        mentor.bio.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchDomain && matchSearch;
+  // Keyboard shortcut Ctrl/Cmd + K
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  // Filter Services
+  const filteredServices = React.useMemo(() => {
+    return SERVICES_DATA.filter((svc) => {
+      const matchesCategory = selectedCategory === "all" || svc.category === selectedCategory;
+      const matchesDuration =
+        selectedDuration === "all" ||
+        (selectedDuration === "30" && svc.durationMins === 30) ||
+        (selectedDuration === "45" && svc.durationMins === 45) ||
+        (selectedDuration === "60" && svc.durationMins === 60);
+
+      const matchesStage =
+        selectedTargetStage === "all" ||
+        (selectedTargetStage === "Students & Fresh Grads" && (svc.code === "S01" || svc.code === "S03" || svc.code === "S09")) ||
+        (selectedTargetStage === "0-2 YOE (Early Career)" && (svc.code === "S02" || svc.code === "S05" || svc.code === "S06" || svc.code === "S10")) ||
+        (selectedTargetStage === "Non-Tech to Tech Switchers" && (svc.code === "S04" || svc.code === "S07" || svc.code === "S08"));
+
+      const q = searchQuery.toLowerCase().trim();
+      const matchesSearch =
+        !q ||
+        svc.name.toLowerCase().includes(q) ||
+        svc.code.toLowerCase().includes(q) ||
+        svc.tagline.toLowerCase().includes(q) ||
+        svc.deliverableDesc.toLowerCase().includes(q) ||
+        svc.mentorTag.toLowerCase().includes(q);
+
+      return matchesCategory && matchesDuration && matchesStage && matchesSearch;
     });
-  }, [activeDomain, searchQuery]);
+  }, [searchQuery, selectedCategory, selectedDuration, selectedTargetStage]);
+
+  // Bundle Handling
+  const handleToggleBundle = (svc: ServiceCardData) => {
+    const isAlreadySelected = selectedServices.some((s) => s.code === svc.code);
+    if (isAlreadySelected) {
+      setSelectedServices(selectedServices.filter((s) => s.code !== svc.code));
+    } else {
+      if (selectedServices.length >= 3) {
+        alert("Custom Track limit reached: Please uncheck one service to choose another.");
+        return;
+      }
+      setSelectedServices([...selectedServices, svc]);
+    }
+  };
+
+  const bundleCount = selectedServices.length;
+  const bundleGrossPrice = selectedServices.reduce((sum, s) => sum + s.price, 0);
+  const bundleDiscount = bundleCount === 3 ? Math.round(bundleGrossPrice * 0.05) : 0;
+  const bundleFinalPrice = bundleGrossPrice - bundleDiscount;
+
+  const resetAllFilters = () => {
+    setSearchQuery("");
+    setSelectedCategory("all");
+    setSelectedDuration("all");
+    setSelectedTargetStage("all");
+  };
 
   return (
-    <div className="flex flex-col w-full px-4 sm:px-6 lg:px-8 py-8 space-y-12 bg-background min-h-screen">
-      {/* Discovery Sub-header with Readiness Pill */}
-      <section className="flex flex-col gap-6">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div className="flex flex-col gap-1 max-w-2xl">
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-primary-container text-on-primary text-xs font-bold">
-                Diagnostic-Driven
-              </span>
-              <span className="text-on-surface-variant text-xs">Updated 14h ago</span>
+    <div className="flex flex-col w-full bg-surface">
+      {/* Top Hero & Assurance Section */}
+      <section className="w-full bg-surface-container-low/70 py-10 sm:py-12 lg:py-16 relative overflow-hidden border-b border-outline-variant/30">
+        <div className="absolute -top-32 right-1/4 w-96 h-96 rounded-full bg-primary/5 blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-24 left-1/3 w-80 h-80 rounded-full bg-secondary-container/20 blur-3xl pointer-events-none" />
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
+          {/* Eyebrow & Live Protocol Status */}
+          <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 mb-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary-fixed text-on-primary-fixed text-xs font-bold">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+              PRD V3.0 Standardized Catalog
             </div>
-            <h1 className="text-3xl sm:text-4xl font-extrabold text-on-surface tracking-tight font-heading mt-1">
-              Discover &amp; Goal-First Recommendations
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container text-on-surface-variant text-xs font-semibold">
+              <span className="material-symbols-outlined text-[15px] text-secondary">verified_user</span>
+              Strict Deliverable SLA Protocol Active
+            </div>
+          </div>
+
+          {/* Main Headline & Value Subtitle */}
+          <div className="max-w-4xl space-y-3 sm:space-y-4">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-on-surface tracking-tight leading-tight font-heading">
+              Outcome-Accountable <span className="text-primary">Career Services</span>
             </h1>
-            <p className="text-sm text-on-surface-variant leading-relaxed">
-              Pinpoint your current readiness gaps or explore verified services and mentors tailored to your target role.
+            <p className="text-sm sm:text-base lg:text-lg text-on-surface-variant leading-relaxed max-w-3xl">
+              Ten standardized 1:1 mentorship modules with fixed pricing in INR, verified Tier-1 mentors, enforceable 48-hour deliverable SLAs, and 100% refund guarantee if cancelled ≥1 hour before session.
             </p>
           </div>
 
-          {/* Target Role Context Badge Card */}
-          <div className="bg-surface-container-low rounded-2xl p-5 shadow-xs max-w-md w-full border border-surface-container">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex flex-col">
-                <span className="text-[11px] uppercase tracking-wider text-on-surface-variant font-bold">
-                  Current Career Target
-                </span>
-                <span className="text-base font-bold text-on-surface mt-0.5">
-                  Associate Product Manager / SDE-1
-                </span>
+          {/* Trust & Reassurance Badges Pill Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 mt-8 pt-4">
+            <div className="bg-surface-container-lowest p-4 rounded-xl shadow-xs border border-outline-variant/30 flex items-start gap-3">
+              <div className="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center shrink-0 mt-0.5 text-primary">
+                <span className="material-symbols-outlined text-[20px]">format_list_numbered</span>
               </div>
-              <div className="flex flex-col items-end">
-                <span className="text-2xl font-extrabold text-primary font-heading">
-                  68<span className="text-xs font-normal text-on-surface-variant">/100</span>
-                </span>
-                <span className="text-[11px] text-error font-bold">Needs Improvement</span>
+              <div>
+                <div className="text-sm font-bold text-on-surface leading-snug font-heading">
+                  No Fluff / No Calls Without Rubric
+                </div>
+                <div className="text-xs text-on-surface-variant mt-0.5">Structured checklists only</div>
               </div>
             </div>
-            <div className="mt-3 pt-2 border-t border-surface-container flex items-center gap-2 text-on-surface-variant text-xs">
-              <span className="material-symbols-outlined text-sm text-error">priority_high</span>
-              <span>Critical deficits in Technical Coding &amp; Interview Execution</span>
-            </div>
-          </div>
-        </div>
 
-        {/* Interactive Goal Selector Chips */}
-        <div className="flex flex-col gap-2 pt-2">
-          <span className="text-xs text-on-surface-variant uppercase tracking-wider font-bold">
-            What are you trying to improve right now?
-          </span>
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setActiveGoal("all")}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer ${
-                activeGoal === "all"
-                  ? "bg-primary text-on-primary"
-                  : "bg-surface-container hover:bg-surface-container-high text-on-surface"
-              }`}
-            >
-              <span>All Objectives</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveGoal("tech")}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
-                activeGoal === "tech"
-                  ? "bg-primary text-on-primary shadow-xs"
-                  : "bg-surface-container hover:bg-surface-container-high text-on-surface"
-              }`}
-            >
-              <span>Prepare for technical &amp; coding interviews</span>
-              <span className="px-2 py-0.5 rounded-full bg-error-container text-on-error-container text-[10px] font-bold">
-                Top Gap
-              </span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveGoal("behavioral")}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
-                activeGoal === "behavioral"
-                  ? "bg-primary text-on-primary shadow-xs"
-                  : "bg-surface-container hover:bg-surface-container-high text-on-surface"
-              }`}
-            >
-              <span>Master behavioral &amp; STAR rounds</span>
-              <span className="px-2 py-0.5 rounded-full bg-surface-variant text-on-surface-variant text-[10px] font-bold">
-                Needs Attention
-              </span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveGoal("resume")}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
-                activeGoal === "resume"
-                  ? "bg-primary text-on-primary shadow-xs"
-                  : "bg-surface-container hover:bg-surface-container-high text-on-surface"
-              }`}
-            >
-              <span>Improve my resume &amp; ATS score</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveGoal("portfolio")}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
-                activeGoal === "portfolio"
-                  ? "bg-primary text-on-primary shadow-xs"
-                  : "bg-surface-container hover:bg-surface-container-high text-on-surface"
-              }`}
-            >
-              <span>Review portfolio &amp; capstones</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveGoal("linkedin")}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
-                activeGoal === "linkedin"
-                  ? "bg-primary text-on-primary shadow-xs"
-                  : "bg-surface-container hover:bg-surface-container-high text-on-surface"
-              }`}
-            >
-              <span>Optimize LinkedIn profile</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveGoal("salary")}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
-                activeGoal === "salary"
-                  ? "bg-primary text-on-primary shadow-xs"
-                  : "bg-surface-container hover:bg-surface-container-high text-on-surface"
-              }`}
-            >
-              <span>Salary negotiation &amp; offer strategy</span>
-            </button>
+            <div className="bg-surface-container-lowest p-4 rounded-xl shadow-xs border border-outline-variant/30 flex items-start gap-3">
+              <div className="w-8 h-8 rounded-lg bg-secondary/10 flex items-center justify-center shrink-0 mt-0.5 text-secondary">
+                <span className="material-symbols-outlined text-[20px]">assignment_turned_in</span>
+              </div>
+              <div>
+                <div className="text-sm font-bold text-on-surface leading-snug font-heading">
+                  48-Hour Scorecard SLA
+                </div>
+                <div className="text-xs text-on-surface-variant mt-0.5">Timestamped PDF report</div>
+              </div>
+            </div>
+
+            <div className="bg-surface-container-lowest p-4 rounded-xl shadow-xs border border-outline-variant/30 flex items-start gap-3">
+              <div className="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center shrink-0 mt-0.5 text-primary">
+                <span className="material-symbols-outlined text-[20px]">currency_rupee</span>
+              </div>
+              <div>
+                <div className="text-sm font-bold text-on-surface leading-snug font-heading">
+                  100% &amp; 80% Refund Guarantee
+                </div>
+                <div className="text-xs text-on-surface-variant mt-0.5">≥1h cancel or deliverable default</div>
+              </div>
+            </div>
+
+            <div className="bg-surface-container-lowest p-4 rounded-xl shadow-xs border border-outline-variant/30 flex items-start gap-3">
+              <div className="w-8 h-8 rounded-lg bg-tertiary-fixed flex items-center justify-center shrink-0 mt-0.5 text-tertiary">
+                <span className="material-symbols-outlined text-[20px]">lock</span>
+              </div>
+              <div>
+                <div className="text-sm font-bold text-on-surface leading-snug font-heading">
+                  Razorpay Escrow Protected
+                </div>
+                <div className="text-xs text-on-surface-variant mt-0.5">Mentor paid upon sign-off</div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Dual-Booking Pathways Explainer Banner */}
-      <section className="bg-surface-container-lowest rounded-2xl p-6 lg:p-8 shadow-xs border border-surface-container">
-        <div className="flex flex-col lg:flex-row gap-6 items-stretch">
-          <div className="lg:w-1/3 flex flex-col justify-between pr-4">
+      {/* Sticky Bundle Selection Bar (PRD §7.3 & §7.4 Bundle Builder Floating Bar) */}
+      <div className="w-full bg-surface-container-high py-3.5 sm:py-4 px-4 sm:px-6 lg:px-12 sticky top-20 z-40 shadow-xs transition-all duration-300 border-b border-outline-variant/30">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3 sm:gap-4 w-full md:w-auto">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-primary-container flex items-center justify-center text-on-primary-container shrink-0">
+              <span className="material-symbols-outlined text-[20px] sm:text-[22px]">auto_awesome</span>
+            </div>
             <div>
-              <span className="text-xs text-primary uppercase font-bold tracking-wider">DreamX Dispatch System</span>
-              <h2 className="text-xl font-bold text-on-surface mt-1 font-heading">Two Transparent Paths to Schedule</h2>
-              <p className="text-xs text-on-surface-variant mt-2 leading-relaxed">
-                No auto-reschedules or phantom availability. Choose between vetted direct mentor selection or algorithmic fast dispatch.
+              <div className="flex items-center gap-2">
+                <span className="text-xs sm:text-sm font-bold text-on-surface font-heading">
+                  Custom 3-Service Career Track
+                </span>
+                <span className="px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container text-[11px] font-bold">
+                  Automatic 5% Discount
+                </span>
+              </div>
+              <p className="text-xs text-on-surface-variant mt-0.5 leading-snug">
+                Select any 3 modules. 100% funded by DreamX platform escrow — mentor fee is never reduced.
               </p>
             </div>
-            <div className="mt-4 flex items-center gap-2 text-on-secondary-container text-xs font-bold bg-secondary-container/40 px-3 py-1.5 rounded-lg w-fit">
-              <span className="material-symbols-outlined text-base text-secondary">verified_user</span>
-              <span>100% Escrow Protection on All Bookings</span>
-            </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:w-2/3">
-            {/* Direct Booking Card */}
-            <div className="bg-surface-container-low rounded-xl p-5 flex flex-col justify-between">
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center gap-2 text-on-surface">
-                  <span className="material-symbols-outlined text-primary">calendar_clock</span>
-                  <span className="text-sm font-bold">Direct Mentor Hold</span>
-                </div>
-                <p className="text-xs text-on-surface-variant leading-relaxed">
-                  Select specific verified mentors from top Tier-1 GCCs and unicorn startups with an instant calendar hold locked directly into their Google Calendar.
-                </p>
+
+          {/* Tracker & Action Button */}
+          <div className="flex items-center justify-between md:justify-end gap-4 sm:gap-5 w-full md:w-auto">
+            <div className="flex items-center gap-2">
+              <div className="flex gap-1.5">
+                <span
+                  className={`w-3 h-3 rounded-full transition-colors ${
+                    bundleCount >= 1 ? "bg-primary" : "bg-surface-container-highest"
+                  }`}
+                />
+                <span
+                  className={`w-3 h-3 rounded-full transition-colors ${
+                    bundleCount >= 2 ? "bg-primary" : "bg-surface-container-highest"
+                  }`}
+                />
+                <span
+                  className={`w-3 h-3 rounded-full transition-colors ${
+                    bundleCount >= 3 ? "bg-primary" : "bg-surface-container-highest"
+                  }`}
+                />
               </div>
-              <div className="mt-4 pt-3 border-t border-surface-container flex items-center justify-between text-xs text-on-surface-variant">
-                <span>Guaranteed slot confirmation</span>
-                <span className="font-bold text-primary">Instant Confirmation</span>
-              </div>
+              <span className="text-xs text-on-surface-variant font-bold whitespace-nowrap">
+                {bundleCount}/3 selected
+              </span>
             </div>
 
-            {/* Smart Match Dispatch Card */}
-            <div className="bg-surface-container-low rounded-xl p-5 flex flex-col justify-between">
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center gap-2 text-on-surface">
-                  <span className="material-symbols-outlined text-tertiary">bolt</span>
-                  <span className="text-sm font-bold">Smart Match Dispatch</span>
-                </div>
-                <p className="text-xs text-on-surface-variant leading-relaxed">
-                  Algorithmic match with guaranteed 30-min Wave 2 fallback, atomic claims, and a 2-Hour 100% refund guarantee if unfulfilled.
-                </p>
-              </div>
-              <div className="mt-4 pt-3 border-t border-surface-container flex items-center justify-between text-xs text-on-surface-variant">
-                <span>Refund Guarantee</span>
-                <span className="font-bold text-secondary">100% Auto-Refund (2h)</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Deterministic Recommendation Engine (Rubric Driven) */}
-      <section className="flex flex-col gap-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div className="flex items-center gap-3">
-            <h2 className="text-xl sm:text-2xl font-bold text-on-surface tracking-tight font-heading">
-              Personalized Gap Recommendations
-            </h2>
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant text-xs font-bold">
-              Grounded in Diagnostic Rubric
-            </span>
-          </div>
-          <span className="text-xs text-on-surface-variant">Priority ordered by target impact weight</span>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Recommendation Card 1 (Top Priority: S06) */}
-          <div className="bg-surface-container-lowest rounded-2xl shadow-xs flex flex-col justify-between transition-transform duration-200 hover:-translate-y-1 border border-surface-container">
-            <div className="p-6 flex flex-col gap-3">
-              <div className="flex items-start justify-between gap-2">
-                <span className="px-2 py-0.5 rounded bg-error text-on-error text-[11px] font-bold uppercase">
-                  Top Priority Gap
-                </span>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-xl font-extrabold text-on-surface font-heading">
-                    {isPro ? "₹949" : "₹999"}
-                  </span>
-                  {isPro && (
-                    <span className="line-through text-on-surface-variant text-xs">₹999</span>
+            <div className="flex items-center gap-3">
+              <div className="text-right hidden sm:block">
+                <div className="text-sm font-bold text-on-surface font-heading">
+                  {bundleCount === 3 ? (
+                    <>
+                      <span className="line-through text-outline text-xs mr-1 font-normal">
+                        ₹{bundleGrossPrice}
+                      </span>
+                      <span>₹{bundleFinalPrice}</span>
+                    </>
+                  ) : (
+                    `₹${bundleGrossPrice}`
                   )}
-                  <span className="text-[11px] text-secondary font-bold pl-1">Pro -5%</span>
+                </div>
+                <div
+                  className={`text-[11px] font-medium ${
+                    bundleCount === 3 ? "text-secondary font-bold" : "text-outline"
+                  }`}
+                >
+                  {bundleCount === 3
+                    ? `You save ₹${bundleDiscount} (5% Platform Discount)`
+                    : `Pick ${3 - bundleCount} to unlock 5%`}
                 </div>
               </div>
-              <div>
-                <div className="flex items-center gap-2 text-on-surface-variant text-xs">
-                  <span>Code: S06</span>
-                  <span>•</span>
-                  <span>60 Minutes</span>
-                  <span>•</span>
-                  <span>1:1 Live Coding</span>
-                </div>
-                <h3 className="text-base font-bold text-on-surface mt-1 font-heading">Technical Mock Interview</h3>
-              </div>
-              {/* Rationale Callout */}
-              <div className="bg-error-container/40 rounded-xl p-3 flex flex-col gap-1">
-                <span className="text-xs text-on-error-container font-bold flex items-center gap-1">
-                  <span className="material-symbols-outlined text-sm">troubleshoot</span>
-                  Why recommended
-                </span>
-                <p className="text-xs text-on-error-container leading-relaxed">
-                  Technical Skills is weighted 20% with current score 2/5 (Below Benchmark) for SDE-1 targets.
-                </p>
-              </div>
-              {/* Deliverables Box */}
-              <div className="flex flex-col gap-1 text-on-surface-variant text-xs">
-                <span className="font-bold text-on-surface">Standard Deliverables:</span>
-                <p className="text-xs leading-normal">
-                  Detailed 48h rubric scorecard, code complexity audit, and actionable revision checklist.
-                </p>
-              </div>
-              <div className="flex items-center gap-2 pt-1 text-xs">
-                <span className="material-symbols-outlined text-sm text-secondary">check_circle</span>
-                <span className="font-medium text-on-surface">Top Match: Rohan Iyer (Senior SDE @ Swiggy)</span>
-              </div>
-            </div>
-            <div className="bg-surface-container-low p-4 rounded-b-2xl flex items-center gap-2 border-t border-surface-container">
-              <Link
-                href="/services/s06-technical-mock"
-                className="flex-1 py-2 px-3 rounded-lg bg-primary text-on-primary text-xs hover:bg-primary-container transition-colors text-center font-bold"
-              >
-                Direct Book ({isPro ? "₹949" : "₹999"})
-              </Link>
-              <Link
-                href="/services/s06-technical-mock"
-                className="flex-1 py-2 px-3 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface text-xs transition-colors text-center font-semibold"
-              >
-                Smart Match
-              </Link>
-            </div>
-          </div>
 
-          {/* Recommendation Card 2: S05 */}
-          <div className="bg-surface-container-lowest rounded-2xl shadow-xs flex flex-col justify-between transition-transform duration-200 hover:-translate-y-1 border border-surface-container">
-            <div className="p-6 flex flex-col gap-3">
-              <div className="flex items-start justify-between gap-2">
-                <span className="px-2 py-0.5 rounded bg-surface-variant text-on-surface-variant text-[11px] font-bold uppercase">
-                  Core Interview Rubric
-                </span>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-xl font-extrabold text-on-surface font-heading">
-                    {isPro ? "₹759" : "₹799"}
-                  </span>
-                  {isPro && (
-                    <span className="line-through text-on-surface-variant text-xs">₹799</span>
-                  )}
-                  <span className="text-[11px] text-secondary font-bold pl-1">Pro -5%</span>
-                </div>
-              </div>
-              <div>
-                <div className="flex items-center gap-2 text-on-surface-variant text-xs">
-                  <span>Code: S05</span>
-                  <span>•</span>
-                  <span>60 Minutes</span>
-                  <span>•</span>
-                  <span>Role-play &amp; Feedback</span>
-                </div>
-                <h3 className="text-base font-bold text-on-surface mt-1 font-heading">Behavioral Mock Interview</h3>
-              </div>
-              {/* Rationale Callout */}
-              <div className="bg-surface-container rounded-xl p-3 flex flex-col gap-1">
-                <span className="text-xs text-on-surface-variant font-bold flex items-center gap-1">
-                  <span className="material-symbols-outlined text-sm">psychology</span>
-                  Why recommended
-                </span>
-                <p className="text-xs text-on-surface-variant leading-relaxed">
-                  STAR framework delivery flagged as inconsistent during initial diagnostic. Leadership attributes need structure.
-                </p>
-              </div>
-              {/* Deliverables Box */}
-              <div className="flex flex-col gap-1 text-on-surface-variant text-xs">
-                <span className="font-bold text-on-surface">Standard Deliverables:</span>
-                <p className="text-xs leading-normal">
-                  Recorded communication clarity metrics, leadership rubric evaluation, and question bank.
-                </p>
-              </div>
-              <div className="flex items-center gap-2 pt-1 text-xs">
-                <span className="material-symbols-outlined text-sm text-secondary">check_circle</span>
-                <span className="font-medium text-on-surface">Top Match: Sneha Rao (Principal PM @ Razorpay)</span>
-              </div>
-            </div>
-            <div className="bg-surface-container-low p-4 rounded-b-2xl flex items-center gap-2 border-t border-surface-container">
-              <Link
-                href="/services/s05-behavioral-mock"
-                className="flex-1 py-2 px-3 rounded-lg bg-primary text-on-primary text-xs hover:bg-primary-container transition-colors text-center font-bold"
+              <button
+                type="button"
+                onClick={() => setIsModalOpen(true)}
+                disabled={bundleCount !== 3}
+                className={`text-xs font-bold px-4 sm:px-5 py-2.5 rounded-lg transition-all inline-flex items-center gap-2 cursor-pointer ${
+                  bundleCount === 3
+                    ? "bg-primary text-on-primary shadow-md hover:bg-primary-container"
+                    : "bg-primary text-on-primary opacity-40 cursor-not-allowed"
+                }`}
               >
-                Direct Book ({isPro ? "₹759" : "₹799"})
-              </Link>
-              <Link
-                href="/services/s05-behavioral-mock"
-                className="flex-1 py-2 px-3 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface text-xs transition-colors text-center font-semibold"
-              >
-                Smart Match
-              </Link>
-            </div>
-          </div>
-
-          {/* Recommendation Card 3: S02 */}
-          <div className="bg-surface-container-lowest rounded-2xl shadow-xs flex flex-col justify-between transition-transform duration-200 hover:-translate-y-1 border border-surface-container">
-            <div className="p-6 flex flex-col gap-3">
-              <div className="flex items-start justify-between gap-2">
-                <span className="px-2 py-0.5 rounded bg-surface-variant text-on-surface-variant text-[11px] font-bold uppercase">
-                  Keyword &amp; Filter Gap
-                </span>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-xl font-extrabold text-on-surface font-heading">
-                    {isPro ? "₹759" : "₹799"}
-                  </span>
-                  {isPro && (
-                    <span className="line-through text-on-surface-variant text-xs">₹799</span>
-                  )}
-                  <span className="text-[11px] text-secondary font-bold pl-1">Pro -5%</span>
-                </div>
-              </div>
-              <div>
-                <div className="flex items-center gap-2 text-on-surface-variant text-xs">
-                  <span>Code: S02</span>
-                  <span>•</span>
-                  <span>45 Minutes</span>
-                  <span>•</span>
-                  <span>Async + 1:1 Review</span>
-                </div>
-                <h3 className="text-base font-bold text-on-surface mt-1 font-heading">ATS Resume Optimization</h3>
-              </div>
-              {/* Rationale Callout */}
-              <div className="bg-surface-container rounded-xl p-3 flex flex-col gap-1">
-                <span className="text-xs text-on-surface-variant font-bold flex items-center gap-1">
-                  <span className="material-symbols-outlined text-sm">description</span>
-                  Why recommended
-                </span>
-                <p className="text-xs text-on-surface-variant leading-relaxed">
-                  Resume score 84/100; missing key enterprise distributed systems keywords required by Tier-1 job filters.
-                </p>
-              </div>
-              {/* Deliverables Box */}
-              <div className="flex flex-col gap-1 text-on-surface-variant text-xs">
-                <span className="font-bold text-on-surface">Standard Deliverables:</span>
-                <p className="text-xs leading-normal">
-                  Line-by-line rewrite suggestions, keyword gap matrix, and 48-hour delivery commitment.
-                </p>
-              </div>
-              <div className="flex items-center gap-2 pt-1 text-xs">
-                <span className="material-symbols-outlined text-sm text-secondary">check_circle</span>
-                <span className="font-medium text-on-surface">Top Match: Tanmay B. (Senior SWE @ Google)</span>
-              </div>
-            </div>
-            <div className="bg-surface-container-low p-4 rounded-b-2xl flex items-center gap-2 border-t border-surface-container">
-              <Link
-                href="/services/s02-ats-optimization"
-                className="flex-1 py-2 px-3 rounded-lg bg-primary text-on-primary text-xs hover:bg-primary-container transition-colors text-center font-bold"
-              >
-                Direct Book ({isPro ? "₹759" : "₹799"})
-              </Link>
-              <Link
-                href="/services/s02-ats-optimization"
-                className="flex-1 py-2 px-3 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface text-xs transition-colors text-center font-semibold"
-              >
-                Smart Match
-              </Link>
+                <span>Review Bundle Track</span>
+                <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+              </button>
             </div>
           </div>
         </div>
-      </section>
+      </div>
 
-      {/* Custom 3-Service Bundle Promo Banner */}
-      <section className="bg-primary text-on-primary rounded-2xl p-6 lg:p-8 shadow-md relative overflow-hidden">
-        <div className="absolute right-0 top-0 bottom-0 opacity-10 flex items-center pointer-events-none">
-          <span className="material-symbols-outlined text-[180px]">auto_fix_high</span>
-        </div>
-        <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-6">
-          <div className="max-w-2xl flex flex-col gap-2">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary text-on-secondary text-xs font-bold w-fit">
-              <span className="material-symbols-outlined text-sm">savings</span>
-              <span>Save an extra 5% with Custom 3-Service Bundle</span>
-            </div>
-            <h3 className="text-xl sm:text-2xl font-bold font-heading">
-              Bundle Any 3 Services for Target Readiness
-            </h3>
-            <p className="text-xs text-on-primary/80 leading-relaxed">
-              Pick any 3 distinct services. DreamX absorbs the bundle discount—mentors are always paid 100% of their standard payout. Zero discount stacking, pure acceleration.
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <Link
-              href="/services"
-              className="px-5 py-3 rounded-lg bg-surface-container-lowest text-primary hover:bg-surface-container text-xs font-extrabold shadow-sm transition-all whitespace-nowrap"
-            >
-              Build Your 3-Service Bundle
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Vetted Mentor Directory with Filters & Domain Tabs */}
-      <section className="flex flex-col gap-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div>
-            <h2 className="text-xl sm:text-2xl font-bold text-on-surface tracking-tight font-heading">
-              Explore Verified Mentors
-            </h2>
-            <p className="text-xs text-on-surface-variant">
-              Top practitioners who have completed identity verification and mentor calibration.
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-on-surface-variant font-medium">
-              Showing {filteredMentors.length} Verified Mentors
-            </span>
-          </div>
-        </div>
-
-        {/* Filter & Search Controls Header */}
-        <div className="bg-surface-container-lowest rounded-2xl p-4 shadow-xs flex flex-col gap-4 border border-surface-container">
-          {/* Domain Tabs */}
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setActiveDomain("engineering")}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                activeDomain === "engineering"
-                  ? "bg-primary text-on-primary"
-                  : "bg-surface-container hover:bg-surface-container-high text-on-surface"
-              }`}
-            >
-              Software Engineering
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveDomain("product")}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                activeDomain === "product"
-                  ? "bg-primary text-on-primary"
-                  : "bg-surface-container hover:bg-surface-container-high text-on-surface"
-              }`}
-            >
-              Product Management
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveDomain("data")}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                activeDomain === "data"
-                  ? "bg-primary text-on-primary"
-                  : "bg-surface-container hover:bg-surface-container-high text-on-surface"
-              }`}
-            >
-              Data Science &amp; AI
-            </button>
-          </div>
-
-          {/* Filter Controls Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-3 pt-1">
-            {/* Search Input */}
-            <div className="md:col-span-2 relative flex items-center">
-              <span className="material-symbols-outlined absolute left-3 text-on-surface-variant text-base select-none pointer-events-none">
+      {/* Main Discovery & Services Section */}
+      <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 py-8 sm:py-10">
+        {/* Controls Header: Search + Dimension Filter Tabs */}
+        <div className="space-y-5 sm:space-y-6 mb-8 sm:mb-10">
+          {/* Search and Duration Filter */}
+          <div className="flex flex-col lg:flex-row gap-4 items-stretch lg:items-center justify-between">
+            <div className="relative flex-1 max-w-2xl">
+              <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline text-[20px]">
                 search
               </span>
               <input
-                className="w-full h-10 pl-9 pr-3 rounded-lg bg-surface-container-low text-on-surface text-xs placeholder:text-on-surface-variant focus:outline-none focus:bg-surface-container transition-colors"
-                placeholder="Search mentor, skill (e.g. Distributed Systems), or company..."
+                ref={searchInputRef}
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search by service name, career challenge, or keyword (e.g. System Design, Resume ATS, Salary Negotiation)..."
+                className="w-full bg-surface-container-lowest text-on-surface placeholder:text-outline pl-11 pr-24 py-3 rounded-xl shadow-xs text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 border border-outline-variant/30"
               />
+              <div className="absolute right-3.5 top-1/2 -translate-y-1/2 hidden sm:flex items-center gap-1 px-2 py-1 rounded bg-surface-container text-outline text-[11px] font-bold">
+                <span>⌘</span>
+                <span>K</span>
+              </div>
             </div>
-            {/* Experience Select */}
-            <div>
-              <select
-                className="w-full h-10 px-3 rounded-lg bg-surface-container-low text-on-surface text-xs focus:outline-none focus:bg-surface-container cursor-pointer"
-                value={experienceFilter}
-                onChange={(e) => setExperienceFilter(e.target.value)}
-              >
-                <option value="">Any Experience Level</option>
-                <option value="3-5">3 - 5 Years (Mid-level)</option>
-                <option value="5-8">5 - 8 Years (Senior / Staff)</option>
-                <option value="8+">8+ Years (Principal / Exec)</option>
-              </select>
+
+            {/* Quick Duration Filter Group */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 lg:pb-0">
+              <span className="text-[11px] text-outline uppercase tracking-wider font-bold whitespace-nowrap mr-1">
+                Duration:
+              </span>
+              {["all", "30", "45", "60"].map((dur) => (
+                <button
+                  key={dur}
+                  type="button"
+                  onClick={() => setSelectedDuration(dur)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer border ${
+                    selectedDuration === dur
+                      ? "bg-surface-container-highest text-on-surface border-outline-variant/40"
+                      : "bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container border-outline-variant/20"
+                  }`}
+                >
+                  {dur === "all" ? "All" : `${dur} min`}
+                </button>
+              ))}
             </div>
-            {/* Availability Filter */}
-            <div>
-              <select className="w-full h-10 px-3 rounded-lg bg-surface-container-low text-on-surface text-xs focus:outline-none focus:bg-surface-container cursor-pointer">
-                <option value="">Next Slot: Any Time</option>
-                <option value="today">Available Today</option>
-                <option value="tomorrow">Available Tomorrow</option>
-                <option value="weekend">This Weekend</option>
-              </select>
+          </div>
+
+          {/* Goal-First Category Tab Navigation */}
+          <div className="flex flex-wrap items-center gap-2">
+            {[
+              { id: "all", label: "All Services", count: "10" },
+              { id: "resume-profile", label: "Resume & Profile", count: "S01–S04" },
+              { id: "tech-drills", label: "Technical & Coding Drills", count: "S06, S10" },
+              { id: "behavioral", label: "Behavioral & Leadership", count: "S05" },
+              { id: "career-strategy", label: "Career Strategy & Compensation", count: "S07–S09" },
+            ].map((cat) => {
+              const isActive = selectedCategory === cat.id;
+              return (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => setSelectedCategory(cat.id)}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer border ${
+                    isActive
+                      ? "bg-primary text-on-primary shadow-xs border-primary"
+                      : "bg-surface-container text-on-surface-variant hover:bg-surface-container-high border-outline-variant/20"
+                  }`}
+                >
+                  <span>{cat.label}</span>
+                  <span
+                    className={`px-1.5 py-0.5 rounded-full text-[10px] ${
+                      isActive ? "bg-on-primary/20 text-on-primary" : "bg-surface-variant text-on-surface"
+                    }`}
+                  >
+                    {cat.count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Secondary Stage Filter Bar */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 bg-surface-container-low rounded-xl border border-outline-variant/20">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="material-symbols-outlined text-[18px] text-primary">filter_alt</span>
+              <span className="text-xs text-on-surface font-bold">Target Candidate Stage:</span>
+              <div className="flex flex-wrap items-center gap-1.5 ml-1">
+                {["all", "Students & Fresh Grads", "0-2 YOE (Early Career)", "Non-Tech to Tech Switchers"].map(
+                  (stage) => (
+                    <button
+                      key={stage}
+                      type="button"
+                      onClick={() => setSelectedTargetStage(stage)}
+                      className={`px-2.5 py-1 rounded-md text-xs font-medium border transition-colors cursor-pointer ${
+                        selectedTargetStage === stage
+                          ? "bg-primary text-on-primary border-primary font-semibold"
+                          : "bg-surface-container-lowest text-on-surface hover:bg-surface-container border-outline-variant/30"
+                      }`}
+                    >
+                      {stage === "all" ? "All Stages" : stage}
+                    </button>
+                  )
+                )}
+              </div>
+            </div>
+            <div className="text-xs text-outline font-semibold">
+              Showing {filteredServices.length} of 10 Audited Modules
             </div>
           </div>
         </div>
 
-        {/* Mentor Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {filteredMentors.map((mentor) => (
-            <div
-              key={mentor.id}
-              className="bg-surface-container-lowest rounded-2xl shadow-xs p-6 flex flex-col justify-between transition-transform duration-200 hover:-translate-y-1 border border-surface-container"
-            >
-              <div className="flex flex-col gap-4">
-                {/* Profile Top Header */}
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-14 h-14 rounded-full ${mentor.avatarBg} flex items-center justify-center font-bold text-lg shadow-xs`}>
-                      {mentor.initials}
+        {/* The Canonical 10 Services Grid (PRD §6 Full Detail) */}
+        {filteredServices.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredServices.map((svc) => {
+              const isChecked = selectedServices.some((s) => s.code === svc.code);
+              return (
+                <article
+                  key={svc.code}
+                  className={`bg-surface-container-lowest rounded-2xl shadow-xs p-6 flex flex-col justify-between hover:shadow-md transition-shadow relative border ${
+                    svc.isPopular
+                      ? "ring-2 ring-primary/30 border-primary/40"
+                      : "border-outline-variant/40"
+                  }`}
+                >
+                  {svc.isPopular && (
+                    <div className="absolute -top-3 right-6 px-3 py-0.5 rounded-full bg-primary text-on-primary text-[11px] font-bold shadow-xs flex items-center gap-1">
+                      <span className="material-symbols-outlined text-[13px]">stars</span>
+                      Most Popular
                     </div>
-                    <div className="flex flex-col">
-                      <div className="flex items-center gap-1.5">
-                        <h4 className="text-base font-bold text-on-surface font-heading">{mentor.name}</h4>
-                        <span className="material-symbols-outlined text-primary text-base" title="Verified Identity">
-                          verified
+                  )}
+
+                  <div className="space-y-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        <span className="px-2.5 py-1 rounded-md bg-primary-fixed text-on-primary-fixed text-xs font-bold font-mono">
+                          {svc.code}
+                        </span>
+                        <span className="px-2 py-0.5 rounded-full bg-surface-container text-on-surface-variant text-xs font-semibold">
+                          {svc.duration}
                         </span>
                       </div>
-                      <span className="text-xs text-on-surface font-semibold">{mentor.role} @ {mentor.company}</span>
-                      <span className="text-[11px] text-on-surface-variant">{mentor.experience}</span>
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                          svc.badgeStyle || "bg-surface-container-highest text-on-surface"
+                        }`}
+                      >
+                        {svc.badge}
+                      </span>
+                    </div>
+
+                    <div>
+                      <h3 className="text-base sm:text-lg font-bold text-on-surface font-heading">
+                        {svc.name}
+                      </h3>
+                      <p className="text-xs sm:text-sm text-on-surface-variant mt-1.5 leading-relaxed">
+                        {svc.tagline}
+                      </p>
+                    </div>
+
+                    {/* SLA Deliverable Box */}
+                    <div
+                      className={`p-3 rounded-xl space-y-1.5 border border-outline-variant/30 ${
+                        svc.deliverableBg || "bg-surface-container-low"
+                      }`}
+                    >
+                      <div className="text-[11px] text-outline uppercase tracking-wider font-bold">
+                        {svc.deliverableTitle}
+                      </div>
+                      <div
+                        className={`text-xs font-bold flex items-center gap-1.5 ${
+                          svc.deliverableTextColor || "text-on-surface"
+                        }`}
+                      >
+                        <span
+                          className={`material-symbols-outlined text-[16px] ${
+                            svc.deliverableIconColor || "text-secondary"
+                          }`}
+                        >
+                          {svc.deliverableIcon}
+                        </span>
+                        {svc.deliverableDesc}
+                      </div>
+                      <div className="text-[11px] text-outline font-medium">{svc.linkedWeight}</div>
+                    </div>
+
+                    {/* What You Will Receive */}
+                    <div className="space-y-2">
+                      <div className="text-xs text-on-surface font-bold uppercase tracking-wider">
+                        What You Will Receive:
+                      </div>
+                      <ul className="space-y-1.5">
+                        {svc.receives.map((item, idx) => (
+                          <li
+                            key={idx}
+                            className="flex items-start gap-2 text-xs text-on-surface-variant leading-relaxed"
+                          >
+                            <span className="material-symbols-outlined text-[15px] text-secondary shrink-0 mt-0.5">
+                              check_circle
+                            </span>
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
                     </div>
                   </div>
-                  {/* Rating badge */}
-                  <div className="flex items-center gap-1 bg-surface-container px-2.5 py-1 rounded-full text-on-surface text-xs">
-                    <span
-                      className="material-symbols-outlined text-sm text-amber-500"
-                      style={{ fontVariationSettings: "'FILL' 1" }}
-                    >
-                      star
-                    </span>
-                    <span className="font-bold">{mentor.rating}</span>
-                    <span className="text-[10px] text-on-surface-variant">({mentor.reviewsCount})</span>
+
+                  {/* Card Bottom Pricing & Actions */}
+                  <div className="mt-6 pt-4 border-t border-outline-variant/20 space-y-4">
+                    <div className="flex items-baseline justify-between">
+                      <div>
+                        <span className="text-xl sm:text-2xl font-extrabold text-on-surface font-heading">
+                          ₹{svc.price}
+                        </span>
+                        <span className="text-xs text-outline ml-1 font-medium">all-inclusive</span>
+                      </div>
+                      <div className="inline-flex items-center gap-1 text-[11px] text-outline font-bold">
+                        <span className="material-symbols-outlined text-[14px] text-secondary">verified</span>
+                        {svc.mentorTag}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between gap-3">
+                      <label className="flex items-center gap-2 cursor-pointer select-none text-xs text-on-surface font-semibold">
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => handleToggleBundle(svc)}
+                          className="rounded text-primary focus:ring-primary w-4 h-4 cursor-pointer"
+                        />
+                        <span>Add to Bundle</span>
+                      </label>
+                      <Link
+                        href={`/services/${svc.slug}`}
+                        className="bg-primary text-on-primary text-xs font-bold px-4 py-2 rounded-lg hover:bg-primary-container hover:text-on-primary-container transition-colors shadow-xs"
+                      >
+                        Book Module
+                      </Link>
+                    </div>
                   </div>
-                </div>
-
-                {/* Badges & Verification tags */}
-                <div className="flex flex-wrap gap-1.5">
-                  {mentor.badges.map((badge) => (
-                    <span
-                      key={badge}
-                      className="px-2.5 py-0.5 rounded-full bg-secondary-container/40 text-on-secondary-container text-[11px] font-bold flex items-center gap-1"
-                    >
-                      <span className="material-symbols-outlined text-xs">done</span>
-                      <span>{badge}</span>
-                    </span>
-                  ))}
-                  <span className="px-2.5 py-0.5 rounded-full bg-surface-container text-on-surface-variant text-[11px] font-semibold">
-                    {mentor.approvedServices}
-                  </span>
-                </div>
-
-                {/* Bio / Specialties */}
-                <p className="text-xs text-on-surface-variant line-clamp-2 leading-relaxed">
-                  {mentor.bio}
-                </p>
-
-                {/* Slot Indicator */}
-                <div className="flex items-center justify-between text-on-surface-variant text-xs bg-surface-container-low px-3 py-2 rounded-xl">
-                  <div className="flex items-center gap-1.5 text-on-surface">
-                    <span className="material-symbols-outlined text-sm text-secondary">schedule</span>
-                    <span>Next available: <strong className="font-bold text-on-surface">{mentor.nextSlot}</strong></span>
-                  </div>
-                  <span className="text-[11px] text-on-surface-variant font-semibold">Slots available</span>
-                </div>
-              </div>
-
-              {/* Footer Pricing and Direct CTA */}
-              <div className="mt-4 pt-3 flex items-center justify-between border-t border-surface-container">
-                <div>
-                  <span className="text-[11px] text-on-surface-variant block">Sessions starting at</span>
-                  <span className="text-base font-bold text-on-surface font-heading">₹{mentor.startingPrice}</span>
-                </div>
-                <Link
-                  href="/mentors"
-                  className="py-2 px-4 rounded-lg bg-primary text-on-primary hover:bg-primary-container text-xs font-bold transition-colors"
-                >
-                  View Profile &amp; Book
-                </Link>
-              </div>
+                </article>
+              );
+            })}
+          </div>
+        ) : (
+          /* Empty Search State */
+          <div className="py-16 text-center space-y-3 bg-surface-container-low/50 rounded-2xl border border-outline-variant/20">
+            <div className="w-12 h-12 rounded-full bg-surface-container mx-auto flex items-center justify-center text-outline">
+              <span className="material-symbols-outlined text-[24px]">search_off</span>
             </div>
-          ))}
+            <h3 className="text-base sm:text-lg font-bold text-on-surface font-heading">
+              No matching career modules found
+            </h3>
+            <p className="text-xs sm:text-sm text-on-surface-variant max-w-md mx-auto">
+              Try broadening your search query or reset your filters to see all 10 standardized modules.
+            </p>
+            <button
+              type="button"
+              onClick={resetAllFilters}
+              className="mt-2 bg-surface-container hover:bg-surface-container-high text-on-surface text-xs font-bold px-4 py-2 rounded-lg transition-colors cursor-pointer"
+            >
+              Reset All Filters
+            </button>
+          </div>
+        )}
+      </main>
+
+      {/* Accountability, SLAs & Consumer Rights Section (PRD §12 & Frontend §10) */}
+      <section className="w-full bg-surface-container-low py-12 sm:py-16 border-t border-outline-variant/30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12">
+          <div className="space-y-3 text-center max-w-3xl mx-auto mb-10 sm:mb-12">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary-container text-on-secondary-container text-xs font-bold">
+              <span className="material-symbols-outlined text-[15px]">verified</span>
+              PRD V3.0 §12 Statutory Compliance
+            </div>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-on-surface font-heading">
+              Enforceable Consumer Guarantees
+            </h2>
+            <p className="text-xs sm:text-sm text-on-surface-variant leading-relaxed">
+              We eliminate the ambiguity of traditional online edtech. Every single mentorship interaction is strictly monitored by automated SLAs, escrow locks, and transparent refund mechanisms.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            {/* SLA 1 */}
+            <div className="bg-surface-container-lowest p-6 rounded-2xl shadow-xs space-y-3 border border-outline-variant/30">
+              <div className="w-10 h-10 rounded-xl bg-surface-container flex items-center justify-center text-primary">
+                <span className="material-symbols-outlined text-[22px]">timer</span>
+              </div>
+              <h4 className="text-base font-bold text-on-surface font-heading">
+                100% Pre-Session Refund
+              </h4>
+              <p className="text-xs text-on-surface-variant leading-relaxed">
+                Cancel up to <strong>≥1 hour</strong> before the scheduled session start time for an instant, no-questions-asked 100% refund credited back to your original source via Razorpay.
+              </p>
+            </div>
+
+            {/* SLA 2 */}
+            <div className="bg-surface-container-lowest p-6 rounded-2xl shadow-xs space-y-3 border border-outline-variant/30">
+              <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary">
+                <span className="material-symbols-outlined text-[22px]">verified_user</span>
+              </div>
+              <h4 className="text-base font-bold text-on-surface font-heading">
+                80% Rubric SLA Guarantee
+              </h4>
+              <p className="text-xs text-on-surface-variant leading-relaxed">
+                If the mentor fails to upload your standardized PDF scorecard and action checklist within <strong>48 hours</strong> of session completion, you receive an automated 80% refund.
+              </p>
+            </div>
+
+            {/* SLA 3 */}
+            <div className="bg-surface-container-lowest p-6 rounded-2xl shadow-xs space-y-3 border border-outline-variant/30">
+              <div className="w-10 h-10 rounded-xl bg-surface-container flex items-center justify-center text-primary">
+                <span className="material-symbols-outlined text-[22px]">badge</span>
+              </div>
+              <h4 className="text-base font-bold text-on-surface font-heading">
+                3-Tier Verified Mentors
+              </h4>
+              <p className="text-xs text-on-surface-variant leading-relaxed">
+                Every mentor has passed Aadhaar &amp; biometric identity verification, corporate employment verification at Tier-1 GCC/Unicorns, and module-specific rubric training.
+              </p>
+            </div>
+
+            {/* SLA 4 */}
+            <div className="bg-surface-container-lowest p-6 rounded-2xl shadow-xs space-y-3 border border-outline-variant/30">
+              <div className="w-10 h-10 rounded-xl bg-error-container/40 flex items-center justify-center text-error">
+                <span className="material-symbols-outlined text-[22px]">gavel</span>
+              </div>
+              <h4 className="text-base font-bold text-on-surface font-heading">
+                Zero False Job Guarantees
+              </h4>
+              <p className="text-xs text-on-surface-variant leading-relaxed">
+                In compliance with Indian ASCI guidelines: DreamX guarantees verified capability improvement, rubrics, and tangible proof-of-work, never fraudulent &ldquo;100% placement guarantees.&rdquo;
+              </p>
+            </div>
+          </div>
         </div>
       </section>
+
+      {/* Interactive Modal: Bundle Details & Summary */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-surface-container-lowest rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5 border border-outline-variant/40 animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between border-b border-outline-variant/20 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-primary-container flex items-center justify-center text-on-primary-container">
+                  <span className="material-symbols-outlined text-[18px]">shopping_bag</span>
+                </div>
+                <h3 className="text-base sm:text-lg font-bold text-on-surface font-heading">
+                  Your 3-Service Career Track
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsModalOpen(false)}
+                className="w-8 h-8 rounded-full bg-surface-container hover:bg-surface-container-high flex items-center justify-center text-on-surface transition-colors cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[18px]">close</span>
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div className="text-xs uppercase text-outline font-bold tracking-wider">
+                Included Modules
+              </div>
+              <div className="space-y-2">
+                {selectedServices.map((s) => (
+                  <div
+                    key={s.code}
+                    className="flex items-center justify-between p-3 rounded-xl bg-surface-container text-xs border border-outline-variant/20"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <span className="px-2 py-0.5 rounded bg-primary-fixed text-on-primary-fixed font-bold font-mono">
+                        {s.code}
+                      </span>
+                      <span className="font-semibold text-on-surface">{s.name}</span>
+                    </div>
+                    <span className="font-bold text-on-surface">₹{s.price}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="p-4 bg-surface-container-low rounded-xl space-y-2 text-xs border border-outline-variant/30">
+              <div className="flex justify-between text-on-surface-variant font-medium">
+                <span>Catalog Total:</span>
+                <span className="font-bold text-on-surface">₹{bundleGrossPrice}</span>
+              </div>
+              <div className="flex justify-between text-secondary font-bold">
+                <span className="flex items-center gap-1">
+                  <span className="material-symbols-outlined text-[15px]">high_res</span>
+                  DreamX 5% Custom Bundle Discount:
+                </span>
+                <span>-₹{bundleDiscount}</span>
+              </div>
+              <div className="flex justify-between text-sm font-bold text-on-surface pt-2 border-t border-outline-variant/20">
+                <span>Final Payable (INR):</span>
+                <span className="text-base text-primary font-heading font-extrabold">
+                  ₹{bundleFinalPrice}
+                </span>
+              </div>
+              <div className="text-[11px] text-outline text-right mt-1">
+                Escrow held until 48-hour delivery sign-off
+              </div>
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setIsModalOpen(false)}
+                className="flex-1 py-2.5 px-4 rounded-xl border border-outline-variant text-on-surface text-xs font-semibold hover:bg-surface-container-low transition-colors cursor-pointer"
+              >
+                Modify Selection
+              </button>
+              <Link
+                href={`/dashboard/bookings?bundle=custom3&services=${selectedServices.map(s => s.code).join(",")}&price=${bundleFinalPrice}`}
+                className="flex-1 py-2.5 px-4 rounded-xl bg-primary text-on-primary text-xs font-bold text-center hover:bg-primary-container transition-colors shadow-md flex items-center justify-center gap-1.5"
+              >
+                <span>Proceed to Escrow Checkout</span>
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -66,7 +66,7 @@ export default function MentorsPage() {
                     : "bg-[#fafafc] text-[#66666f] border-[#e7e7eb] hover:bg-[#f7f7f8] hover:text-[#171717]"
                 }`}
               >
-                {tier === "All" ? "All Mentors (4)" : `${tier} Tier`}
+                {tier === "All" ? `All Mentors (${MENTORS.length})` : `${tier} Tier`}
               </button>
             ))}
           </div>
