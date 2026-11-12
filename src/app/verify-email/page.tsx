@@ -3,31 +3,33 @@
 import * as React from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import {
   Mail,
   ShieldCheck,
-  ArrowRight,
-  RefreshCw,
   CheckCircle2,
+  Clock,
+  RotateCcw,
+  Check,
+  MessageSquare,
+  Lock,
 } from "lucide-react";
 
 function VerifyEmailContent() {
   const searchParams = useSearchParams();
-  const email = searchParams.get("email") || "your email";
+  const email = searchParams.get("email") || "aarav.sharma@techpulse.io";
   const role = searchParams.get("role") || "student";
 
-  const [otp, setOtp] = React.useState(["", "", "", "", "", ""]);
-  const [timer, setTimer] = React.useState(59);
+  const [otp, setOtp] = React.useState(["8", "4", "1", "9", "2", ""]);
+  const [timer, setTimer] = React.useState(48);
   const [isVerifying, setIsVerifying] = React.useState(false);
   const [verified, setVerified] = React.useState(false);
 
   React.useEffect(() => {
+    let interval: NodeJS.Timeout;
     if (timer > 0) {
-      const interval = setInterval(() => setTimer((t) => t - 1), 1000);
-      return () => clearInterval(interval);
+      interval = setInterval(() => setTimer((t) => t - 1), 1000);
     }
+    return () => clearInterval(interval);
   }, [timer]);
 
   const handleOtpChange = (index: number, val: string) => {
@@ -36,11 +38,17 @@ function VerifyEmailContent() {
       nextOtp[index] = val;
       setOtp(nextOtp);
 
-      // Auto focus next input
       if (val && index < 5) {
         const nextInput = document.getElementById(`otp-${index + 1}`);
         nextInput?.focus();
       }
+    }
+  };
+
+  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Backspace" && !otp[index] && index > 0) {
+      const prevInput = document.getElementById(`otp-${index - 1}`);
+      prevInput?.focus();
     }
   };
 
@@ -51,103 +59,270 @@ function VerifyEmailContent() {
     setTimeout(() => {
       setIsVerifying(false);
       setVerified(true);
-    }, 600);
+    }, 700);
+  };
+
+  const handleResend = () => {
+    setTimer(59);
+    alert(`Fresh 6-digit cryptographic verification code dispatched to ${email}`);
   };
 
   return (
-    <div className="min-h-[calc(100vh-16rem)] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative">
-      <div className="w-full max-w-md space-y-6">
-        <div className="text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-[#e7e7eb] text-xs font-semibold text-[#16834a] shadow-xs">
-            <ShieldCheck className="w-3.5 h-3.5" />
-            <span>Zero-Trust Verification Step</span>
-          </div>
+    <div className="min-h-screen bg-[#fcf9f8] text-[#1c1b1b] flex flex-col justify-between py-6 px-4 sm:px-6 lg:px-8">
+      {/* 1. Top Global Security Ribbon */}
+      <div className="max-w-4xl w-full mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 pb-6 border-b border-[#e7e7eb] text-xs">
+        <div className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-[#3828b5] flex items-center justify-center text-white font-bold text-xs shadow-xs">
+              DX
+            </div>
+            <span className="font-extrabold text-base text-[#1c1b1b] tracking-tight">
+              DreamX
+            </span>
+          </Link>
+          <span className="text-gray-300">|</span>
+          <span className="text-[11px] font-bold text-[#3828b5] bg-[#3828b5]/10 px-2 py-0.5 rounded font-mono">
+            Identity &amp; Email Verification Gateway v3.0
+          </span>
         </div>
 
-        <Card className="p-6 sm:p-8 bg-white border-[#e7e7eb] shadow-xl space-y-6 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-[#eef2ff] text-[#5145cd] flex items-center justify-center mx-auto shadow-sm">
-            <Mail className="w-8 h-8" />
-          </div>
+        <div className="flex flex-wrap items-center gap-3 text-[11px] text-gray-600">
+          <span className="flex items-center gap-1 text-[#16834a] font-semibold">
+            <ShieldCheck className="w-3.5 h-3.5" />
+            256-Bit SSL Encrypted Verification Channel
+          </span>
+          <span className="text-gray-300">•</span>
+          <span className="text-gray-600">DPDP Act 2023 Identity Shield</span>
+          <span className="text-gray-300">•</span>
+          <Link
+            href="/login"
+            className="text-[#3828b5] font-semibold hover:underline"
+          >
+            ← Return to Sign In
+          </Link>
+        </div>
+      </div>
 
-          <div className="space-y-1">
-            <h1 className="text-2xl font-extrabold text-[#171717] tracking-tight">
-              Verify Your Email
-            </h1>
-            <p className="text-xs text-[#66666f] max-w-xs mx-auto">
-              We sent a 6-digit verification code to <br />
-              <strong className="text-[#171717]">{email}</strong>
+      {/* 2. Main Verification Card */}
+      <div className="w-full max-w-xl mx-auto my-8">
+        <div className="bg-white rounded-2xl border border-[#e7e7eb] shadow-xl p-6 sm:p-8 space-y-6">
+          {!verified ? (
+            <>
+              {/* Header */}
+              <div className="text-center space-y-2">
+                <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-[#3828b5] flex items-center justify-center mx-auto shadow-sm border border-indigo-100 relative">
+                  <Mail className="w-7 h-7" />
+                  <span className="absolute -bottom-1 -right-1 w-5 h-5 bg-[#eaf5ef] text-[#16834a] border border-[#16834a]/30 rounded-full flex items-center justify-center text-[10px] font-bold">
+                    ✓
+                  </span>
+                </div>
+                <div className="inline-block px-2.5 py-0.5 rounded-full bg-indigo-50 border border-indigo-200 text-[10px] font-bold text-[#3828b5] uppercase tracking-wider font-mono">
+                  PRD §18.1 Statutory Identity Verification
+                </div>
+                <h1 className="text-2xl font-extrabold text-[#1c1b1b] tracking-tight">
+                  Verify Your Email Address
+                </h1>
+                <p className="text-xs text-[#474554] max-w-md mx-auto leading-relaxed">
+                  We have dispatched a 6-digit cryptographic verification code to your registered email address to protect your candidate nodal escrow wallet.
+                </p>
+              </div>
+
+              {/* Registered Email Display Pill */}
+              <div className="p-3 rounded-xl bg-gray-50 border border-gray-200 flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-500 font-medium">Recipient:</span>
+                  <span className="font-mono font-bold text-[#1c1b1b]">{email}</span>
+                </div>
+                <Link
+                  href="/signup"
+                  className="text-[#3828b5] font-semibold hover:underline text-[11px]"
+                >
+                  Change Email
+                </Link>
+              </div>
+
+              {/* 6-Digit OTP Box Grid */}
+              <form onSubmit={handleVerify} className="space-y-6">
+                <div>
+                  <div className="flex justify-center items-center gap-2 sm:gap-3">
+                    {otp.map((digit, i) => (
+                      <input
+                        key={i}
+                        id={`otp-${i}`}
+                        type="text"
+                        maxLength={1}
+                        value={digit}
+                        onChange={(e) => handleOtpChange(i, e.target.value)}
+                        onKeyDown={(e) => handleKeyDown(i, e)}
+                        className={`w-12 h-14 sm:w-14 sm:h-16 text-center text-xl sm:text-2xl font-bold font-mono rounded-xl border-2 transition-all ${
+                          digit
+                            ? "border-[#3828b5] bg-white text-[#1c1b1b] shadow-xs"
+                            : i === 5
+                            ? "border-[#3828b5] bg-indigo-50/50 ring-2 ring-[#3828b5]/20 animate-pulse"
+                            : "border-gray-200 bg-[#f6f3f2] text-gray-800"
+                        } focus:outline-none focus:border-[#3828b5] focus:bg-white`}
+                      />
+                    ))}
+                  </div>
+                  <p className="text-[11px] text-center text-gray-500 mt-2">
+                    Enter the demo 6th digit (e.g. <strong className="font-mono text-[#3828b5]">6</strong>) to complete verification
+                  </p>
+                </div>
+
+                {/* Resend Intelligence Strip */}
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-2 p-3 rounded-xl bg-[#f6f3f2] border border-[#e7e7eb] text-xs">
+                  <div className="flex items-center gap-1.5 text-gray-600">
+                    <Clock className="w-3.5 h-3.5 text-amber-700" />
+                    <span>
+                      {timer > 0 ? (
+                        <>Resend code in <strong className="font-mono text-[#1c1b1b]">{timer}s</strong></>
+                      ) : (
+                        <span className="text-emerald-700 font-bold">Ready to resend</span>
+                      )}
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    disabled={timer > 0}
+                    onClick={handleResend}
+                    className="text-[#3828b5] font-bold hover:underline disabled:opacity-40 disabled:hover:no-underline flex items-center gap-1 cursor-pointer"
+                  >
+                    <RotateCcw className="w-3 h-3" />
+                    <span>Resend OTP via Email</span>
+                  </button>
+                </div>
+
+                {/* WhatsApp Alternative */}
+                <div className="p-3 rounded-xl bg-emerald-50/60 border border-emerald-200 flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2">
+                    <MessageSquare className="w-4 h-4 text-emerald-700" />
+                    <div>
+                      <span className="font-bold text-[#1c1b1b] block">Or verify via WhatsApp instant link</span>
+                      <span className="text-[11px] text-gray-500">Encrypted one-time magic link sent to verified mobile</span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => alert(`Encrypted WhatsApp magic link sent to registered phone number.`)}
+                    className="px-2.5 py-1 rounded-md bg-white border border-emerald-300 text-emerald-800 font-bold hover:bg-emerald-50 text-[11px] shadow-2xs"
+                  >
+                    Send to WhatsApp
+                  </button>
+                </div>
+
+                {/* Submit Action */}
+                <button
+                  type="submit"
+                  disabled={isVerifying || otp.join("").length < 6}
+                  className="w-full py-3.5 px-4 rounded-xl bg-[#3828b5] hover:bg-[#2e2195] text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+                >
+                  <span>{isVerifying ? "Validating Cryptographic Nonce..." : "Verify Email & Enter Portal →"}</span>
+                </button>
+
+                <p className="text-[11px] text-center text-gray-400">
+                  Zero tracking • Cryptographic OTP expires in exactly 10 minutes • Argon2id protected session
+                </p>
+              </form>
+            </>
+          ) : (
+            /* State B: Verification Success Card */
+            <div className="text-center space-y-5 py-4">
+              <div className="w-16 h-16 rounded-full bg-[#eaf5ef] text-[#16834a] flex items-center justify-center mx-auto border-4 border-emerald-100 shadow-sm animate-bounce">
+                <CheckCircle2 className="w-10 h-10" />
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="inline-block px-3 py-1 rounded-full bg-[#eaf5ef] border border-[#a2deb8] text-xs font-bold text-[#16834a]">
+                  UID: #DX-8419 • Identity Anchor Sealed
+                </div>
+                <h2 className="text-2xl font-extrabold text-[#1c1b1b]">
+                  Email Verified Successfully! 🎉
+                </h2>
+                <p className="text-xs text-[#474554] max-w-sm mx-auto leading-relaxed">
+                  Your identity has been cryptographically sealed. Your candidate nodal escrow wallet and 8-dimension readiness matrix are now unlocked.
+                </p>
+              </div>
+
+              <div className="p-4 rounded-xl bg-indigo-50/70 border border-indigo-200 text-xs text-left space-y-2">
+                <div className="flex items-center justify-between border-b border-indigo-100 pb-2">
+                  <span className="text-gray-500 font-medium">Activated Identity:</span>
+                  <span className="font-mono font-bold text-[#3828b5]">{email}</span>
+                </div>
+                <div className="flex items-center justify-between border-b border-indigo-100 pb-2">
+                  <span className="text-gray-500 font-medium">Role Clearance:</span>
+                  <span className="font-bold text-[#16834a] flex items-center gap-1">
+                    <Check className="w-3.5 h-3.5" />
+                    {role === "mentor" ? "Accredited Mentor Candidate" : "Verified Job Seeker"}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-500 font-medium">Next Milestone:</span>
+                  <span className="font-semibold text-[#1c1b1b]">
+                    {role === "mentor" ? "Complete 4-Step Onboarding Wizard" : "Complete Diagnostic Assessment"}
+                  </span>
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <Link
+                  href={role === "mentor" ? "/mentor/onboarding" : "/dashboard/onboarding"}
+                  className="w-full py-3.5 px-6 rounded-xl bg-[#3828b5] hover:bg-[#2e2195] text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2"
+                >
+                  <span>{role === "mentor" ? "Proceed to Mentor Onboarding →" : "Proceed to Candidate Onboarding →"}</span>
+                </Link>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* 3. Bottom Trust & Statutory Security Ledger */}
+      <div className="max-w-4xl w-full mx-auto space-y-4 pt-4 border-t border-[#e7e7eb] text-xs">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="p-3 rounded-lg bg-white border border-[#e7e7eb] space-y-1">
+            <span className="font-bold text-[#1c1b1b] flex items-center gap-1.5">
+              <Lock className="w-3.5 h-3.5 text-[#16834a]" />
+              Argon2id Nonce Hashing
+            </span>
+            <p className="text-[11px] text-gray-500 leading-normal">
+              Defending against brute-force token scraping and replay attacks per RFC 9106 and PRD §18.
             </p>
           </div>
 
-          {verified ? (
-            <div className="p-5 rounded-2xl bg-[#ebf7ee] border border-[#94f7b2]/50 space-y-3">
-              <div className="flex items-center justify-center gap-2 text-sm font-bold text-[#006d3a]">
-                <CheckCircle2 className="w-5 h-5" />
-                <span>Email Successfully Verified!</span>
-              </div>
-              <p className="text-xs text-[#66666f]">
-                Your account is authenticated. Let&apos;s personalize your career experience.
-              </p>
-              <Link href={role === "mentor" ? "/mentor/onboarding" : "/dashboard/onboarding"}>
-                <Button size="md" className="w-full mt-2">
-                  <span>Continue to {role === "mentor" ? "Mentor Verification" : "Career Intake Wizard"}</span>
-                  <ArrowRight className="w-4 h-4 ml-1" />
-                </Button>
-              </Link>
-            </div>
-          ) : (
-            <form onSubmit={handleVerify} className="space-y-6">
-              {/* OTP Input Boxes */}
-              <div className="flex items-center justify-center gap-2 sm:gap-2.5">
-                {otp.map((digit, idx) => (
-                  <input
-                    key={idx}
-                    id={`otp-${idx}`}
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={1}
-                    value={digit}
-                    onChange={(e) => handleOtpChange(idx, e.target.value)}
-                    className="w-11 h-12 text-center text-lg font-bold rounded-xl border border-[#e7e7eb] bg-[#fafafc] focus:outline-none focus:border-[#5145cd] focus:bg-white text-[#171717] shadow-xs"
-                    required
-                  />
-                ))}
-              </div>
-
-              <Button
-                type="submit"
-                size="lg"
-                className="w-full shadow-md"
-                isLoading={isVerifying}
-              >
-                <span>Confirm & Activate Account</span>
-                <ArrowRight className="w-4 h-4 ml-1" />
-              </Button>
-
-              <div className="flex items-center justify-between text-xs text-[#66666f] pt-2">
-                <span>Didn&apos;t receive code?</span>
-                {timer > 0 ? (
-                  <span className="text-[#8b8b95]">Resend in {timer}s</span>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => setTimer(59)}
-                    className="font-bold text-[#5145cd] hover:underline flex items-center gap-1"
-                  >
-                    <RefreshCw className="w-3 h-3" /> Resend OTP
-                  </button>
-                )}
-              </div>
-            </form>
-          )}
-
-          <div className="pt-4 border-t border-[#f7f7f8] text-xs text-[#8b8b95]">
-            Need to change your email?{" "}
-            <Link href="/signup" className="text-[#5145cd] font-semibold hover:underline">
-              Back to Sign Up
-            </Link>
+          <div className="p-3 rounded-lg bg-white border border-[#e7e7eb] space-y-1">
+            <span className="font-bold text-[#1c1b1b] flex items-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-[#16834a]" />
+              DPDP Act 2023 Compliance
+            </span>
+            <p className="text-[11px] text-gray-500 leading-normal">
+              Strict Indian citizen data sovereignty. Zero commercial sharing or unsolicited marketing.
+            </p>
           </div>
-        </Card>
+
+          <div className="p-3 rounded-lg bg-white border border-[#e7e7eb] space-y-1">
+            <span className="font-bold text-[#1c1b1b] flex items-center gap-1.5">
+              <CheckCircle2 className="w-3.5 h-3.5 text-[#16834a]" />
+              Nodal Escrow Shield
+            </span>
+            <p className="text-[11px] text-gray-500 leading-normal">
+              Verified email serves as primary cryptographic anchor for Razorpay nodal refund authorizations.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-gray-400 pt-1 font-medium">
+          <p>© 2025 DreamX Technologies Pvt. Ltd. • Bengaluru • Hyderabad • NCR</p>
+          <div className="flex items-center gap-3">
+            <Link href="/terms" className="hover:underline">Terms</Link>
+            <span>•</span>
+            <Link href="/privacy" className="hover:underline">Privacy</Link>
+            <span>•</span>
+            <Link href="/refunds" className="hover:underline">Refunds</Link>
+            <span>•</span>
+            <span className="text-emerald-700 font-semibold">● 99.98% System Uptime</span>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -155,13 +330,7 @@ function VerifyEmailContent() {
 
 export default function VerifyEmailPage() {
   return (
-    <React.Suspense
-      fallback={
-        <div className="min-h-[calc(100vh-16rem)] flex items-center justify-center py-12">
-          <div className="text-sm text-[#8b8b95]">Loading verification details...</div>
-        </div>
-      }
-    >
+    <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center text-xs">Loading verification desk...</div>}>
       <VerifyEmailContent />
     </React.Suspense>
   );
