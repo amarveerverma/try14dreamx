@@ -1,551 +1,548 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { SERVICES } from "@/data/services";
-import {
-  ShieldCheck,
-  CheckCircle2,
-  Briefcase,
-  UploadCloud,
-  FileText,
-  Lock,
-  ArrowRight,
-  ArrowLeft,
-  CreditCard,
-  Building2,
-  Mail,
-} from "lucide-react";
 
 export default function MentorOnboardingPage() {
   const router = useRouter();
-  const [step, setStep] = React.useState(1);
-  const totalSteps = 4;
-
-  // Form State
-  // Step 1: Professional Details
-  const [company, setCompany] = React.useState("");
-  const [designation, setDesignation] = React.useState("");
-  const [yearsExp, setYearsExp] = React.useState("");
-  const [linkedin, setLinkedin] = React.useState("");
-  const [workEmail, setWorkEmail] = React.useState("");
-
-  // Step 2: Service Approvals Applied For
-  const [selectedServices, setSelectedServices] = React.useState<string[]>([
-    "S01",
-    "S06",
-  ]);
-
-  // Step 3: Identity & Proof Upload
+  const [currentStep, setCurrentStep] = React.useState(3);
+  const [workEmail, setWorkEmail] = React.useState("vikram.singh@google.com");
+  const [emailOtpVerified, setEmailOtpVerified] = React.useState(true);
   const [idType, setIdType] = React.useState("aadhaar");
-  const [uploadedProof, setUploadedProof] = React.useState<string | null>(null);
+  const [idNumber, setIdNumber] = React.useState("•••• •••• 8912");
+  const [showId, setShowId] = React.useState(false);
+  const [uploadedBadge, setUploadedBadge] = React.useState<string | null>(
+    "Google_L5_Staff_ID_Badge.pdf (2.4 MB)"
+  );
+  const [weeklyHours, setWeeklyHours] = React.useState("6");
+  const [saving, setSaving] = React.useState(false);
+  const [successNotice, setSuccessNotice] = React.useState(false);
 
-  // Step 4: Availability & Settlement
-  const [weeklyHours, setWeeklyHours] = React.useState("5-10");
-  const [payoutMethod, setPayoutMethod] = React.useState<"upi" | "bank">("upi");
-  const [upiId, setUpiId] = React.useState("");
-  const [accountNumber, setAccountNumber] = React.useState("");
-  const [ifsc, setIfsc] = React.useState("");
-
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [submitted, setSubmitted] = React.useState(false);
-
-  const toggleService = (id: string) => {
-    if (selectedServices.includes(id)) {
-      if (selectedServices.length > 1) {
-        setSelectedServices(selectedServices.filter((s) => s !== id));
-      }
-    } else {
-      setSelectedServices([...selectedServices, id]);
-    }
+  const calculateProjectedYield = (hours: number) => {
+    // approx ₹4000/hr gross across blended S01/S05/S06
+    return hours * 4000;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
+  const handleNext = () => {
+    setSaving(true);
     setTimeout(() => {
-      setIsSubmitting(false);
-      setSubmitted(true);
-    }, 1200);
+      setSaving(false);
+      setSuccessNotice(true);
+      setTimeout(() => {
+        router.push("/mentor");
+      }, 1200);
+    }, 1000);
   };
-
-  if (submitted) {
-    return (
-      <div className="min-h-[calc(100vh-16rem)] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <Card className="max-w-xl w-full p-8 sm:p-10 bg-white border-[#e7e7eb] shadow-xl text-center space-y-6">
-          <div className="w-16 h-16 rounded-2xl bg-[#ebf7ee] text-[#16834a] flex items-center justify-center mx-auto shadow-xs">
-            <CheckCircle2 className="w-8 h-8" />
-          </div>
-
-          <div className="space-y-2">
-            <Badge variant="verified">Verification Application Submitted</Badge>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#171717] tracking-tight">
-              Application Under Dual-Control Audit
-            </h1>
-            <p className="text-xs sm:text-sm text-[#66666f] leading-relaxed">
-              Our operations compliance team is verifying your employment credentials at <strong className="text-[#171717]">{company || "your employer"}</strong>. Review SLA turnaround is <strong>within 24 hours</strong>.
-            </p>
-          </div>
-
-          <div className="p-4 rounded-xl bg-[#fafafc] border border-[#e7e7eb] text-left space-y-2 text-xs">
-            <div className="flex justify-between">
-              <span className="text-[#8b8b95]">Applied Services:</span>
-              <strong className="text-[#171717]">{selectedServices.length} Approved Tracks</strong>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-[#8b8b95]">Settlement Channel:</span>
-              <strong className="text-[#171717]">{payoutMethod.toUpperCase()} (Weekly Escrow Release)</strong>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-[#8b8b95]">Auditing Framework:</span>
-              <strong className="text-[#16834a]">ISO/IEC 27001 &amp; DPDP Act 2023</strong>
-            </div>
-          </div>
-
-          <Button
-            size="lg"
-            className="w-full shadow-md"
-            onClick={() => router.push("/mentor")}
-          >
-            <span>Proceed to Mentor Console</span>
-            <ArrowRight className="w-4 h-4 ml-1" />
-          </Button>
-        </Card>
-      </div>
-    );
-  }
 
   return (
-    <div className="min-h-[calc(100vh-16rem)] flex flex-col justify-center py-10 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto w-full">
-      {/* Header Banner */}
-      <div className="space-y-2 text-center max-w-2xl mx-auto mb-8">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#eef2ff] text-[#5145cd] text-xs font-semibold">
-          <ShieldCheck className="w-3.5 h-3.5" />
-          <span>Industry Mentor Onboarding • 3-Stage Trust Audit</span>
-        </div>
-        <h1 className="text-3xl font-extrabold text-[#171717] tracking-tight">
-          Apply to Become an Approved Mentor
-        </h1>
-        <p className="text-xs sm:text-sm text-[#66666f]">
-          DreamX enforces strict employment audits to protect candidates and preserve our No Job Guarantee Hype Pledge.
-        </p>
-      </div>
-
-      {/* Progress Track */}
-      <div className="bg-white rounded-xl shadow-xs border border-[#e7e7eb] p-5 mb-8">
-        <div className="grid grid-cols-4 gap-2 text-center text-xs font-semibold">
-          {[
-            { s: 1, label: "Work Credentials" },
-            { s: 2, label: "Service Approvals" },
-            { s: 3, label: "Proof of Employment" },
-            { s: 4, label: "Settlement & Slots" },
-          ].map((item) => (
-            <div
-              key={item.s}
-              onClick={() => step > item.s && setStep(item.s)}
-              className={`flex flex-col items-center gap-1.5 ${
-                step === item.s ? "text-[#5145cd]" : step > item.s ? "text-[#16834a] cursor-pointer" : "text-[#8b8b95]"
-              }`}
-            >
-              <div
-                className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
-                  step === item.s
-                    ? "bg-[#5145cd] text-white shadow-xs"
-                    : step > item.s
-                    ? "bg-[#ebf7ee] text-[#16834a] border border-[#16834a]"
-                    : "bg-[#f2f3ff] text-[#8b8b95]"
-                }`}
-              >
-                {step > item.s ? <CheckCircle2 className="w-4 h-4" /> : item.s}
-              </div>
-              <span className="hidden sm:inline">{item.label}</span>
+    <div className="flex flex-col w-full bg-[#fcf9f8] min-h-screen text-[#1c1b1b]">
+      {/* Top Navigation Bar */}
+      <header className="sticky top-0 z-30 w-full bg-white/95 backdrop-blur-md border-b border-[#e7e7eb] px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <Link href="/mentor" className="flex items-center gap-2">
+            <div className="h-8 w-8 rounded-xl bg-[#5145cd] flex items-center justify-center text-white font-bold shadow-xs">
+              <span className="material-symbols-outlined text-[18px]">verified</span>
             </div>
-          ))}
-        </div>
-        <div className="w-full bg-[#f0eded] rounded-full h-1.5 mt-4">
-          <div
-            className="bg-[#5145cd] h-1.5 rounded-full transition-all duration-300"
-            style={{ width: `${(step / totalSteps) * 100}%` }}
-          />
-        </div>
-      </div>
-
-      <Card className="p-6 sm:p-10 bg-white border-[#e7e7eb] shadow-sm">
-        {/* ================= STEP 1: PROFESSIONAL CREDENTIALS ================= */}
-        {step === 1 && (
-          <div className="space-y-6">
-            <div className="space-y-1">
-              <Badge variant="default">Stage 1 of 3: Professional Verification</Badge>
-              <h2 className="text-xl font-bold text-[#171717]">
-                Current Industry Role &amp; Background
-              </h2>
-              <p className="text-xs text-[#66666f]">
-                Only engineers and leaders with verified top-tier tech experience qualify to mentor on DreamX.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-[#171717]">Current Tech Company / Employer</label>
-                <div className="relative">
-                  <Input
-                    value={company}
-                    onChange={(e) => setCompany(e.target.value)}
-                    placeholder="e.g. Google, Microsoft, Swiggy, Razorpay"
-                    className="h-10 text-sm pl-9"
-                    required
-                  />
-                  <Building2 className="w-4 h-4 text-[#8b8b95] absolute left-3 top-3 pointer-events-none" />
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-[#171717]">Designation / Level</label>
-                <div className="relative">
-                  <Input
-                    value={designation}
-                    onChange={(e) => setDesignation(e.target.value)}
-                    placeholder="e.g. Senior Software Engineer (L5), Staff PM"
-                    className="h-10 text-sm pl-9"
-                    required
-                  />
-                  <Briefcase className="w-4 h-4 text-[#8b8b95] absolute left-3 top-3 pointer-events-none" />
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-[#171717]">Total Years of Experience</label>
-                <select
-                  value={yearsExp}
-                  onChange={(e) => setYearsExp(e.target.value)}
-                  className="w-full h-10 px-3 bg-white border border-[#e7e7eb] rounded-lg text-sm text-[#171717] focus:border-[#5145cd] focus:outline-none"
-                >
-                  <option value="" disabled>Select experience</option>
-                  <option value="2-4">2–4 Years (Peer Track)</option>
-                  <option value="5-8">5–8 Years (Senior Track)</option>
-                  <option value="8+">8+ Years (Principal / Staff Track)</option>
-                  <option value="12+">12+ Years (Director / VP Track)</option>
-                </select>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-[#171717]">Corporate Work Email</label>
-                <div className="relative">
-                  <Input
-                    type="email"
-                    value={workEmail}
-                    onChange={(e) => setWorkEmail(e.target.value)}
-                    placeholder="e.g. yourname@google.com"
-                    className="h-10 text-sm pl-9"
-                    required
-                  />
-                  <Mail className="w-4 h-4 text-[#8b8b95] absolute left-3 top-3 pointer-events-none" />
-                </div>
-                <span className="text-[11px] text-[#8b8b95] block">
-                  Used exclusively for automated corporate domain verification.
-                </span>
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-[#171717]">LinkedIn Profile URL</label>
-              <Input
-                value={linkedin}
-                onChange={(e) => setLinkedin(e.target.value)}
-                placeholder="https://linkedin.com/in/your-profile"
-                className="h-10 text-sm"
-                required
-              />
-            </div>
-
-            <div className="pt-4 flex justify-end">
-              <Button
-                size="md"
-                disabled={!company || !designation || !yearsExp}
-                onClick={() => setStep(2)}
-                className="shadow-sm"
-              >
-                <span>Continue to Service Qualifications</span>
-                <ArrowRight className="w-4 h-4 ml-1" />
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {/* ================= STEP 2: SERVICE QUALIFICATION ================= */}
-        {step === 2 && (
-          <div className="space-y-6">
-            <div className="space-y-1">
-              <Badge variant="default">Stage 2 of 3: Service-Specific Approvals</Badge>
-              <h2 className="text-xl font-bold text-[#171717]">
-                Select Services You Are Qualified to Deliver
-              </h2>
-              <p className="text-xs text-[#66666f]">
-                Mentors are approved service-by-service based on technical domain alignment. Select at least one service.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {SERVICES.map((srv) => {
-                const isSelected = selectedServices.includes(srv.id);
-                return (
-                  <button
-                    key={srv.id}
-                    type="button"
-                    onClick={() => toggleService(srv.id)}
-                    className={`p-3.5 rounded-xl border text-left transition-all flex items-start gap-3 ${
-                      isSelected
-                        ? "bg-[#eef2ff] border-[#5145cd] ring-1 ring-[#5145cd]"
-                        : "bg-white border-[#e7e7eb] hover:bg-[#fafafc]"
-                    }`}
-                  >
-                    <div
-                      className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 mt-0.5 ${
-                        isSelected
-                          ? "bg-[#5145cd] text-white"
-                          : "border border-[#c8c4d6]"
-                      }`}
-                    >
-                      {isSelected && <CheckCircle2 className="w-3.5 h-3.5" />}
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-bold text-xs text-[#171717]">
-                          {srv.code} • {srv.title}
-                        </span>
-                      </div>
-                      <span className="text-[11px] text-[#66666f] block mt-0.5">
-                        {srv.duration} • ₹{srv.price} standard base
-                      </span>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className="pt-4 flex items-center justify-between">
-              <Button variant="ghost" onClick={() => setStep(1)}>
-                <ArrowLeft className="w-4 h-4 mr-1" /> Back
-              </Button>
-              <Button size="md" onClick={() => setStep(3)} className="shadow-sm">
-                <span>Continue to Proof Upload</span>
-                <ArrowRight className="w-4 h-4 ml-1" />
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {/* ================= STEP 3: PROOF OF EMPLOYMENT ================= */}
-        {step === 3 && (
-          <div className="space-y-6">
-            <div className="space-y-1">
-              <Badge variant="default">Stage 3 of 3: Identity &amp; Employer Proof</Badge>
-              <h2 className="text-xl font-bold text-[#171717]">
-                Government ID &amp; Employment Documentation
-              </h2>
-              <p className="text-xs text-[#66666f]">
-                Upload documents to prove identity and employment. All files are encrypted using AES-256 and stored in private zero-trust buckets.
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-[#171717]">Verification Document Type</label>
-              <div className="grid grid-cols-3 gap-3 text-xs">
-                {[
-                  { id: "aadhaar", label: "Aadhaar Card (Redacted)" },
-                  { id: "passport", label: "Indian Passport" },
-                  { id: "id_card", label: "Corporate Employee Badge" },
-                ].map((doc) => (
-                  <button
-                    key={doc.id}
-                    type="button"
-                    onClick={() => setIdType(doc.id)}
-                    className={`p-3 rounded-lg border text-center font-semibold transition-all ${
-                      idType === doc.id
-                        ? "bg-[#eef2ff] border-[#5145cd] text-[#5145cd]"
-                        : "bg-white border-[#e7e7eb] text-[#171717] hover:bg-[#fafafc]"
-                    }`}
-                  >
-                    {doc.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Document Upload Zone */}
-            <div
-              onClick={() => setUploadedProof("employment_verification_document.pdf")}
-              className="p-8 border-2 border-dashed border-[#e7e7eb] hover:border-[#5145cd] rounded-2xl bg-[#fafafc] hover:bg-[#f2f3ff]/50 transition-all cursor-pointer flex flex-col items-center justify-center text-center gap-3"
-            >
-              <div className="w-12 h-12 rounded-xl bg-[#eef2ff] text-[#5145cd] flex items-center justify-center">
-                <UploadCloud className="w-6 h-6" />
-              </div>
-              <div>
-                <span className="font-bold text-sm text-[#171717] block">
-                  Click to upload proof document (PDF, PNG, JPG)
-                </span>
-                <span className="text-xs text-[#8b8b95] mt-1 block">
-                  Upload corporate badge, offer letter, or work verification letter (Max 5MB)
-                </span>
-              </div>
-            </div>
-
-            {uploadedProof && (
-              <div className="p-3.5 rounded-xl bg-[#ebf7ee] border border-[#94f7b2] flex items-center justify-between text-xs">
-                <div className="flex items-center gap-2 text-[#006d3a] font-bold">
-                  <FileText className="w-4 h-4" />
-                  <span>{uploadedProof} (Uploaded • Ready for reviewer)</span>
-                </div>
-                <Badge variant="verified">Secured</Badge>
-              </div>
-            )}
-
-            <div className="p-3.5 rounded-xl bg-[#fafafc] border border-[#e7e7eb] flex items-start gap-2.5 text-xs text-[#66666f]">
-              <Lock className="w-4 h-4 text-[#5145cd] shrink-0 mt-0.5" />
-              <span>
-                <strong>Zero-Trust Privacy Guarantee:</strong> Uploaded ID files are accessible strictly by dual-control verification reviewers and automatically purged according to DPDP retention rules.
+            <div>
+              <span className="text-base font-bold text-[#1c1b1b] tracking-tight font-heading">
+                DreamX
+              </span>
+              <span className="text-[10px] ml-2 tracking-wider uppercase font-bold text-[#5145cd] bg-[#f0eded] px-2 py-0.5 rounded">
+                MENTOR ONBOARDING
               </span>
             </div>
+          </Link>
+          <span className="hidden sm:inline text-[#c8c4d6]">/</span>
+          <span className="hidden sm:inline text-xs text-[#474554] font-medium">
+            Step {currentStep} of 4: Identity &amp; Credential Audit
+          </span>
+        </div>
 
-            <div className="pt-4 flex items-center justify-between">
-              <Button variant="ghost" onClick={() => setStep(2)}>
-                <ArrowLeft className="w-4 h-4 mr-1" /> Back
-              </Button>
-              <Button size="md" onClick={() => setStep(4)} className="shadow-sm">
-                <span>Continue to Payout &amp; Availability</span>
-                <ArrowRight className="w-4 h-4 ml-1" />
-              </Button>
+        <div className="flex items-center gap-3 text-xs">
+          <span className="hidden md:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#eaf5ef] text-[#006d3a] font-bold text-[11px] border border-[#94f7b2]">
+            <span className="material-symbols-outlined text-[14px]">shield</span>
+            Dual-Control Verification Desk
+          </span>
+          <div className="flex items-center gap-2 pl-2 border-l border-[#e7e7eb]">
+            <div className="w-7 h-7 rounded-full bg-[#5145cd] text-white flex items-center justify-center text-xs font-bold">
+              VS
+            </div>
+            <span className="font-bold text-xs text-[#1c1b1b] hidden sm:inline">Vikram Singh</span>
+          </div>
+        </div>
+      </header>
+
+      {/* Accreditation Ribbon */}
+      <div className="w-full bg-[#f6f3f2] border-b border-[#e7e7eb] px-4 sm:px-6 lg:px-8 py-2.5 flex flex-wrap items-center justify-between gap-2 text-xs">
+        <div className="flex items-center gap-2">
+          <span className="font-bold text-[#1c1b1b]">
+            Tier-1 Engineering Mentor Accreditation Protocol (PRD §9.1)
+          </span>
+        </div>
+        <div className="flex flex-wrap items-center gap-2 text-[11px]">
+          <span className="px-2 py-0.5 rounded bg-white border border-[#e7e7eb] text-[#474554] font-semibold">
+            24h SLA Review Turnaround
+          </span>
+          <span className="px-2 py-0.5 rounded bg-white border border-[#e7e7eb] text-[#006d3a] font-semibold">
+            Razorpay Nodal Payout Guarantee
+          </span>
+          <span className="px-2 py-0.5 rounded bg-white border border-[#e7e7eb] text-[#5145cd] font-semibold">
+            DPDP Act 2023 Shielded
+          </span>
+        </div>
+      </div>
+
+      {/* Main Container */}
+      <main className="p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-6">
+        {/* 4-Stage Linear Progress Stepper */}
+        <section aria-label="Accreditation Steps" className="bg-white border border-[#e7e7eb] rounded-2xl p-4 sm:p-5 shadow-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {/* Step 1 */}
+            <button
+              type="button"
+              onClick={() => setCurrentStep(1)}
+              className="flex items-start gap-3 p-3 rounded-xl hover:bg-[#f6f3f2] text-left transition-colors"
+            >
+              <div className="w-7 h-7 rounded-full bg-[#eaf5ef] text-[#006d3a] flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">
+                <span className="material-symbols-outlined text-[16px]">check</span>
+              </div>
+              <div className="min-w-0">
+                <span className="text-[10px] text-[#777585] uppercase font-bold tracking-wider block">
+                  Step 01 • Completed
+                </span>
+                <span className="text-xs font-bold text-[#1c1b1b] block truncate">
+                  Professional Track &amp; Role
+                </span>
+                <span className="text-[11px] text-[#006d3a] font-semibold">
+                  Staff AI/ML @ Google (L5/L6)
+                </span>
+              </div>
+            </button>
+
+            {/* Step 2 */}
+            <button
+              type="button"
+              onClick={() => setCurrentStep(2)}
+              className="flex items-start gap-3 p-3 rounded-xl hover:bg-[#f6f3f2] text-left transition-colors"
+            >
+              <div className="w-7 h-7 rounded-full bg-[#eaf5ef] text-[#006d3a] flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">
+                <span className="material-symbols-outlined text-[16px]">check</span>
+              </div>
+              <div className="min-w-0">
+                <span className="text-[10px] text-[#777585] uppercase font-bold tracking-wider block">
+                  Step 02 • Completed
+                </span>
+                <span className="text-xs font-bold text-[#1c1b1b] block truncate">
+                  Service Module Approvals
+                </span>
+                <span className="text-[11px] text-[#006d3a] font-semibold">
+                  3 Selected (S06, S01, S05)
+                </span>
+              </div>
+            </button>
+
+            {/* Step 3 (Active) */}
+            <div className="flex items-start gap-3 p-3 rounded-xl bg-[#e3dfff]/40 border-2 border-[#5145cd] text-left shadow-xs">
+              <div className="w-7 h-7 rounded-full bg-[#5145cd] text-white flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">
+                3
+              </div>
+              <div className="min-w-0">
+                <span className="text-[10px] text-[#5145cd] uppercase font-bold tracking-wider block">
+                  Step 03 • In Progress
+                </span>
+                <span className="text-xs font-bold text-[#1c1b1b] block truncate">
+                  Identity &amp; Employer Proof
+                </span>
+                <span className="text-[11px] text-[#5145cd] font-semibold">
+                  Dual-Control Audit
+                </span>
+              </div>
+            </div>
+
+            {/* Step 4 */}
+            <button
+              type="button"
+              onClick={() => setCurrentStep(4)}
+              className="flex items-start gap-3 p-3 rounded-xl hover:bg-[#f6f3f2] text-left transition-colors opacity-75"
+            >
+              <div className="w-7 h-7 rounded-full bg-[#f0eded] text-[#777585] flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">
+                4
+              </div>
+              <div className="min-w-0">
+                <span className="text-[10px] text-[#777585] uppercase font-bold tracking-wider block">
+                  Step 04 • Upcoming
+                </span>
+                <span className="text-xs font-bold text-[#777585] block truncate">
+                  Availability &amp; Settlement
+                </span>
+                <span className="text-[11px] text-[#777585]">
+                  Bank &amp; Escrow Rails
+                </span>
+              </div>
+            </button>
+          </div>
+        </section>
+
+        {successNotice ? (
+          <div className="bg-white border border-[#94f7b2] rounded-2xl p-8 sm:p-12 text-center max-w-xl mx-auto shadow-sm space-y-4">
+            <div className="w-14 h-14 rounded-2xl bg-[#eaf5ef] text-[#006d3a] flex items-center justify-center mx-auto shadow-xs">
+              <span className="material-symbols-outlined text-[32px]">check_circle</span>
+            </div>
+            <div className="space-y-1">
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#eaf5ef] text-[#006d3a]">
+                Accreditation Dossier Updated
+              </span>
+              <h2 className="text-2xl font-extrabold text-[#1c1b1b] font-heading">
+                Verification Proof Staged
+              </h2>
+              <p className="text-xs text-[#474554] max-w-md mx-auto leading-relaxed">
+                Your corporate domain credentials and employment proof have been submitted to the DreamX Trust &amp; Verification Desk. Dual-control review SLA turnaround is within 24 hours.
+              </p>
+            </div>
+            <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
+              <Link
+                href="/mentor/verification"
+                className="w-full sm:w-auto px-5 py-2.5 bg-[#5145cd] text-white text-xs font-bold rounded-xl shadow-xs hover:bg-[#3828b5] transition-all"
+              >
+                Go to Trust Verification Desk
+              </Link>
+              <button
+                type="button"
+                onClick={() => setSuccessNotice(false)}
+                className="w-full sm:w-auto px-4 py-2.5 border border-[#e7e7eb] text-xs font-bold text-[#1c1b1b] rounded-xl hover:bg-[#f6f3f2]"
+              >
+                Edit Dossier
+              </button>
+            </div>
+          </div>
+        ) : (
+          /* 2-Column Layout (Form Area vs Sidebar) */
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            {/* Left 8 Cols: Form Area */}
+            <div className="lg:col-span-8 space-y-6">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-bold text-[#5145cd] uppercase tracking-wider font-mono">
+                    STAGE 03 / 04
+                  </span>
+                </div>
+                <h2 className="text-xl sm:text-2xl font-extrabold text-[#1c1b1b] font-heading tracking-tight mt-1">
+                  Step 3: Upload Employment Proof &amp; Identity Verification
+                </h2>
+                <p className="text-xs sm:text-sm text-[#474554] mt-1 leading-relaxed">
+                  To guarantee 100% verified credentials for candidates, all mentors must complete employment verification via corporate email, work ID badge, or offer letter per PRD §9.1.
+                </p>
+              </div>
+
+              {/* Card 1: Corporate Email */}
+              <div className="bg-white border border-[#e7e7eb] rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-[#e7e7eb]">
+                  <div className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[#5145cd] text-[20px]">domain</span>
+                    <span className="text-sm font-bold text-[#1c1b1b]">Corporate Work Email (Domain Provenance)</span>
+                  </div>
+                  {emailOtpVerified && (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#eaf5ef] text-[#006d3a]">
+                      <span className="material-symbols-outlined text-[13px]">check</span>
+                      Domain OTP Verified
+                    </span>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <label htmlFor="work-email" className="block text-xs font-bold text-[#1c1b1b]">
+                    Work Email Address
+                  </label>
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                    <input
+                      id="work-email"
+                      type="email"
+                      value={workEmail}
+                      onChange={(e) => setWorkEmail(e.target.value)}
+                      placeholder="name@google.com or name@amazon.com"
+                      className="flex-1 px-3.5 py-2.5 rounded-xl border border-[#e7e7eb] bg-[#f6f3f2] text-xs font-medium text-[#1c1b1b] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5145cd]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setEmailOtpVerified(true)}
+                      className="px-4 py-2.5 rounded-xl bg-white border border-[#e7e7eb] hover:bg-[#f6f3f2] text-xs font-bold text-[#1c1b1b] shrink-0"
+                    >
+                      Re-verify OTP
+                    </button>
+                  </div>
+                  <p className="text-[11px] text-[#777585]">
+                    Must match recognized tech employers (Google, Microsoft, Amazon, Swiggy, Uber, etc.). DKIM &amp; DMARC domain probes verified.
+                  </p>
+                </div>
+              </div>
+
+              {/* Card 2: Employer Credential Upload */}
+              <div className="bg-white border border-[#e7e7eb] rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-[#e7e7eb]">
+                  <div className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[#5145cd] text-[20px]">badge</span>
+                    <span className="text-sm font-bold text-[#1c1b1b]">
+                      Employer Proof of Current / Recent Senior Role
+                    </span>
+                  </div>
+                  <span className="text-[11px] font-mono text-[#777585]">Max 10 MB</span>
+                </div>
+
+                {uploadedBadge ? (
+                  <div className="p-4 rounded-xl bg-[#f6f3f2] border border-[#94f7b2] flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-lg bg-[#eaf5ef] text-[#006d3a] flex items-center justify-center">
+                        <span className="material-symbols-outlined text-[20px]">picture_as_pdf</span>
+                      </div>
+                      <div>
+                        <span className="text-xs font-bold text-[#1c1b1b] block">{uploadedBadge}</span>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span className="text-[10px] font-bold text-[#006d3a] bg-[#eaf5ef] px-1.5 py-0.2 rounded">
+                            Encrypted AES-256
+                          </span>
+                          <span className="text-[10px] text-[#777585]">SHA-256 Validated</span>
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setUploadedBadge(null)}
+                      className="text-xs font-bold text-[#5145cd] hover:underline"
+                    >
+                      Replace
+                    </button>
+                  </div>
+                ) : (
+                  <div className="border-2 border-dashed border-[#c8c4d6] hover:border-[#5145cd] rounded-xl p-8 text-center space-y-2 cursor-pointer bg-[#fcf9f8] transition-colors">
+                    <div className="w-12 h-12 rounded-full bg-[#e3dfff] text-[#5145cd] flex items-center justify-center mx-auto">
+                      <span className="material-symbols-outlined text-[24px]">cloud_upload</span>
+                    </div>
+                    <div className="text-xs font-bold text-[#1c1b1b]">
+                      Drag and drop your work proof here, or <span className="text-[#5145cd] underline">browse files</span>
+                    </div>
+                    <p className="text-[11px] text-[#777585]">
+                      Supported formats: PDF, PNG, JPG (Corporate ID Badge front &amp; back, recent Offer Letter, or Form 16)
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setUploadedBadge("Google_L5_Staff_ID_Badge.pdf (2.4 MB)")}
+                      className="mt-2 px-3 py-1.5 rounded-lg bg-white border border-[#e7e7eb] text-xs font-bold text-[#1c1b1b]"
+                    >
+                      Select Sample ID Badge
+                    </button>
+                  </div>
+                )}
+                <p className="text-[11px] text-[#777585]">
+                  Note: You may redact compensation figures on offer letters. Only employer name, employee name, job title, and issuance date are audited.
+                </p>
+              </div>
+
+              {/* Card 3: Government Identity Document & DPDP Masking */}
+              <div className="bg-white border border-[#e7e7eb] rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-[#e7e7eb]">
+                  <div className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[#5145cd] text-[20px]">lock</span>
+                    <span className="text-sm font-bold text-[#1c1b1b]">
+                      Government Identity Document &amp; DPDP Masking
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-bold text-[#006d3a] bg-[#eaf5ef] px-2 py-0.5 rounded-full">
+                    Statutory KYC
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label htmlFor="id-type" className="block text-xs font-bold text-[#1c1b1b]">
+                      Document Type
+                    </label>
+                    <select
+                      id="id-type"
+                      value={idType}
+                      onChange={(e) => setIdType(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-[#e7e7eb] bg-[#f6f3f2] text-xs font-medium text-[#1c1b1b] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5145cd]"
+                    >
+                      <option value="aadhaar">Aadhaar Card (Masked)</option>
+                      <option value="passport">Indian Passport</option>
+                      <option value="pan">PAN Card</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label htmlFor="doc-number" className="block text-xs font-bold text-[#1c1b1b]">
+                      Document Number
+                    </label>
+                    <div className="relative">
+                      <input
+                        id="doc-number"
+                        type={showId ? "text" : "password"}
+                        value={idNumber}
+                        onChange={(e) => setIdNumber(e.target.value)}
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-[#e7e7eb] bg-[#f6f3f2] text-xs font-mono text-[#1c1b1b] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5145cd]"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowId(!showId)}
+                        className="absolute right-3 top-2.5 text-[#777585] hover:text-[#1c1b1b]"
+                      >
+                        <span className="material-symbols-outlined text-sm">
+                          {showId ? "visibility_off" : "visibility"}
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-[#f0eded]/60 border border-[#e7e7eb] text-xs text-[#474554] space-y-1">
+                  <span className="font-bold text-[#1c1b1b] flex items-center gap-1 text-[11px]">
+                    <span className="material-symbols-outlined text-sm text-[#006d3a]">verified_user</span>
+                    Statutory Privacy Shield (PRD §18.4)
+                  </span>
+                  <p className="text-[11px] text-[#777585] leading-relaxed">
+                    Under Indian DPDP Act 2023, identity documents are stored in zero-knowledge encrypted cold storage, used exclusively for KYC audit by verified DreamX compliance officers, and NEVER exposed to candidates, recruiters, or third parties.
+                  </p>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center justify-between pt-2">
+                <span className="text-[11px] text-[#777585] hidden sm:inline">
+                  Autosaved 2 mins ago • Application ID #MTR-APP-8842
+                </span>
+                <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setCurrentStep(2)}
+                    className="px-4 py-2.5 rounded-xl border border-[#e7e7eb] bg-white text-xs font-bold text-[#1c1b1b] hover:bg-[#f6f3f2]"
+                  >
+                    ← Back to Step 2: Services
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleNext}
+                    disabled={saving}
+                    className="px-5 py-2.5 rounded-xl bg-[#5145cd] hover:bg-[#3828b5] text-white text-xs font-bold shadow-xs transition-all flex items-center gap-1.5 focus:ring-2 focus:ring-offset-2 focus:ring-[#5145cd] disabled:opacity-75"
+                  >
+                    <span>{saving ? "Submitting Audit..." : "Save & Continue to Step 4 →"}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Right 4 Cols: Trust & Economics Sidebar */}
+            <div className="lg:col-span-4 space-y-5">
+              {/* Card 1: Estimated Net Monthly Yield */}
+              <div className="bg-white border border-[#e7e7eb] rounded-2xl p-5 shadow-xs space-y-4">
+                <div>
+                  <span className="text-[10px] font-bold text-[#777585] uppercase tracking-wider">
+                    PRD §13.1 Economics
+                  </span>
+                  <h3 className="text-base font-bold text-[#1c1b1b] font-heading mt-0.5">
+                    Estimated Net Monthly Yield
+                  </h3>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-[#eaf5ef] border border-[#94f7b2]">
+                  <span className="text-[11px] font-bold text-[#006d3a] block">
+                    PROJECTED EARNINGS
+                  </span>
+                  <div className="text-2xl font-extrabold text-[#1c1b1b] font-heading tabular-nums mt-0.5">
+                    ₹{calculateProjectedYield(Number(weeklyHours)).toLocaleString("en-IN")}
+                    <span className="text-xs font-normal text-[#474554]"> / month</span>
+                  </div>
+                  <span className="text-[10px] text-[#006d3a] font-semibold mt-1 block">
+                    At {weeklyHours} hours committed per week
+                  </span>
+                </div>
+
+                {/* Hours Selector */}
+                <div className="space-y-1.5">
+                  <label htmlFor="weekly-hours-select" className="block text-xs font-bold text-[#1c1b1b]">
+                    Weekly Capacity
+                  </label>
+                  <div id="weekly-hours-select" className="grid grid-cols-3 gap-2">
+                    {["4", "6", "10"].map((h) => (
+                      <button
+                        key={h}
+                        type="button"
+                        onClick={() => setWeeklyHours(h)}
+                        className={`py-2 rounded-xl text-xs font-bold border transition-all ${
+                          weeklyHours === h
+                            ? "border-[#5145cd] bg-[#e3dfff] text-[#130068] shadow-xs"
+                            : "border-[#e7e7eb] bg-white text-[#474554] hover:bg-[#f6f3f2]"
+                        }`}
+                      >
+                        {h} hrs/wk
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-2 pt-2 border-t border-[#e7e7eb] text-xs text-[#474554]">
+                  <div className="flex justify-between">
+                    <span>S06 Technical Mock (4 × ₹999)</span>
+                    <span className="font-bold text-[#1c1b1b]">₹3,996</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>S01 Resume Audit (6 × ₹599)</span>
+                    <span className="font-bold text-[#1c1b1b]">₹3,594</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>S05 Behavioral STAR (4 × ₹799)</span>
+                    <span className="font-bold text-[#1c1b1b]">₹3,196</span>
+                  </div>
+                  <div className="flex justify-between pt-1 border-t border-[#e7e7eb] font-bold text-[#006d3a]">
+                    <span>Platform Commission</span>
+                    <span>₹0 (0% Cut)</span>
+                  </div>
+                </div>
+                <p className="text-[11px] text-[#777585] leading-relaxed">
+                  DreamX absorbs candidate discounts. 100% of listed price is disbursed weekly via Razorpay Nodal Escrow every Monday.
+                </p>
+              </div>
+
+              {/* Card 2: Why DreamX Enforces Strict Verification */}
+              <div className="bg-white border border-[#e7e7eb] rounded-2xl p-5 shadow-xs space-y-3">
+                <span className="text-xs font-bold text-[#1c1b1b] block">
+                  Why DreamX Enforces Strict Verification
+                </span>
+                <div className="flex items-center gap-2 p-2.5 rounded-xl bg-[#ffdad6]/40 border border-[#ffdad6]">
+                  <span className="text-xl font-extrabold text-[#ba1a1a] font-heading">68%</span>
+                  <span className="text-xs font-semibold text-[#93000a]">
+                    Applicant Rejection Rate (Only verified Staff/Lead engineers accredited)
+                  </span>
+                </div>
+                <ul className="space-y-2 text-xs text-[#474554]">
+                  <li className="flex items-start gap-2">
+                    <span className="material-symbols-outlined text-sm text-[#006d3a] mt-0.5">check_circle</span>
+                    <span><strong>Zero Unverified Mentors:</strong> Every scorecard is cryptographically signed.</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="material-symbols-outlined text-sm text-[#006d3a] mt-0.5">check_circle</span>
+                    <span><strong>100% Protected Hourly Rate:</strong> Escrow locks full fee before slots confirm.</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="material-symbols-outlined text-sm text-[#006d3a] mt-0.5">check_circle</span>
+                    <span><strong>Zero Cold Solicitation:</strong> Only pre-matched candidates in your exact domain.</span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Card 3: Compliance & Document Security */}
+              <div className="p-4 rounded-2xl bg-[#f6f3f2] border border-[#e7e7eb] text-xs text-[#777585] space-y-1">
+                <div className="flex items-center gap-1.5 font-bold text-[#1c1b1b]">
+                  <span className="material-symbols-outlined text-[16px] text-[#5145cd]">verified_user</span>
+                  <span>Compliance Custody Policy</span>
+                </div>
+                <p className="text-[11px] leading-relaxed">
+                  Reviewed exclusively by DreamX Compliance Legal Team. Automated 12-month purge policy for unapproved or withdrawn submissions.
+                </p>
+              </div>
             </div>
           </div>
         )}
-
-        {/* ================= STEP 4: SETTLEMENT & SLOTS ================= */}
-        {step === 4 && (
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-1">
-              <Badge variant="success">Final Step: Payout Escrow &amp; Weekly Slots</Badge>
-              <h2 className="text-xl font-bold text-[#171717]">
-                Availability &amp; Automated Payout Account
-              </h2>
-              <p className="text-xs text-[#66666f]">
-                Escrow funds are disbursed automatically upon delivery of session reports within contractual 48-hour SLA.
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-[#171717]">Expected Weekly Mentoring Capacity</label>
-              <div className="grid grid-cols-3 gap-3 text-xs">
-                {[
-                  { id: "2-5", label: "2–5 Hours / Week" },
-                  { id: "5-10", label: "5–10 Hours / Week" },
-                  { id: "10+", label: "10+ Hours / Week" },
-                ].map((cap) => (
-                  <button
-                    key={cap.id}
-                    type="button"
-                    onClick={() => setWeeklyHours(cap.id)}
-                    className={`p-3 rounded-lg border text-center font-semibold transition-all ${
-                      weeklyHours === cap.id
-                        ? "bg-[#eef2ff] border-[#5145cd] text-[#5145cd]"
-                        : "bg-white border-[#e7e7eb] text-[#171717] hover:bg-[#fafafc]"
-                    }`}
-                  >
-                    {cap.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Payout Channel Selector */}
-            <div className="space-y-3 pt-2">
-              <label className="text-xs font-bold text-[#171717]">Indian Settlement Channel</label>
-              <div className="flex gap-4">
-                <button
-                  type="button"
-                  onClick={() => setPayoutMethod("upi")}
-                  className={`flex-1 p-3 rounded-xl border flex items-center justify-center gap-2 text-xs font-bold transition-all ${
-                    payoutMethod === "upi"
-                      ? "bg-[#eef2ff] border-[#5145cd] text-[#5145cd]"
-                      : "bg-white border-[#e7e7eb] text-[#171717]"
-                  }`}
-                >
-                  <CreditCard className="w-4 h-4" />
-                  <span>Instant UPI ID</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPayoutMethod("bank")}
-                  className={`flex-1 p-3 rounded-xl border flex items-center justify-center gap-2 text-xs font-bold transition-all ${
-                    payoutMethod === "bank"
-                      ? "bg-[#eef2ff] border-[#5145cd] text-[#5145cd]"
-                      : "bg-white border-[#e7e7eb] text-[#171717]"
-                  }`}
-                >
-                  <Building2 className="w-4 h-4" />
-                  <span>Direct Bank Account (NEFT/IMPS)</span>
-                </button>
-              </div>
-
-              {payoutMethod === "upi" ? (
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-[#171717]">UPI VPA (Virtual Payment Address)</label>
-                  <Input
-                    value={upiId}
-                    onChange={(e) => setUpiId(e.target.value)}
-                    placeholder="e.g. yourname@oksbi, yourname@okhdfcbank"
-                    className="h-10 text-sm"
-                    required
-                  />
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-[#171717]">Account Number</label>
-                    <Input
-                      value={accountNumber}
-                      onChange={(e) => setAccountNumber(e.target.value)}
-                      placeholder="e.g. 501002391283"
-                      className="h-10 text-sm"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-[#171717]">Bank IFSC Code</label>
-                    <Input
-                      value={ifsc}
-                      onChange={(e) => setIfsc(e.target.value)}
-                      placeholder="e.g. HDFC0000240"
-                      className="h-10 text-sm"
-                      required
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="pt-4 flex items-center justify-between">
-              <Button variant="ghost" onClick={() => setStep(3)}>
-                <ArrowLeft className="w-4 h-4 mr-1" /> Back
-              </Button>
-              <Button
-                type="submit"
-                size="lg"
-                isLoading={isSubmitting}
-                className="shadow-md"
-              >
-                <span>Submit Mentor Application</span>
-                <ArrowRight className="w-4 h-4 ml-1" />
-              </Button>
-            </div>
-          </form>
-        )}
-      </Card>
+      </main>
     </div>
   );
 }
