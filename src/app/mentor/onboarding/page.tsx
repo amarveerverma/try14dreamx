@@ -13,6 +13,7 @@ export default function MentorOnboardingPage() {
   const [idNumber, setIdNumber] = React.useState("•••• •••• 8912");
   const [showId, setShowId] = React.useState(false);
   const [uploadedBadge, setUploadedBadge] = React.useState<string | null>(null);
+  const [showSampleGuide, setShowSampleGuide] = React.useState(false);
   const [weeklyHours, setWeeklyHours] = React.useState("6");
   const [saving, setSaving] = React.useState(false);
   const [successNotice, setSuccessNotice] = React.useState(false);
@@ -345,9 +346,78 @@ export default function MentorOnboardingPage() {
                     </label>
                   </div>
                 )}
-                <p className="text-[11px] text-[#777585]">
-                  Note: You may redact compensation figures on offer letters. Only employer name, employee name, job title, and issuance date are audited.
-                </p>
+                <div className="pt-1 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <p className="text-[11px] text-[#777585]">
+                    Note: You may redact compensation figures on offer letters. Only employer name, employee name, job title, and issuance date are audited.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setShowSampleGuide(!showSampleGuide)}
+                    className="text-[11px] font-bold text-[#5145cd] hover:underline flex items-center gap-1 shrink-0 cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-[14px]">info</span>
+                    {showSampleGuide ? "Hide Sample Guide" : "View Sample Accepted ID"}
+                  </button>
+                </div>
+
+                {showSampleGuide && (
+                  <div className="p-4 rounded-xl bg-indigo-50/50 border border-indigo-100 space-y-3 text-xs animate-in fade-in duration-200">
+                    <div className="flex items-center justify-between border-b border-indigo-100 pb-2">
+                      <span className="font-bold text-[#3828b5] flex items-center gap-1.5">
+                        <span className="material-symbols-outlined text-[16px]">visibility</span>
+                        Sample Accepted ID Badge &amp; Redaction Guide
+                      </span>
+                      <span className="text-[10px] font-semibold text-[#006d3a] bg-[#eaf5ef] px-2 py-0.5 rounded-full">
+                        DPDP Act 2023 Compliant
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-[11px]">
+                      {/* Visual Mock Badge Representation */}
+                      <div className="p-3 rounded-lg bg-white border border-[#e7e7eb] shadow-2xs space-y-2">
+                        <div className="flex items-center justify-between border-b border-gray-100 pb-1.5">
+                          <span className="font-black text-gray-900 tracking-tight">ACME TECH / ENTERPRISE</span>
+                          <span className="text-[9px] font-bold text-gray-400">CORPORATE PASS</span>
+                        </div>
+                        <div className="flex gap-2.5 items-center">
+                          <div className="w-10 h-10 rounded-md bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-400 text-[10px]">
+                            Photo
+                          </div>
+                          <div className="space-y-0.5">
+                            <div className="font-bold text-gray-900 text-xs">Vikramaditya Rao</div>
+                            <div className="text-[10px] text-[#5145cd] font-semibold">Lead Systems Architect</div>
+                            <div className="text-[9px] text-gray-400">Emp ID: AC-882104 • Valid 2026</div>
+                          </div>
+                        </div>
+                        <div className="pt-1 text-[9px] text-emerald-700 bg-emerald-50 p-1.5 rounded flex items-center gap-1">
+                          <span className="material-symbols-outlined text-[12px]">check_circle</span>
+                          <span>Accepted: Clear Name, Senior Title, and Employer Logo</span>
+                        </div>
+                      </div>
+
+                      {/* Redaction Rules Checklist */}
+                      <div className="space-y-1.5 text-gray-600">
+                        <span className="font-bold text-gray-900 block text-xs">What Our Audit Desk Checks:</span>
+                        <div className="flex items-start gap-1.5">
+                          <span className="text-emerald-600 font-bold">✓</span>
+                          <span><strong>Employer Name &amp; Logo</strong> must be clearly identifiable.</span>
+                        </div>
+                        <div className="flex items-start gap-1.5">
+                          <span className="text-emerald-600 font-bold">✓</span>
+                          <span><strong>Full Name</strong> must match your Government ID KYC.</span>
+                        </div>
+                        <div className="flex items-start gap-1.5">
+                          <span className="text-emerald-600 font-bold">✓</span>
+                          <span><strong>Senior Role (5+ YoE)</strong> to confirm accreditation bar.</span>
+                        </div>
+                        <div className="flex items-start gap-1.5 text-amber-800">
+                          <span className="text-amber-600 font-bold">🛡️</span>
+                          <span><strong>Allowed Redactions:</strong> Compensation, salary figures, and personal residential address may be blacked out.</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Card 3: Government Identity Document & DPDP Masking */}
