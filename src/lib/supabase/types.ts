@@ -474,7 +474,14 @@ export interface Database {
       [_ in never]: never;
     };
     Functions: {
-      [_ in never]: never;
+      log_identity_evidence_access: {
+        Args: {
+          p_target_id: string;
+          p_evidence_type: string;
+          p_reason_code?: string;
+        };
+        Returns: string;
+      };
     };
     Enums: {
       user_role: UserRole;
