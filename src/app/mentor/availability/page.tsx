@@ -20,11 +20,15 @@ import {
   Sunset,
   Coffee,
 } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+import { useAuth } from "@/lib/auth-context";
 
 interface SlotItem {
   id: string;
   timeRange: string;
   scope: string;
+  startTime?: string;
+  endTime?: string;
   isConfirmed?: boolean;
   candidateName?: string;
   candidateId?: string;
@@ -34,12 +38,132 @@ interface SlotItem {
 
 interface DaySchedule {
   day: string;
+  dayIndex: number;
   enabled: boolean;
   blockedReason?: string;
   slots: SlotItem[];
 }
 
+const DAYS_OF_WEEK: { name: string; index: number }[] = [
+  { name: "Monday", index: 1 },
+  { name: "Tuesday", index: 2 },
+  { name: "Wednesday", index: 3 },
+  { name: "Thursday", index: 4 },
+  { name: "Friday", index: 5 },
+  { name: "Saturday", index: 6 },
+  { name: "Sunday", index: 0 },
+];
+
+const INITIAL_SCHEDULES: DaySchedule[] = [
+  {
+    day: "Monday",
+    dayIndex: 1,
+    enabled: false,
+    blockedReason: "Unavailable • Corporate Sprint Planning (Google L5 Internal)",
+    slots: [],
+  },
+  {
+    day: "Tuesday",
+    dayIndex: 2,
+    enabled: true,
+    slots: [
+      {
+        id: "tue-1",
+        timeRange: "07:00 PM – 08:00 PM IST",
+        startTime: "19:00",
+        endTime: "20:00",
+        scope: "S06 Technical Mock / S01 Resume Review",
+      },
+      {
+        id: "tue-2",
+        timeRange: "08:30 PM – 09:30 PM IST",
+        startTime: "20:30",
+        endTime: "21:30",
+        scope: "S06 Technical Mock eligible",
+      },
+    ],
+  },
+  {
+    day: "Wednesday",
+    dayIndex: 3,
+    enabled: false,
+    blockedReason: "Unavailable • Blocked by Google Calendar Work Event (Team Sync)",
+    slots: [],
+  },
+  {
+    day: "Thursday",
+    dayIndex: 4,
+    enabled: true,
+    slots: [
+      {
+        id: "thu-1",
+        timeRange: "07:30 PM – 08:30 PM IST",
+        startTime: "19:30",
+        endTime: "20:30",
+        scope: "Open for Direct Booking & Smart Match",
+      },
+    ],
+  },
+  {
+    day: "Friday",
+    dayIndex: 5,
+    enabled: true,
+    slots: [
+      {
+        id: "fri-1",
+        timeRange: "07:30 PM – 08:30 PM IST",
+        startTime: "19:30",
+        endTime: "20:30",
+        scope: "S06 Technical Mock",
+        isConfirmed: true,
+        candidateName: "Rohan Sharma",
+        candidateId: "#DX-9124",
+        serviceName: "S06 Technical Mock",
+        escrowAmount: "₹999",
+      },
+    ],
+  },
+  {
+    day: "Saturday",
+    dayIndex: 6,
+    enabled: true,
+    slots: [
+      {
+        id: "sat-1",
+        timeRange: "10:30 AM – 11:30 AM IST",
+        startTime: "10:30",
+        endTime: "11:30",
+        scope: "Morning architectural review window",
+      },
+      {
+        id: "sat-2",
+        timeRange: "04:00 PM – 05:00 PM IST",
+        startTime: "16:00",
+        endTime: "17:00",
+        scope: "Afternoon mock drill",
+      },
+    ],
+  },
+  {
+    day: "Sunday",
+    dayIndex: 0,
+    enabled: true,
+    slots: [
+      {
+        id: "sun-1",
+        timeRange: "11:00 AM – 12:00 PM IST",
+        startTime: "11:00",
+        endTime: "12:00",
+        scope: "Weekend career roadmap & strategy",
+      },
+    ],
+  },
+];
+
 export default function MentorAvailabilityPage() {
+  const { user } = useAuth();
+  const supabase = React.useMemo(() => createClient(), []);
+
   // Live IST Clock
   const [istTime, setIstTime] = React.useState("19:48:10 IST");
   React.useEffect(() => {
@@ -63,107 +187,17 @@ export default function MentorAvailabilityPage() {
     return () => clearInterval(interval);
   }, []);
 
-  // Sync state
+  // Verification & Governance status
+  const [mentorStatus, setMentorStatus] = React.useState<"approved" | "pending" | "none">("pending");
   const [isSyncing, setIsSyncing] = React.useState(false);
-  const [syncStatus, setSyncStatus] = React.useState("Synced 2m ago");
+  const [syncStatus, setSyncStatus] = React.useState("Synced with Supabase");
 
-  const handleSync = () => {
-    setIsSyncing(true);
-    setTimeout(() => {
-      setIsSyncing(false);
-      setSyncStatus("Just now");
-    }, 1200);
-  };
-
-  // Governance settings state
+  // Governance settings state (PRD §9.3 & §11.1)
   const [interSessionRest, setInterSessionRest] = React.useState("15 mins");
   const [advanceNotice, setAdvanceNotice] = React.useState("2 hours");
 
   // Weekly Schedule State
-  const [schedules, setSchedules] = React.useState<DaySchedule[]>([
-    {
-      day: "Monday",
-      enabled: false,
-      blockedReason: "Unavailable • Corporate Sprint Planning (Google L5 Internal)",
-      slots: [],
-    },
-    {
-      day: "Tuesday",
-      enabled: true,
-      slots: [
-        {
-          id: "tue-1",
-          timeRange: "07:00 PM – 08:00 PM IST",
-          scope: "S06 Technical Mock / S01 Resume Review",
-        },
-        {
-          id: "tue-2",
-          timeRange: "08:30 PM – 09:30 PM IST",
-          scope: "S06 Technical Mock eligible",
-        },
-      ],
-    },
-    {
-      day: "Wednesday",
-      enabled: false,
-      blockedReason: "Unavailable • Blocked by Google Calendar Work Event (Team Sync)",
-      slots: [],
-    },
-    {
-      day: "Thursday",
-      enabled: true,
-      slots: [
-        {
-          id: "thu-1",
-          timeRange: "07:30 PM – 08:30 PM IST",
-          scope: "Open for Direct Booking & Smart Match",
-        },
-      ],
-    },
-    {
-      day: "Friday",
-      enabled: true,
-      slots: [
-        {
-          id: "fri-1",
-          timeRange: "07:30 PM – 08:30 PM IST",
-          scope: "S06 Technical Mock",
-          isConfirmed: true,
-          candidateName: "Rohan Sharma",
-          candidateId: "#DX-9124",
-          serviceName: "S06 Technical Mock",
-          escrowAmount: "₹999",
-        },
-      ],
-    },
-    {
-      day: "Saturday",
-      enabled: true,
-      slots: [
-        {
-          id: "sat-1",
-          timeRange: "10:30 AM – 11:30 AM IST",
-          scope: "Morning architectural review window",
-        },
-        {
-          id: "sat-2",
-          timeRange: "04:00 PM – 05:00 PM IST",
-          scope: "Afternoon mock drill",
-        },
-      ],
-    },
-    {
-      day: "Sunday",
-      enabled: true,
-      slots: [
-        {
-          id: "sun-1",
-          timeRange: "11:00 AM – 12:00 PM IST",
-          scope: "Weekend career roadmap & strategy",
-        },
-      ],
-    },
-  ]);
+  const [schedules, setSchedules] = React.useState<DaySchedule[]>(INITIAL_SCHEDULES);
 
   // Modal State for adding slot
   const [modalOpen, setModalOpen] = React.useState(false);
@@ -172,29 +206,81 @@ export default function MentorAvailabilityPage() {
   const [modalEndTime, setModalEndTime] = React.useState("20:00");
   const [modalScope, setModalScope] = React.useState("S06 Technical Mock / S01 Resume Review");
 
-  const toggleDay = (dayName: string) => {
-    setSchedules((prev) =>
-      prev.map((d) => (d.day === dayName ? { ...d, enabled: !d.enabled } : d))
-    );
-  };
+  // 1. Fetch live slots & mentor status from Supabase
+  React.useEffect(() => {
+    let isCancelled = false;
 
-  const removeSlot = (dayName: string, slotId: string) => {
-    setSchedules((prev) =>
-      prev.map((d) =>
-        d.day === dayName
-          ? { ...d, slots: d.slots.filter((s) => s.id !== slotId) }
-          : d
-      )
-    );
-  };
+    async function loadRemoteAvailability() {
+      try {
+        const mentorId = user?.id || "00000000-0000-0000-0000-000000000002";
 
-  const handleAddSlotSubmit = (e: React.FormEvent) => {
+        // Check verification status
+        const { data: mentorProfile } = await supabase
+          .from("mentor_profiles")
+          .select("verification_status")
+          .eq("id", mentorId)
+          .maybeSingle();
+
+        if (!isCancelled && mentorProfile?.verification_status) {
+          setMentorStatus(mentorProfile.verification_status as "approved" | "pending");
+        }
+
+        // Fetch remote slots
+        const { data: dbSlots } = await supabase
+          .from("mentor_availability_slots")
+          .select("*")
+          .eq("mentor_id", mentorId);
+
+        if (!isCancelled && dbSlots && dbSlots.length > 0) {
+          // Map DB slots into schedule days
+          setSchedules((prev) =>
+            prev.map((dayPlan) => {
+              const matchingDb = dbSlots.filter((s) => s.day_of_week === dayPlan.dayIndex);
+              if (matchingDb.length === 0) return dayPlan;
+
+              const mappedSlots: SlotItem[] = matchingDb.map((s) => ({
+                id: s.id,
+                timeRange: `${s.start_time.slice(0, 5)} – ${s.end_time.slice(0, 5)} IST`,
+                startTime: s.start_time.slice(0, 5),
+                endTime: s.end_time.slice(0, 5),
+                scope: "Open for Direct Booking & Smart Match",
+              }));
+
+              return {
+                ...dayPlan,
+                enabled: matchingDb.some((s) => s.is_active),
+                slots: mappedSlots,
+              };
+            })
+          );
+        }
+      } catch (err) {
+        console.warn("Notice loading remote availability:", err);
+      }
+    }
+
+    loadRemoteAvailability();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [supabase, user]);
+
+  // 2. Add Slot handler (persists to Supabase)
+  const handleAddSlotSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const dayMeta = DAYS_OF_WEEK.find((d) => d.name === modalDay);
+    const dayIndex = dayMeta ? dayMeta.index : 2;
+
+    const newSlotId = `slot-${Date.now()}`;
     const newSlot: SlotItem = {
-      id: `slot-${Date.now()}`,
+      id: newSlotId,
       timeRange: `${modalStartTime} – ${modalEndTime} IST`,
+      startTime: modalStartTime,
+      endTime: modalEndTime,
       scope: modalScope,
     };
+
     setSchedules((prev) =>
       prev.map((d) =>
         d.day === modalDay
@@ -203,6 +289,87 @@ export default function MentorAvailabilityPage() {
       )
     );
     setModalOpen(false);
+
+    // Persist to Supabase
+    try {
+      const mentorId = user?.id || "00000000-0000-0000-0000-000000000002";
+      await supabase.from("mentor_availability_slots").insert({
+        mentor_id: mentorId,
+        day_of_week: dayIndex,
+        start_time: `${modalStartTime}:00`,
+        end_time: `${modalEndTime}:00`,
+        timezone: "Asia/Kolkata",
+        is_active: true,
+        buffer_minutes: parseInt(interSessionRest, 10) || 15,
+        min_notice_hours: parseInt(advanceNotice, 10) || 2,
+      });
+    } catch (err) {
+      console.warn("Notice writing slot to Supabase:", err);
+    }
+  };
+
+  // 3. Remove Slot handler
+  const removeSlot = async (dayName: string, slotId: string) => {
+    setSchedules((prev) =>
+      prev.map((d) =>
+        d.day === dayName
+          ? { ...d, slots: d.slots.filter((s) => s.id !== slotId) }
+          : d
+      )
+    );
+
+    // Delete from Supabase if slot ID is a UUID
+    if (slotId.includes("-") && slotId.length > 20) {
+      try {
+        await supabase.from("mentor_availability_slots").delete().eq("id", slotId);
+      } catch (err) {
+        console.warn("Notice deleting slot from Supabase:", err);
+      }
+    }
+  };
+
+  // 4. Toggle Day handler
+  const toggleDay = (dayName: string) => {
+    setSchedules((prev) =>
+      prev.map((d) => (d.day === dayName ? { ...d, enabled: !d.enabled } : d))
+    );
+  };
+
+  // 5. Manual Sync with Supabase & Google Calendar
+  const handleSync = async () => {
+    setIsSyncing(true);
+    try {
+      const mentorId = user?.id || "00000000-0000-0000-0000-000000000002";
+
+      // Sync active schedules into Supabase
+      const activeSlotsToSave = schedules
+        .filter((d) => d.enabled)
+        .flatMap((d) =>
+          d.slots.map((s) => ({
+            mentor_id: mentorId,
+            day_of_week: d.dayIndex,
+            start_time: `${s.startTime || "19:00"}:00`,
+            end_time: `${s.endTime || "20:00"}:00`,
+            timezone: "Asia/Kolkata",
+            is_active: true,
+            buffer_minutes: parseInt(interSessionRest, 10) || 15,
+            min_notice_hours: parseInt(advanceNotice, 10) || 2,
+          }))
+        );
+
+      if (activeSlotsToSave.length > 0) {
+        await supabase
+          .from("mentor_availability_slots")
+          .upsert(activeSlotsToSave);
+      }
+
+      setSyncStatus("Just now (Supabase IST)");
+    } catch (err) {
+      console.warn("Sync notice:", err);
+      setSyncStatus("Local draft cached");
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
   // Total active hours
@@ -243,11 +410,54 @@ export default function MentorAvailabilityPage() {
       </header>
 
       {/* 2. MAIN CONTENT AREA */}
-      <main className="max-w-[1400px] mx-auto px-6 lg:px-10 py-8 space-y-8">
+      <main className="max-w-[1400px] mx-auto px-6 lg:px-10 py-8 space-y-6">
+        {/* P5 Exit Criteria 1 Governance Banner */}
+        {mentorStatus === "approved" ? (
+          <div className="p-4 rounded-2xl bg-[#eaf5ef] border border-[#94f7b2] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs shadow-xs">
+            <div className="flex items-center gap-2.5 text-[#006d3a]">
+              <ShieldCheck className="w-5 h-5 text-[#006d3a] shrink-0" />
+              <div>
+                <span className="font-bold block">
+                  Tier-1 Accredited Mentor • Live Dispatch Matrix Active (PRD §9.3)
+                </span>
+                <span className="text-[#1c1b1b]">
+                  Your active slots are published in the candidate search pool and eligible for Instant Smart Match bookings.
+                </span>
+              </div>
+            </div>
+            <Link
+              href="/mentor/dispatch"
+              className="px-3.5 py-1.5 rounded-xl bg-white border border-[#94f7b2] text-[#006d3a] font-bold text-xs hover:bg-[#d1edd9] transition-all self-start sm:self-auto shrink-0"
+            >
+              View Dispatch Pool
+            </Link>
+          </div>
+        ) : (
+          <div className="p-4 rounded-2xl bg-amber-50/90 border border-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs shadow-xs">
+            <div className="flex items-center gap-2.5 text-amber-900">
+              <AlertCircle className="w-5 h-5 text-amber-700 shrink-0" />
+              <div>
+                <span className="font-bold block">
+                  P5 Governance Guard Enforced (PRD §9.1 &amp; §9.3): Accreditation Pending
+                </span>
+                <span className="text-amber-800">
+                  Unverified applicants cannot accept paid candidate bookings. Your weekly schedule is saved securely in Supabase and will automatically activate once dual-control audit approval is finalized.
+                </span>
+              </div>
+            </div>
+            <Link
+              href="/mentor/verification"
+              className="px-3.5 py-1.5 rounded-xl bg-[#5145cd] text-white font-bold text-xs hover:bg-[#3828b5] transition-all self-start sm:self-auto shrink-0 shadow-xs"
+            >
+              Check Verification Status
+            </Link>
+          </div>
+        )}
+
         {/* 2.1 Header & Actions */}
         <section className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-2">
           <div className="space-y-1 max-w-3xl">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#1c1b1b] tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#1c1b1b] tracking-tight font-heading">
               Weekly Recurring Availability &amp; Booking Buffers
             </h1>
             <p className="text-sm text-[#474554] leading-relaxed">
@@ -259,10 +469,10 @@ export default function MentorAvailabilityPage() {
             <button
               onClick={handleSync}
               disabled={isSyncing}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-[#e7e7eb] bg-white text-xs sm:text-sm font-semibold text-[#1c1b1b] hover:bg-[#f6f3f2] transition-all shadow-xs"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#e7e7eb] bg-white text-xs sm:text-sm font-semibold text-[#1c1b1b] hover:bg-[#f6f3f2] transition-all shadow-xs disabled:opacity-75"
             >
               <RefreshCw className={`w-4 h-4 text-[#16834a] ${isSyncing ? "animate-spin" : ""}`} />
-              <span>Sync Google Calendar</span>
+              <span>Sync with Supabase</span>
               <span className="text-[11px] font-normal text-[#777585] ml-1">({syncStatus})</span>
             </button>
             <button
@@ -270,7 +480,7 @@ export default function MentorAvailabilityPage() {
                 setModalDay("Tuesday");
                 setModalOpen(true);
               }}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#5145cd] text-xs sm:text-sm font-semibold text-white hover:bg-[#3828b5] transition-all shadow-sm active:scale-[0.99]"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#5145cd] text-xs sm:text-sm font-semibold text-white hover:bg-[#3828b5] transition-all shadow-sm active:scale-[0.99]"
             >
               <Plus className="w-4 h-4" />
               <span>Add Custom Time Block</span>
@@ -281,7 +491,7 @@ export default function MentorAvailabilityPage() {
         {/* 2.2 Telemetry Bento Grid (3 Cards) */}
         <section className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {/* Card 1 */}
-          <div className="p-5 rounded-xl bg-white border border-[#e7e7eb] shadow-xs flex flex-col justify-between">
+          <div className="p-5 rounded-2xl bg-white border border-[#e7e7eb] shadow-xs flex flex-col justify-between">
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs uppercase tracking-wider font-semibold text-[#777585]">
                 Active Weekly Capacity
@@ -301,7 +511,7 @@ export default function MentorAvailabilityPage() {
           </div>
 
           {/* Card 2 */}
-          <div className="p-5 rounded-xl bg-white border border-[#e7e7eb] shadow-xs flex flex-col justify-between">
+          <div className="p-5 rounded-2xl bg-white border border-[#e7e7eb] shadow-xs flex flex-col justify-between">
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs uppercase tracking-wider font-semibold text-[#777585]">
                 Two-Way Calendar Sync
@@ -313,7 +523,7 @@ export default function MentorAvailabilityPage() {
             </div>
             <div className="flex items-center gap-2 mb-1 truncate">
               <span className="text-base font-bold text-[#1c1b1b] truncate">
-                vikram.singh@google.com
+                {user?.email || "vikram.singh@google.com"}
               </span>
             </div>
             <p className="text-xs text-[#474554] mt-1">
@@ -323,7 +533,7 @@ export default function MentorAvailabilityPage() {
           </div>
 
           {/* Card 3 */}
-          <div className="p-5 rounded-xl bg-white border border-[#e7e7eb] shadow-xs flex flex-col justify-between">
+          <div className="p-5 rounded-2xl bg-white border border-[#e7e7eb] shadow-xs flex flex-col justify-between">
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs uppercase tracking-wider font-semibold text-[#777585]">
                 Notice &amp; Booking Safeguards
@@ -348,7 +558,7 @@ export default function MentorAvailabilityPage() {
         <section className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
-              <h2 className="text-xl font-bold text-[#1c1b1b]">Weekly Recurring Availability Windows</h2>
+              <h2 className="text-xl font-bold text-[#1c1b1b] font-heading">Weekly Recurring Availability Windows</h2>
               <p className="text-xs text-[#474554]">
                 Configure standard hours for algorithmic matching and candidate self-scheduling.
               </p>
@@ -373,7 +583,7 @@ export default function MentorAvailabilityPage() {
               return (
                 <div
                   key={dayPlan.day}
-                  className={`p-4 rounded-xl border transition-all ${
+                  className={`p-4 rounded-2xl border transition-all ${
                     isFridayConfirmed
                       ? "border-[#16834a]/40 bg-white shadow-xs"
                       : dayPlan.enabled
@@ -447,7 +657,7 @@ export default function MentorAvailabilityPage() {
                               setModalDay(dayPlan.day);
                               setModalOpen(true);
                             }}
-                            className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-[#e7e7eb] bg-white text-xs font-semibold text-[#1c1b1b] hover:bg-[#f6f3f2] transition-colors"
+                            className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-[#e7e7eb] bg-white text-xs font-semibold text-[#1c1b1b] hover:bg-[#f6f3f2] transition-colors"
                           >
                             <Plus className="w-3.5 h-3.5 text-[#5145cd]" />
                             <span>Add Window</span>
@@ -455,7 +665,7 @@ export default function MentorAvailabilityPage() {
                           {isFridayConfirmed && (
                             <Link
                               href="/mentor/sessions"
-                              className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#16834a] text-white text-xs font-semibold hover:bg-[#126b3c] transition-colors shadow-xs"
+                              className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-[#16834a] text-white text-xs font-semibold hover:bg-[#126b3c] transition-colors shadow-xs"
                             >
                               <span>Open Session Console</span>
                             </Link>
@@ -465,7 +675,7 @@ export default function MentorAvailabilityPage() {
                         <button
                           type="button"
                           onClick={() => toggleDay(dayPlan.day)}
-                          className="px-3 py-1.5 rounded-lg border border-[#e7e7eb] bg-white text-xs font-medium text-[#474554] hover:text-[#1c1b1b] hover:bg-[#f0eded] transition-colors"
+                          className="px-3 py-1.5 rounded-xl border border-[#e7e7eb] bg-white text-xs font-medium text-[#474554] hover:text-[#1c1b1b] hover:bg-[#f0eded] transition-colors"
                         >
                           Enable Day
                         </button>
@@ -481,7 +691,7 @@ export default function MentorAvailabilityPage() {
                           return (
                             <div
                               key={slot.id}
-                              className="w-full flex flex-wrap items-center justify-between gap-3 p-3 rounded-lg bg-[#eaf5ef]/60 border border-[#bfe4cc]"
+                              className="w-full flex flex-wrap items-center justify-between gap-3 p-3 rounded-xl bg-[#eaf5ef]/60 border border-[#bfe4cc]"
                             >
                               <div className="flex items-center gap-3">
                                 <span className="w-2.5 h-2.5 rounded-full bg-[#16834a]" />
@@ -499,7 +709,7 @@ export default function MentorAvailabilityPage() {
                                 </div>
                               </div>
                               <div className="flex items-center gap-2">
-                                <span className="px-2.5 py-1 rounded-md text-xs font-semibold bg-white border border-[#bfe4cc] text-[#16834a] tabular-nums">
+                                <span className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-white border border-[#bfe4cc] text-[#16834a] tabular-nums">
                                   Escrow Locked {slot.escrowAmount}
                                 </span>
                                 <CheckCircle2 className="w-4 h-4 text-[#16834a]" />
@@ -511,7 +721,7 @@ export default function MentorAvailabilityPage() {
                         return (
                           <div
                             key={slot.id}
-                            className="flex items-center gap-2.5 px-3 py-1.5 rounded-lg bg-[#f6f3f2] border border-[#e7e7eb] text-xs"
+                            className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-[#f6f3f2] border border-[#e7e7eb] text-xs"
                           >
                             {slot.timeRange.includes("AM") ? (
                               <Sun className="w-3.5 h-3.5 text-[#a7670b]" />
@@ -548,11 +758,11 @@ export default function MentorAvailabilityPage() {
         <section className="p-6 rounded-2xl bg-white border border-[#e7e7eb] shadow-xs space-y-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between pb-4 border-b border-[#e7e7eb] gap-2">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-[#e3dfff]/60 flex items-center justify-center text-[#5145cd]">
+              <div className="w-10 h-10 rounded-xl bg-[#e3dfff]/60 flex items-center justify-center text-[#5145cd]">
                 <SlidersHorizontal className="w-5 h-5" />
               </div>
               <div>
-                <h2 className="text-lg font-bold text-[#1c1b1b]">Buffer &amp; Booking Governance Rules</h2>
+                <h2 className="text-lg font-bold text-[#1c1b1b] font-heading">Buffer &amp; Booking Governance Rules</h2>
                 <p className="text-xs text-[#474554]">
                   PRD §11.1 &amp; §12.1 mandatory system constraints protecting mentor focus and candidate review rigor.
                 </p>
@@ -580,7 +790,7 @@ export default function MentorAvailabilityPage() {
                     key={val}
                     type="button"
                     onClick={() => setInterSessionRest(val)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
                       interSessionRest === val
                         ? "bg-[#5145cd] text-white shadow-xs"
                         : "border border-[#e7e7eb] bg-white text-[#474554] hover:bg-[#f6f3f2]"
@@ -611,7 +821,7 @@ export default function MentorAvailabilityPage() {
                     key={val}
                     type="button"
                     onClick={() => setAdvanceNotice(val)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
                       advanceNotice === val
                         ? "bg-[#5145cd] text-white shadow-xs"
                         : "border border-[#e7e7eb] bg-white text-[#474554] hover:bg-[#f6f3f2]"
@@ -636,7 +846,7 @@ export default function MentorAvailabilityPage() {
                   Caps daily slots to ensure uncompromised evaluation quality.
                 </span>
               </div>
-              <div className="p-3 rounded-lg bg-[#f6f3f2] border border-[#e7e7eb] flex items-center justify-between">
+              <div className="p-3 rounded-xl bg-[#f6f3f2] border border-[#e7e7eb] flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Coffee className="w-4 h-4 text-[#5145cd]" />
                   <span className="text-sm font-bold text-[#1c1b1b] tabular-nums">
@@ -647,7 +857,7 @@ export default function MentorAvailabilityPage() {
                   Enforced
                 </span>
               </div>
-              <div className="p-2.5 rounded-lg bg-[#f6f3f2] border border-[#e7e7eb] text-[11px] text-[#474554] leading-relaxed">
+              <div className="p-2.5 rounded-xl bg-[#f6f3f2] border border-[#e7e7eb] text-[11px] text-[#474554] leading-relaxed">
                 <strong className="text-[#1c1b1b]">PRD §12.1 Guardrail:</strong> Full refund window opens &gt;1h prior to slot; 80% escrow protection applies if candidate no-shows.
               </div>
             </div>
@@ -657,7 +867,7 @@ export default function MentorAvailabilityPage() {
         {/* 2.5 External Calendar Integration Desk */}
         <section className="space-y-4">
           <div>
-            <h2 className="text-xl font-bold text-[#1c1b1b]">Calendar Synchronizations</h2>
+            <h2 className="text-xl font-bold text-[#1c1b1b] font-heading">Calendar Synchronizations</h2>
             <p className="text-xs text-[#474554]">
               Bidirectional sync guarantees you never get booked when your corporate calendar is busy.
             </p>
@@ -665,11 +875,11 @@ export default function MentorAvailabilityPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {/* Google Calendar (Connected) */}
-            <div className="p-5 rounded-xl bg-white border border-[#16834a]/30 shadow-xs flex flex-col justify-between space-y-4">
+            <div className="p-5 rounded-2xl bg-white border border-[#16834a]/30 shadow-xs flex flex-col justify-between space-y-4">
               <div>
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-[#edf3fc] flex items-center justify-center text-[#2864c5]">
+                    <div className="w-8 h-8 rounded-xl bg-[#edf3fc] flex items-center justify-center text-[#2864c5]">
                       <Calendar className="w-4 h-4" />
                     </div>
                     <div>
@@ -684,10 +894,10 @@ export default function MentorAvailabilityPage() {
                   </span>
                 </div>
 
-                <div className="p-3 rounded-lg bg-[#f6f3f2] border border-[#e7e7eb] space-y-2">
+                <div className="p-3 rounded-xl bg-[#f6f3f2] border border-[#e7e7eb] space-y-2">
                   <div className="flex items-center justify-between text-xs">
                     <span className="font-medium text-[#1c1b1b] truncate">
-                      vikram.singh@google.com
+                      {user?.email || "vikram.singh@google.com"}
                     </span>
                     <span className="text-[11px] text-[#777585] tabular-nums">Sync token valid</span>
                   </div>
@@ -719,11 +929,11 @@ export default function MentorAvailabilityPage() {
             </div>
 
             {/* Microsoft Outlook / 365 (Available) */}
-            <div className="p-5 rounded-xl bg-white border border-[#e7e7eb] shadow-xs flex flex-col justify-between space-y-4">
+            <div className="p-5 rounded-2xl bg-white border border-[#e7e7eb] shadow-xs flex flex-col justify-between space-y-4">
               <div>
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-[#f0eded] flex items-center justify-center text-[#474554]">
+                    <div className="w-8 h-8 rounded-xl bg-[#f0eded] flex items-center justify-center text-[#474554]">
                       <Mail className="w-4 h-4" />
                     </div>
                     <div>
@@ -738,7 +948,7 @@ export default function MentorAvailabilityPage() {
                   </span>
                 </div>
 
-                <div className="p-4 rounded-lg bg-[#f6f3f2] border border-dashed border-[#c8c4d6] text-center space-y-1">
+                <div className="p-4 rounded-xl bg-[#f6f3f2] border border-dashed border-[#c8c4d6] text-center space-y-1">
                   <Link2 className="w-6 h-6 text-[#777585] mx-auto" />
                   <p className="text-xs text-[#474554]">
                     Connect Microsoft 365 or Outlook work calendar to automatically avoid internal corporate meeting collisions.
@@ -749,66 +959,46 @@ export default function MentorAvailabilityPage() {
               <div className="flex items-center justify-end pt-2 border-t border-[#e7e7eb]">
                 <button
                   type="button"
-                  className="flex items-center gap-2 px-3.5 py-1.5 rounded-lg border border-[#e7e7eb] bg-white text-xs font-semibold text-[#1c1b1b] hover:bg-[#f6f3f2] transition-colors shadow-xs"
+                  className="text-xs font-semibold text-[#5145cd] hover:underline"
                 >
-                  <Link2 className="w-3.5 h-3.5 text-[#5145cd]" />
-                  <span>Connect Outlook Calendar</span>
+                  Connect Account →
                 </button>
               </div>
             </div>
           </div>
         </section>
-
-        {/* 2.6 Statutory Compliance & Escrow Protection Notice */}
-        <footer className="p-4 rounded-xl bg-[#f6f3f2] border border-[#e7e7eb] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-[#474554]">
-          <div className="flex items-center gap-2.5">
-            <ShieldCheck className="w-5 h-5 text-[#16834a] shrink-0" />
-            <span>
-              <strong className="text-[#1c1b1b] font-semibold">PRD §10.4 Guaranteed Atomic Hold:</strong> Slot reservations are held in atomic state. No candidate can confirm a session without prior 100% pre-funding into the Razorpay Nodal Escrow.
-            </span>
-          </div>
-          <div className="flex items-center gap-3 text-xs font-medium text-[#777585] shrink-0">
-            <Link href="/terms" className="hover:text-[#5145cd] transition-colors">
-              SLA Manual §11
-            </Link>
-            <span>•</span>
-            <Link href="/refunds" className="hover:text-[#5145cd] transition-colors">
-              Escrow Protection Protocol
-            </Link>
-          </div>
-        </footer>
       </main>
 
-      {/* 3. MODAL FOR ADDING CUSTOM TIME BLOCK */}
+      {/* MODAL: ADD CUSTOM TIME BLOCK */}
       {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-[#e7e7eb] space-y-5 animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between border-b border-[#e7e7eb] pb-3">
-              <div className="flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-[#5145cd]" />
-                <h3 className="font-bold text-base text-[#1c1b1b]">Add Availability Window</h3>
-              </div>
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-200 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+              <h3 className="font-bold text-base text-[#1c1b1b] font-heading">
+                Add Availability Time Block
+              </h3>
               <button
+                type="button"
                 onClick={() => setModalOpen(false)}
-                className="text-[#777585] hover:text-[#1c1b1b]"
+                className="text-gray-400 hover:text-gray-600"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleAddSlotSubmit} className="space-y-4">
+            <form onSubmit={handleAddSlotSubmit} className="space-y-4 text-xs">
               <div>
                 <label className="text-xs font-semibold text-[#1c1b1b] block mb-1">
-                  Select Day
+                  Select Day of Week
                 </label>
                 <select
                   value={modalDay}
                   onChange={(e) => setModalDay(e.target.value)}
-                  className="w-full text-xs p-2.5 rounded-lg border border-[#e7e7eb] bg-white focus:outline-none focus:border-[#5145cd]"
+                  className="w-full text-xs p-2.5 rounded-xl border border-[#e7e7eb] bg-white focus:outline-none focus:border-[#5145cd]"
                 >
-                  {schedules.map((d) => (
-                    <option key={d.day} value={d.day}>
-                      {d.day}
+                  {DAYS_OF_WEEK.map((d) => (
+                    <option key={d.name} value={d.name}>
+                      {d.name}
                     </option>
                   ))}
                 </select>
@@ -817,24 +1007,26 @@ export default function MentorAvailabilityPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs font-semibold text-[#1c1b1b] block mb-1">
-                    Start Time
+                    Start Time (IST)
                   </label>
                   <input
                     type="time"
                     value={modalStartTime}
                     onChange={(e) => setModalStartTime(e.target.value)}
-                    className="w-full text-xs p-2 rounded-lg border border-[#e7e7eb] bg-white focus:outline-none focus:border-[#5145cd]"
+                    className="w-full text-xs p-2.5 rounded-xl border border-[#e7e7eb] bg-white focus:outline-none focus:border-[#5145cd]"
+                    required
                   />
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-[#1c1b1b] block mb-1">
-                    End Time
+                    End Time (IST)
                   </label>
                   <input
                     type="time"
                     value={modalEndTime}
                     onChange={(e) => setModalEndTime(e.target.value)}
-                    className="w-full text-xs p-2 rounded-lg border border-[#e7e7eb] bg-white focus:outline-none focus:border-[#5145cd]"
+                    className="w-full text-xs p-2.5 rounded-xl border border-[#e7e7eb] bg-white focus:outline-none focus:border-[#5145cd]"
+                    required
                   />
                 </div>
               </div>
@@ -846,7 +1038,7 @@ export default function MentorAvailabilityPage() {
                 <select
                   value={modalScope}
                   onChange={(e) => setModalScope(e.target.value)}
-                  className="w-full text-xs p-2.5 rounded-lg border border-[#e7e7eb] bg-white focus:outline-none focus:border-[#5145cd]"
+                  className="w-full text-xs p-2.5 rounded-xl border border-[#e7e7eb] bg-white focus:outline-none focus:border-[#5145cd]"
                 >
                   <option value="S06 Technical Mock / S01 Resume Review">
                     S06 Technical Mock &amp; S01 Resume Review
@@ -867,13 +1059,13 @@ export default function MentorAvailabilityPage() {
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
-                  className="px-4 py-2 rounded-lg border border-[#e7e7eb] text-xs font-medium text-[#474554] hover:bg-[#f6f3f2]"
+                  className="px-4 py-2 rounded-xl border border-[#e7e7eb] text-xs font-medium text-[#474554] hover:bg-[#f6f3f2]"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-lg bg-[#5145cd] text-white text-xs font-semibold hover:bg-[#3828b5] transition-all"
+                  className="px-4 py-2 rounded-xl bg-[#5145cd] text-white text-xs font-semibold hover:bg-[#3828b5] transition-all"
                 >
                   Save Time Window
                 </button>
