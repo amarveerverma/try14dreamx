@@ -6,851 +6,705 @@ import { useAuth } from "@/lib/auth-context";
 
 export default function StudentDashboardPage() {
   const { user, membership } = useAuth();
-  const [taskDone, setTaskDone] = React.useState(false);
 
-  const candidateName = user?.name || "Ananya Sharma";
-  const candidateId = user?.id || "DX-8421";
+  const candidateName = user?.name ? user.name.split(" ")[0] : "Rohan";
+  const candidateId = user?.id || "DX-7749";
   const isPro = membership?.tier === "pro" || membership?.tier === "elite";
 
   return (
-    <div className="flex flex-col w-full px-4 sm:px-6 lg:px-8 py-6 space-y-8 bg-background min-h-screen">
-      {/* Header Notification Bar / Context Ribbon */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-surface-container-low px-4 py-2.5 rounded-xl shadow-xs">
-        <div className="flex items-center gap-2 text-on-surface">
-          <span
-            className="material-symbols-outlined text-secondary text-base"
-            style={{ fontVariationSettings: "'FILL' 1" }}
-          >
-            verified
-          </span>
-          <span className="text-xs uppercase tracking-wider text-on-surface-variant font-bold">
-            Active Cycle:
-          </span>
-          <span className="text-xs font-semibold">
-            Campus Placement Drive 2026-27 • Milestone Check 3 of 6
-          </span>
-        </div>
-        <div className="flex items-center gap-4 text-xs">
-          <span className="text-on-surface-variant">
-            Timezone: <span className="font-bold text-on-surface">Asia/Kolkata (IST)</span>
-          </span>
-          <span className="h-3.5 w-px bg-surface-container-highest" />
-          <Link
-            href="/dashboard/readiness"
-            className="text-primary hover:underline flex items-center gap-1 font-bold"
-          >
-            <span>Audit Log</span>
-            <span className="material-symbols-outlined text-xs">open_in_new</span>
-          </Link>
-        </div>
-      </div>
-
-      {/* 1. Welcome Header Region */}
-      <header className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
-        <div className="max-w-3xl space-y-2">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-full bg-surface-container text-on-surface text-xs font-bold">
-              Candidate #{candidateId}
+    <div className="flex flex-col w-full p-4 sm:p-6 lg:p-8 gap-6 bg-background min-h-screen">
+      {/* 1. Student Dashboard Header & Contextual Greeting */}
+      <section className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-surface-container-lowest p-6 rounded-2xl shadow-xs border border-outline-variant/30">
+        <div className="flex flex-col gap-1.5">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-on-surface tracking-tight font-heading">
+              Good morning, {candidateName}
+            </h1>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-surface-container text-on-surface-variant text-xs font-semibold">
+              <span className="w-1.5 h-1.5 rounded-full bg-secondary" />
+              <span>Asia/Kolkata (IST) • 10:42 AM</span>
             </span>
-            <span className="px-2.5 py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed text-xs font-bold flex items-center gap-1">
-              <span className="material-symbols-outlined text-xs">target</span>
-              Target: Associate Product Manager / SDE-1
-            </span>
-            {isPro && (
-              <span className="px-2.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-container text-xs font-bold">
-                {membership.tier.toUpperCase()} Member • 5% off
-              </span>
-            )}
           </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-on-surface tracking-tight font-heading">
-            Good morning, {candidateName.split(" ")[0]}
-          </h1>
-          <p className="text-sm text-on-surface-variant">
-            Track your career readiness, complete recommended gap interventions, and access verified mentor guidance.
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-3 shrink-0">
-          <Link
-            href="/dashboard/readiness"
-            className="px-4 py-2.5 rounded-lg bg-surface-container-lowest text-on-surface hover:bg-surface-container transition-colors shadow-xs text-xs font-bold flex items-center gap-2 border border-surface-container"
-          >
-            <span className="material-symbols-outlined text-base">assessment</span>
-            <span>Take Readiness Assessment</span>
-          </Link>
-          <Link
-            href="/services"
-            className="px-4 py-2.5 rounded-lg bg-primary text-on-primary hover:bg-primary-container transition-colors shadow-xs text-xs font-bold flex items-center gap-2"
-          >
-            <span className="material-symbols-outlined text-base">explore</span>
-            <span>Explore Matched Services</span>
-          </Link>
-        </div>
-      </header>
 
-      {/* 2. Core Metric & Status Cards (Top 3-column Grid) */}
-      <section aria-label="Core Status &amp; Metrics">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Card 1: Career Readiness Score */}
-          <article className="bg-surface-container-lowest rounded-2xl p-6 shadow-xs flex flex-col justify-between border border-surface-container">
-            <div>
-              <div className="flex items-center justify-between gap-2 mb-2">
-                <span className="text-[11px] uppercase tracking-wider text-on-surface-variant font-bold">
-                  Current Diagnostic
-                </span>
-                <span className="px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface text-xs font-semibold">
-                  Developing foundation
-                </span>
-              </div>
-              <div className="flex items-baseline gap-2 mt-2">
-                <span className="text-4xl font-extrabold text-on-surface font-heading">68</span>
-                <span className="text-sm text-on-surface-variant font-normal">/ 100</span>
-              </div>
-              <p className="mt-1 text-xs text-on-surface-variant">
-                Based on 6 of 8 assessed dimensions • Updated 2 days ago
-              </p>
-              {/* Linear progress visual */}
-              <div className="mt-4 space-y-1.5">
-                <div className="w-full bg-surface-container-high h-2 rounded-full overflow-hidden">
-                  <div className="bg-primary h-full rounded-full transition-all duration-500 w-[68%]" />
-                </div>
-                <div className="flex justify-between items-center text-[11px] text-on-surface-variant">
-                  <span>0 (Entry Baseline)</span>
-                  <span className="text-on-surface font-bold">68% Composite Score</span>
-                  <span>100 (Offer Ready)</span>
-                </div>
-              </div>
-            </div>
-            <div className="mt-6 pt-3 bg-surface-container-low -mx-6 -mb-6 px-6 pb-4 rounded-b-2xl flex items-center justify-between">
-              <span className="text-xs text-on-surface-variant font-medium">Coverage: 75% complete</span>
-              <Link
-                href="/dashboard/readiness"
-                className="text-xs font-bold text-primary hover:underline flex items-center gap-1"
-              >
-                <span>View 8-Dimension Breakdown</span>
-                <span className="material-symbols-outlined text-xs">arrow_forward</span>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-0.5 text-on-surface-variant text-xs">
+            <span className="flex items-center gap-1 text-on-surface font-semibold">
+              <span className="material-symbols-outlined text-[16px] text-primary">target</span>
+              <span>Target: SDE-2 Backend (GCC &amp; Indian Unicorns)</span>
+            </span>
+            <span className="text-outline-variant hidden sm:inline">•</span>
+            <span className="flex items-center gap-1">
+              <span className="material-symbols-outlined text-[16px]">timeline</span>
+              <span>Cohort: Active Job Search (0-2 YoE Track)</span>
+            </span>
+            <span className="text-outline-variant hidden sm:inline">•</span>
+            <span>
+              Candidate ID: <code className="bg-surface-container-low px-1.5 py-0.5 rounded font-mono text-[11px] font-bold">#{candidateId}</code>
+            </span>
+          </div>
+        </div>
+
+        {/* Right Header Actions */}
+        <div className="flex flex-wrap items-center gap-3 pt-2 lg:pt-0">
+          <div className="flex items-center gap-2 bg-secondary-container/30 border border-secondary/20 px-3 py-1.5 rounded-xl text-on-secondary-container">
+            <span className="material-symbols-outlined text-secondary text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>
+              workspace_premium
+            </span>
+            <div className="flex flex-col text-left">
+              <span className="text-xs font-bold leading-tight">
+                {isPro ? `${membership.tier.toUpperCase()} Member (5% Off)` : "Free Tier Candidate"}
+              </span>
+              <Link href="/membership" className="text-[11px] text-primary font-bold hover:underline leading-tight">
+                {membership.tier === "elite" ? "Elite Benefits Active" : "Upgrade to Elite"}
               </Link>
             </div>
-          </article>
+          </div>
 
-          {/* Card 2: Primary Next Recommended Action */}
-          <article className="bg-surface-container-lowest rounded-2xl p-6 shadow-xs flex flex-col justify-between border border-surface-container">
-            <div>
-              <div className="flex items-center justify-between gap-2 mb-2">
-                <div className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-error animate-pulse" />
-                  <span className="text-[11px] uppercase tracking-wider text-error font-bold">
-                    Highest Weighted Gap
-                  </span>
-                </div>
-                <span className="px-2 py-0.5 rounded-full bg-secondary-container/50 text-on-secondary-container text-xs font-bold">
+          <Link
+            href="/dashboard/readiness"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-surface-container text-on-surface hover:bg-surface-container-high rounded-xl text-xs font-bold transition-colors border border-outline-variant/30"
+          >
+            <span className="material-symbols-outlined text-[18px]">assignment</span>
+            <span>Baseline Test</span>
+          </Link>
+
+          <Link
+            href="/services"
+            className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-primary text-on-primary hover:bg-primary-container hover:text-on-primary-container rounded-xl text-xs font-bold transition-all shadow-sm"
+          >
+            <span className="material-symbols-outlined text-[18px]">calendar_add_on</span>
+            <span>Book 1:1 Service</span>
+          </Link>
+        </div>
+      </section>
+
+      {/* 2. Top Critical Overview Grid (3 High-Impact Cards) */}
+      <section className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Card 1: 8-Dimension Career Readiness Score */}
+        <div className="lg:col-span-4 flex flex-col justify-between bg-surface-container-lowest p-6 rounded-2xl shadow-xs border border-outline-variant/30 relative overflow-hidden">
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs uppercase tracking-wider text-on-surface-variant font-bold font-mono">
+                Career Readiness Score
+              </span>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-secondary-container/40 text-on-secondary-container text-xs font-bold">
+                <span className="material-symbols-outlined text-[14px]">trending_up</span>
+                <span>+14 pts vs baseline</span>
+              </span>
+            </div>
+
+            <div className="flex items-baseline gap-2 mt-1">
+              <span className="text-4xl font-extrabold text-on-surface font-heading">68</span>
+              <span className="text-lg text-on-surface-variant font-semibold">/ 100</span>
+              <span className="ml-auto px-2.5 py-1 rounded-lg bg-surface-container text-on-surface text-xs font-bold">
+                Developing Foundation
+              </span>
+            </div>
+
+            {/* Micro Progress Bar */}
+            <div className="w-full bg-surface-container rounded-full h-2 mt-1 overflow-hidden flex">
+              <div className="bg-primary h-2 rounded-full transition-all duration-500" style={{ width: "68%" }} />
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 mt-2 p-3 bg-surface-container-low rounded-xl text-on-surface-variant text-xs border border-outline-variant/20">
+              <div>
+                <span className="text-[10px] font-bold text-outline uppercase tracking-wider block">Active Vector</span>
+                <span className="text-xs font-bold text-on-surface mt-0.5 block">6 of 8 Assessed</span>
+              </div>
+              <div>
+                <span className="text-[10px] font-bold text-outline uppercase tracking-wider block">Audit Quality</span>
+                <span className="text-xs font-bold text-secondary mt-0.5 block">75% Verified</span>
+              </div>
+            </div>
+
+            <p className="text-xs text-on-surface-variant mt-1 leading-relaxed">
+              Last impact: <span className="text-on-surface font-bold">+8 pts</span> verified via audited session deliverables from S06 Architecture Drill. Portfolio weight redistributed proportionally (PRD §8.3).
+            </p>
+          </div>
+
+          <div className="pt-4 mt-2 border-t border-surface-container">
+            <Link
+              href="#vector-matrix"
+              className="inline-flex items-center gap-1.5 text-primary hover:text-primary-container text-xs font-bold cursor-pointer"
+            >
+              <span>View Detailed Rubric History</span>
+              <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+            </Link>
+          </div>
+        </div>
+
+        {/* Card 2: Deterministic Next Step (PRD §8.5 Engine) */}
+        <div className="lg:col-span-4 flex flex-col justify-between bg-surface-container-lowest p-6 rounded-2xl shadow-xs border border-outline-variant/30 relative">
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs uppercase tracking-wider text-on-surface-variant font-bold font-mono">
+                Deterministic Next Step
+              </span>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container text-on-surface-variant text-[11px] font-bold">
+                <span className="material-symbols-outlined text-[13px]">auto_awesome</span>
+                <span>PRD §8.5 Engine</span>
+              </span>
+            </div>
+
+            <div className="mt-1">
+              <span className="text-[11px] font-bold text-primary uppercase font-mono tracking-wider">
+                Code S08 • 30 Min Drill
+              </span>
+              <h3 className="text-base sm:text-lg font-bold text-on-surface font-heading mt-0.5 leading-snug">
+                Salary Negotiation &amp; ESOP Valuation
+              </h3>
+            </div>
+
+            <div className="p-3 bg-surface-container-low rounded-xl text-xs text-on-surface-variant leading-relaxed border border-outline-variant/20">
+              <p>
+                <strong className="text-on-surface">Trigger Rule:</strong> Selected because{" "}
+                <span className="text-error font-bold">Career Planning &amp; Negotiation</span> is your lowest rated vector (2.0/5.0) with imminent offer stages approaching.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-between mt-1">
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-2xl font-extrabold text-on-surface font-mono">₹664</span>
+                <span className="text-xs text-outline line-through font-mono">₹699</span>
+                <span className="text-[11px] text-on-secondary-container bg-secondary-container/50 px-1.5 py-0.5 rounded font-bold">
                   Pro: 5% off
                 </span>
               </div>
-              <h2 className="text-base font-bold text-on-surface mt-1 font-heading">
-                Technical Mock Interview (S06)
-              </h2>
-              <div className="mt-1 flex items-baseline gap-2">
-                <span className="text-base font-bold text-on-surface">₹949</span>
-                <span className="text-xs text-on-surface-variant line-through">₹999</span>
-                <span className="text-xs text-on-surface-variant">• 60 min 1:1 Live</span>
-              </div>
-              {/* Rationale Callout */}
-              <div className="mt-3 p-3 rounded-xl bg-surface-container-low text-xs text-on-surface leading-relaxed">
-                <div className="flex items-start gap-2">
-                  <span className="material-symbols-outlined text-primary text-base shrink-0 mt-0.5">info</span>
-                  <div>
-                    <span className="font-bold text-on-surface">Why recommended: </span>
-                    <span className="text-on-surface-variant">
-                      &quot;Technical Interview Skills&quot; is your highest-weighted gap (weight 20%, score 2/5 - Below expected level) for your target goal.
-                    </span>
-                  </div>
-                </div>
-              </div>
+              <span className="text-[11px] text-outline font-semibold">100% DreamX funded</span>
             </div>
-            <div className="mt-6 pt-3 bg-surface-container-low -mx-6 -mb-6 px-6 pb-4 rounded-b-2xl flex items-center justify-between">
-              <span className="text-xs text-on-surface-variant font-medium">48h SLA Report Guaranteed</span>
-              <Link
-                href="/services/s06-technical-mock"
-                className="px-3 py-1.5 rounded-lg bg-primary text-on-primary hover:bg-primary-container transition-colors text-xs font-bold"
-              >
-                Book with Vetted Mentor
-              </Link>
-            </div>
-          </article>
+          </div>
 
-          {/* Card 3: Upcoming Confirmed Booking */}
-          <article className="bg-surface-container-lowest rounded-2xl p-6 shadow-xs flex flex-col justify-between border border-surface-container">
-            <div>
-              <div className="flex items-center justify-between gap-2 mb-2">
-                <span className="px-2.5 py-0.5 rounded-full bg-secondary-container/40 text-on-secondary-container text-xs font-bold flex items-center gap-1">
-                  <span className="material-symbols-outlined text-xs">event_available</span>
-                  Confirmed • Tomorrow, 4:00 PM IST
-                </span>
-                <span className="text-[11px] text-on-surface-variant font-semibold">Session #BK-9182</span>
+          <div className="pt-4 mt-2 border-t border-surface-container">
+            <Link
+              href="/services/s08-salary-negotiation"
+              className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-primary text-on-primary hover:bg-primary-container hover:text-on-primary-container rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer"
+            >
+              <span>Book Recommended Slot</span>
+              <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+            </Link>
+          </div>
+        </div>
+
+        {/* Card 3: Next Confirmed Session & Escrow Protection */}
+        <div className="lg:col-span-4 flex flex-col justify-between bg-surface-container-lowest p-6 rounded-2xl shadow-xs border border-outline-variant/30">
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs uppercase tracking-wider text-on-surface-variant font-bold font-mono">
+                Next Confirmed Session
+              </span>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-secondary-container/50 text-on-secondary-container text-[11px] font-bold">
+                <span className="w-1.5 h-1.5 rounded-full bg-secondary" />
+                <span>Confirmed</span>
+              </span>
+            </div>
+
+            <div className="mt-1">
+              <span className="text-[11px] font-bold text-primary font-mono uppercase tracking-wider">
+                Code S06 • 60 Min Live
+              </span>
+              <h3 className="text-base sm:text-lg font-bold text-on-surface font-heading mt-0.5 leading-snug">
+                Distributed Architecture &amp; System Drill
+              </h3>
+            </div>
+
+            {/* Mentor Metadata */}
+            <div className="flex items-center gap-3 p-3 bg-surface-container-low rounded-xl border border-outline-variant/20">
+              <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs shrink-0">
+                VR
               </div>
-              <h2 className="text-base font-bold text-on-surface mt-1 font-heading">
-                Resume Review (S01)
-              </h2>
-              {/* Mentor details */}
-              <div className="mt-3 flex items-start gap-3">
-                <div className="w-10 h-10 rounded-full bg-primary-fixed text-primary flex items-center justify-center font-bold text-sm shrink-0">
-                  RV
-                </div>
-                <div className="min-w-0">
-                  <p className="text-xs font-bold text-on-surface truncate">Mentor Rahul Verma</p>
-                  <p className="text-xs text-on-surface-variant truncate">Staff Engineer @ Swiggy</p>
-                  <span className="inline-flex items-center gap-1 text-[11px] text-secondary font-bold">
-                    <span className="material-symbols-outlined text-xs">verified</span>
-                    Verified Identity &amp; Tech Lead
+              <div className="flex flex-col min-w-0">
+                <div className="flex items-center gap-1">
+                  <span className="text-xs font-bold text-on-surface truncate">Vikramaditya Rao</span>
+                  <span className="material-symbols-outlined text-primary text-[14px]" style={{ fontVariationSettings: "'FILL' 1" }} title="Tier-1 Verified Mentor">
+                    verified
                   </span>
                 </div>
-              </div>
-              {/* Video access status */}
-              <div className="mt-3 px-3 py-2 rounded-xl bg-surface-container flex items-center justify-between text-xs">
-                <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-on-surface-variant text-base">videocam</span>
-                  <span className="font-bold text-on-surface">Google Meet</span>
-                </div>
-                <span className="text-on-surface-variant">Join link unlocks 15m prior</span>
+                <span className="text-[11px] text-on-surface-variant truncate">
+                  Lead AI/ML Architect • Ex-Swiggy
+                </span>
               </div>
             </div>
-            <div className="mt-6 pt-3 bg-surface-container-low -mx-6 -mb-6 px-6 pb-4 rounded-b-2xl flex items-center justify-between">
-              <span className="text-xs text-on-surface-variant font-medium">Resume v2.4 attached</span>
-              <Link
-                href="/dashboard/bookings"
-                className="text-xs font-bold text-primary hover:underline flex items-center gap-1"
-              >
-                <span>View Booking &amp; Prep Details</span>
-                <span className="material-symbols-outlined text-xs">arrow_forward</span>
+
+            <div className="flex flex-col gap-1 text-xs">
+              <div className="flex items-center gap-2 text-on-surface font-medium">
+                <span className="material-symbols-outlined text-[16px] text-primary">schedule</span>
+                <span>Tomorrow, 25 Oct • 07:30 PM - 08:30 PM IST</span>
+              </div>
+              <div className="flex items-center gap-2 text-[11px] text-outline">
+                <span className="material-symbols-outlined text-[16px] text-secondary">shield</span>
+                <span>₹999 locked in Razorpay Nodal Escrow (Safe release T+48h)</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-4 mt-2 border-t border-surface-container space-y-2">
+            <button
+              type="button"
+              disabled
+              className="w-full inline-flex items-center justify-center gap-2 px-3 py-2.5 bg-surface-container text-on-surface-variant rounded-xl text-xs font-bold cursor-not-allowed border border-outline-variant/30"
+            >
+              <span className="material-symbols-outlined text-[16px]">video_call</span>
+              <span>Join Google Meet (Unlocks at 07:15 PM)</span>
+            </button>
+            <div className="flex items-center justify-between text-[11px] text-on-surface-variant px-1">
+              <Link href="/dashboard/bookings" className="text-primary hover:underline font-semibold">
+                Reschedule / Cancel
               </Link>
+              <span>100% refund eligible until 06:30 PM</span>
             </div>
-          </article>
+          </div>
         </div>
       </section>
 
-      {/* 3. Career Journey Stage Banner */}
-      <section aria-label="Career Journey Stepper" className="bg-surface-container-lowest rounded-2xl p-6 shadow-xs border border-surface-container">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-surface-container">
+      {/* 3. Guided Career Journey Progression Timeline (PRD §8.5) */}
+      <section className="bg-surface-container-lowest p-6 rounded-2xl shadow-xs border border-outline-variant/30 flex flex-col gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs uppercase tracking-wider text-primary font-bold">Structured Path</span>
-              <span className="px-2 py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed text-xs font-bold">
-                Stage 2 of 4 Active
-              </span>
-            </div>
-            <h2 className="text-xl font-bold text-on-surface font-heading mt-1">
-              Placement Acceleration Journey
+            <h2 className="text-lg sm:text-xl font-bold text-on-surface font-heading">
+              Career Acceleration Roadmap
             </h2>
+            <p className="text-xs text-on-surface-variant">
+              Deterministic progression based on continuous 8-dimension rubric feedback
+            </p>
           </div>
-          <div className="bg-surface-container-low px-3.5 py-2 rounded-xl flex items-center gap-2 text-xs">
-            <span className="material-symbols-outlined text-primary text-lg">flag</span>
-            <div>
-              <span className="uppercase tracking-wider text-on-surface-variant font-bold">Current Milestone: </span>
-              <span className="text-on-surface font-semibold ml-1">
-                Close Resume &amp; Tech Interview gaps before campus placements start.
-              </span>
-            </div>
-          </div>
+          <span className="self-start sm:self-auto text-xs bg-surface-container px-3 py-1 rounded-full text-on-surface-variant font-bold">
+            Stage 3 of 5 In Progress
+          </span>
         </div>
 
-        {/* 4-Stage Horizontal Stepper Track */}
-        <div className="pt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Progression Track */}
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-3 pt-2">
           {/* Stage 1 */}
-          <div className="flex flex-col p-3.5 rounded-xl bg-surface-container-low">
-            <div className="flex items-center justify-between mb-2">
-              <span className="w-6 h-6 rounded-full bg-secondary text-on-secondary flex items-center justify-center text-xs font-bold">
-                ✓
+          <div className="flex flex-col p-4 bg-surface-container-low rounded-xl gap-2 relative border border-outline-variant/20">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-secondary font-mono">Stage 01</span>
+              <span className="material-symbols-outlined text-secondary text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>
+                check_circle
               </span>
-              <span className="text-xs text-secondary font-bold">Completed</span>
             </div>
-            <p className="text-xs font-bold text-on-surface">1. Onboarding &amp; Baseline</p>
-            <p className="text-xs text-on-surface-variant mt-1">Diagnostic assessment taken, target role benchmark mapped.</p>
+            <div>
+              <h4 className="text-xs sm:text-sm font-bold text-on-surface font-heading">Diagnostic Baseline</h4>
+              <span className="text-[11px] text-on-surface-variant block mt-0.5">Completed • 12 Oct</span>
+            </div>
+            <span className="text-[11px] text-outline mt-auto font-mono">Initial Score: 54/100</span>
           </div>
 
-          {/* Stage 2 (Active) */}
-          <div className="flex flex-col p-3.5 rounded-xl bg-primary-fixed text-on-primary-fixed">
-            <div className="flex items-center justify-between mb-2">
-              <span className="w-6 h-6 rounded-full bg-primary text-on-primary flex items-center justify-center text-xs font-bold">
-                2
-              </span>
-              <span className="text-xs bg-primary text-on-primary px-2 py-0.5 rounded-full font-bold">
-                Active
+          {/* Stage 2 */}
+          <div className="flex flex-col p-4 bg-surface-container-low rounded-xl gap-2 relative border border-outline-variant/20">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-secondary font-mono">Stage 02</span>
+              <span className="material-symbols-outlined text-secondary text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>
+                check_circle
               </span>
             </div>
-            <p className="text-xs font-bold text-on-primary-fixed">2. Core Readiness &amp; Gap Closure</p>
-            <p className="text-xs text-on-primary-fixed-variant mt-1">Remediating 2 low-scoring dimensions via targeted 1:1 sessions.</p>
+            <div>
+              <h4 className="text-xs sm:text-sm font-bold text-on-surface font-heading">Resume &amp; ATS Optimization</h4>
+              <span className="text-[11px] text-on-surface-variant block mt-0.5">Completed • 18 Oct</span>
+            </div>
+            <span className="text-[11px] text-secondary font-bold mt-auto">Score: 85% Verified</span>
           </div>
 
-          {/* Stage 3 */}
-          <div className="flex flex-col p-3.5 rounded-xl bg-surface-container-low opacity-80">
-            <div className="flex items-center justify-between mb-2">
-              <span className="w-6 h-6 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center text-xs font-bold">
-                3
-              </span>
-              <span className="text-xs text-on-surface-variant font-medium">Upcoming</span>
+          {/* Stage 3 (Active) */}
+          <div className="flex flex-col p-4 bg-primary-fixed/20 rounded-xl gap-2 relative ring-2 ring-primary border border-primary/30">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-primary font-mono">Stage 03 (Current)</span>
+              <span className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse" />
             </div>
-            <p className="text-xs font-bold text-on-surface">3. Interview Readiness</p>
-            <p className="text-xs text-on-surface-variant mt-1">DSA round drills, behavioral STAR rehearsal &amp; portfolio defenses.</p>
+            <div>
+              <h4 className="text-xs sm:text-sm font-bold text-on-surface font-heading">Technical Simulation</h4>
+              <span className="text-[11px] text-primary font-bold block mt-0.5">Session Scheduled Tomorrow</span>
+            </div>
+            <span className="text-[11px] text-on-surface-variant mt-auto">Concurrency &amp; Design Drill</span>
           </div>
 
           {/* Stage 4 */}
-          <div className="flex flex-col p-3.5 rounded-xl bg-surface-container-low opacity-80">
-            <div className="flex items-center justify-between mb-2">
-              <span className="w-6 h-6 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center text-xs font-bold">
-                4
-              </span>
-              <span className="text-xs text-on-surface-variant font-medium">Upcoming</span>
+          <div className="flex flex-col p-4 bg-surface-container-low/60 rounded-xl gap-2 relative opacity-75 border border-outline-variant/10">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-on-surface-variant font-mono">Stage 04</span>
+              <span className="material-symbols-outlined text-outline text-[18px]">radio_button_unchecked</span>
             </div>
-            <p className="text-xs font-bold text-on-surface">4. Job Applications &amp; Negotiation</p>
-            <p className="text-xs text-on-surface-variant mt-1">Referral submission pipelines, live compensation assessment.</p>
+            <div>
+              <h4 className="text-xs sm:text-sm font-bold text-on-surface font-heading">Negotiation &amp; Offer</h4>
+              <span className="text-[11px] text-on-surface-variant block mt-0.5">Next Target • S08</span>
+            </div>
+            <span className="text-[11px] text-outline mt-auto">Unlocks post S06 Audit</span>
+          </div>
+
+          {/* Stage 5 */}
+          <div className="flex flex-col p-4 bg-surface-container-low/40 rounded-xl gap-2 relative opacity-60 border border-outline-variant/10">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-outline font-mono">Stage 05</span>
+              <span className="material-symbols-outlined text-outline text-[18px]">lock</span>
+            </div>
+            <div>
+              <h4 className="text-xs sm:text-sm font-bold text-on-surface-variant font-heading">Placement Escrow Release</h4>
+              <span className="text-[11px] text-outline block mt-0.5">Final Milestone</span>
+            </div>
+            <span className="text-[11px] text-outline mt-auto">Offer Letter Validation</span>
           </div>
         </div>
       </section>
 
-      {/* 4. Readiness 8-Dimension Snapshot Matrix */}
-      <section aria-label="Readiness 8-Dimension Snapshot" id="matrix">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-4">
+      {/* 4. 8-Dimension Career Readiness Vector Matrix (PRD §8.1 & §8.2) */}
+      <section className="bg-surface-container-lowest p-6 rounded-2xl shadow-xs border border-outline-variant/30 flex flex-col gap-4" id="vector-matrix">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs uppercase tracking-wider text-on-surface-variant font-bold">
-                Rubric Breakdown
-              </span>
-              <span className="px-2 py-0.5 rounded-full bg-surface-container text-on-surface text-xs font-semibold">
-                Scale 0 to 5
+              <h2 className="text-lg sm:text-xl font-bold text-on-surface font-heading">
+                8-Dimension Career Readiness Vector Matrix
+              </h2>
+              <span className="material-symbols-outlined text-on-surface-variant text-[16px] cursor-help" title="Evaluated on 0.0 - 5.0 scale strictly based on accredited mentor audits.">
+                info
               </span>
             </div>
-            <h2 className="text-xl font-bold text-on-surface font-heading mt-1">
-              8-Dimension Readiness Matrix
-            </h2>
+            <p className="text-xs text-on-surface-variant mt-0.5">
+              Readiness scores are 100% private by default and strictly derived from accredited mentor scorecards (PRD §8.1).
+            </p>
           </div>
-          <p className="text-xs text-on-surface-variant max-w-md">
-            Calculated from diagnostic benchmark criteria tailored specifically to early-career tech candidates in the Indian market.
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-on-surface-variant bg-surface-container px-2.5 py-1 rounded-lg font-mono font-bold">
+              Scale: 0.0 – 5.0
+            </span>
+            <Link
+              href="/dashboard/reports"
+              className="inline-flex items-center gap-1 text-primary hover:text-primary-container text-xs font-bold p-1 cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[16px]">history</span>
+              <span>Rubric Log</span>
+            </Link>
+          </div>
+        </div>
+
+        {/* Vector Breakdown Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
+          {/* 1. Resume */}
+          <div className="p-4 bg-surface-container-low rounded-xl flex flex-col justify-between gap-3 border border-outline-variant/20">
+            <div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-on-surface font-heading">1. Resume / CV</span>
+                <span className="px-1.5 py-0.5 rounded bg-secondary-container/50 text-on-secondary-container text-[11px] font-bold">
+                  Strong
+                </span>
+              </div>
+              <div className="flex items-baseline gap-1 mt-2">
+                <span className="text-2xl font-extrabold text-on-surface font-mono">4.0</span>
+                <span className="text-xs text-on-surface-variant font-mono">/ 5.0</span>
+              </div>
+              <div className="w-full bg-surface-container rounded-full h-1.5 mt-2">
+                <div className="bg-secondary h-1.5 rounded-full" style={{ width: "80%" }} />
+              </div>
+            </div>
+            <div className="text-[11px] text-secondary font-medium pt-1 flex items-center gap-1">
+              <span className="material-symbols-outlined text-[14px]">verified</span>
+              <span>Verified in S01 Audit</span>
+            </div>
+          </div>
+
+          {/* 2. LinkedIn Presence */}
+          <div className="p-4 bg-surface-container-low rounded-xl flex flex-col justify-between gap-3 border border-outline-variant/20">
+            <div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-on-surface font-heading">2. LinkedIn Profile</span>
+                <span className="px-1.5 py-0.5 rounded bg-surface-container text-on-surface text-[11px] font-bold">
+                  Acceptable
+                </span>
+              </div>
+              <div className="flex items-baseline gap-1 mt-2">
+                <span className="text-2xl font-extrabold text-on-surface font-mono">3.5</span>
+                <span className="text-xs text-on-surface-variant font-mono">/ 5.0</span>
+              </div>
+              <div className="w-full bg-surface-container rounded-full h-1.5 mt-2">
+                <div className="bg-primary h-1.5 rounded-full" style={{ width: "70%" }} />
+              </div>
+            </div>
+            <div className="text-[11px] text-secondary font-medium pt-1 flex items-center gap-1">
+              <span className="material-symbols-outlined text-[14px]">verified</span>
+              <span>Verified in S03 Audit</span>
+            </div>
+          </div>
+
+          {/* 3. Portfolio & Code */}
+          <div className="p-4 bg-surface-container-low/60 rounded-xl flex flex-col justify-between gap-3 border border-dashed border-outline-variant/40">
+            <div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-on-surface-variant font-heading">3. Portfolio Artifacts</span>
+                <span className="px-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant text-[11px]">
+                  N/A (Exempt)
+                </span>
+              </div>
+              <div className="flex items-baseline gap-1 mt-2">
+                <span className="text-2xl font-extrabold text-outline font-mono">—</span>
+              </div>
+              <div className="w-full bg-surface-container rounded-full h-1.5 mt-2">
+                <div className="bg-outline-variant h-1.5 rounded-full" style={{ width: "0%" }} />
+              </div>
+            </div>
+            <div className="text-[11px] text-outline pt-1">
+              <span>Weight redistributed (PRD §8.3)</span>
+            </div>
+          </div>
+
+          {/* 4. Communication & Soft Skills */}
+          <div className="p-4 bg-surface-container-low rounded-xl flex flex-col justify-between gap-3 border border-outline-variant/20">
+            <div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-on-surface font-heading">4. Communication</span>
+                <span className="px-1.5 py-0.5 rounded bg-secondary-container/50 text-on-secondary-container text-[11px] font-bold">
+                  Strong
+                </span>
+              </div>
+              <div className="flex items-baseline gap-1 mt-2">
+                <span className="text-2xl font-extrabold text-on-surface font-mono">4.0</span>
+                <span className="text-xs text-on-surface-variant font-mono">/ 5.0</span>
+              </div>
+              <div className="w-full bg-surface-container rounded-full h-1.5 mt-2">
+                <div className="bg-secondary h-1.5 rounded-full" style={{ width: "80%" }} />
+              </div>
+            </div>
+            <div className="text-[11px] text-secondary font-medium pt-1 flex items-center gap-1">
+              <span className="material-symbols-outlined text-[14px]">verified</span>
+              <span>STAR Method Logged (S05)</span>
+            </div>
+          </div>
+
+          {/* 5. Technical Competence */}
+          <div className="p-4 bg-surface-container-low rounded-xl flex flex-col justify-between gap-3 border border-outline-variant/20">
+            <div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-on-surface font-heading">5. Technical Competence</span>
+                <span className="px-1.5 py-0.5 rounded bg-surface-container text-on-surface text-[11px] font-bold">
+                  Developing
+                </span>
+              </div>
+              <div className="flex items-baseline gap-1 mt-2">
+                <span className="text-2xl font-extrabold text-on-surface font-mono">3.8</span>
+                <span className="text-xs text-on-surface-variant font-mono">/ 5.0</span>
+              </div>
+              <div className="w-full bg-surface-container rounded-full h-1.5 mt-2">
+                <div className="bg-primary h-1.5 rounded-full" style={{ width: "76%" }} />
+              </div>
+            </div>
+            <div className="text-[11px] text-on-surface font-medium pt-1">
+              <span>Testing in S06 session tomorrow</span>
+            </div>
+          </div>
+
+          {/* 6. Interview Mechanics */}
+          <div className="p-4 bg-surface-container-low rounded-xl flex flex-col justify-between gap-3 border border-outline-variant/20">
+            <div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-on-surface font-heading">6. Interview Acumen</span>
+                <span className="px-1.5 py-0.5 rounded bg-surface-container text-on-surface text-[11px] font-bold">
+                  Acceptable
+                </span>
+              </div>
+              <div className="flex items-baseline gap-1 mt-2">
+                <span className="text-2xl font-extrabold text-on-surface font-mono">3.5</span>
+                <span className="text-xs text-on-surface-variant font-mono">/ 5.0</span>
+              </div>
+              <div className="w-full bg-surface-container rounded-full h-1.5 mt-2">
+                <div className="bg-primary h-1.5 rounded-full" style={{ width: "70%" }} />
+              </div>
+            </div>
+            <div className="text-[11px] text-secondary font-medium pt-1 flex items-center gap-1">
+              <span className="material-symbols-outlined text-[14px]">verified</span>
+              <span>S05 Mock Debrief Logged</span>
+            </div>
+          </div>
+
+          {/* 7. Career Planning & Negotiation (Lowest) */}
+          <div className="p-4 bg-error-container/20 rounded-xl flex flex-col justify-between gap-3 border border-error/30">
+            <div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-on-surface font-heading">7. Career &amp; Negotiation</span>
+                <span className="px-1.5 py-0.5 rounded bg-error text-on-error text-[11px] font-bold">
+                  Attention Needed
+                </span>
+              </div>
+              <div className="flex items-baseline gap-1 mt-2">
+                <span className="text-2xl font-extrabold text-error font-mono">2.0</span>
+                <span className="text-xs text-on-surface-variant font-mono">/ 5.0</span>
+              </div>
+              <div className="w-full bg-surface-container rounded-full h-1.5 mt-2">
+                <div className="bg-error h-1.5 rounded-full" style={{ width: "40%" }} />
+              </div>
+            </div>
+            <div className="text-[11px] text-error font-bold pt-1">
+              <span>Action Required: Book S08/S09</span>
+            </div>
+          </div>
+
+          {/* 8. Confidence & Executive Presence */}
+          <div className="p-4 bg-surface-container-low rounded-xl flex flex-col justify-between gap-3 border border-outline-variant/20">
+            <div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-on-surface font-heading">8. Professional Confidence</span>
+                <span className="px-1.5 py-0.5 rounded bg-surface-container text-on-surface text-[11px] font-bold">
+                  Developing
+                </span>
+              </div>
+              <div className="flex items-baseline gap-1 mt-2">
+                <span className="text-2xl font-extrabold text-on-surface font-mono">3.5</span>
+                <span className="text-xs text-on-surface-variant font-mono">/ 5.0</span>
+              </div>
+              <div className="w-full bg-surface-container rounded-full h-1.5 mt-2">
+                <div className="bg-primary h-1.5 rounded-full" style={{ width: "70%" }} />
+              </div>
+            </div>
+            <div className="text-[11px] text-on-surface-variant pt-1">
+              <span>Audited across all sessions</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 5. Pending & Delivered Post-Session Reports (PRD §11.2, 48h SLA Guarantee) */}
+      <section className="bg-surface-container-lowest p-6 rounded-2xl shadow-xs border border-outline-variant/30 flex flex-col gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h2 className="text-lg sm:text-xl font-bold text-on-surface font-heading">
+              Post-Session Written Rubrics &amp; Deliverables
+            </h2>
+            <p className="text-xs text-on-surface-variant">
+              Mentors are bound to a strict 48-hour delivery SLA backed by DreamX Razorpay Escrow
+            </p>
+          </div>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-container-low text-on-surface text-xs font-bold border border-outline-variant/20">
+            <span className="material-symbols-outlined text-secondary text-[16px]">verified_user</span>
+            <span>Escrow SLA Active: 80% Auto-Refund Protection</span>
+          </div>
+        </div>
+
+        {/* Deliverables Table / Cards */}
+        <div className="flex flex-col gap-2 overflow-x-auto">
+          <div className="min-w-[680px] flex flex-col divide-y divide-surface-container">
+            {/* Item 1: S01 Resume Review */}
+            <div className="py-3 px-2 flex items-center justify-between gap-4 hover:bg-surface-container-low/40 rounded-xl transition-colors">
+              <div className="flex items-center gap-3 w-1/3">
+                <div className="w-8 h-8 rounded-lg bg-secondary-container/40 text-secondary flex items-center justify-center shrink-0">
+                  <span className="material-symbols-outlined text-[18px]">description</span>
+                </div>
+                <div className="flex flex-col truncate">
+                  <span className="text-xs font-bold text-on-surface truncate">S01 Resume Review &amp; ATS Audit</span>
+                  <span className="text-[11px] text-on-surface-variant">Mentor: Priya Nair (Ex-Amazon Bar Raiser)</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-secondary-container/40 text-on-secondary-container text-xs font-bold">
+                  <span className="material-symbols-outlined text-[13px]">check</span>
+                  <span>Delivered (34h)</span>
+                </span>
+                <span className="text-xs text-outline font-semibold">SLA Met</span>
+              </div>
+              <div className="flex flex-col text-right">
+                <span className="text-xs font-bold text-on-surface font-mono">8.4 / 10</span>
+                <span className="text-[11px] text-on-surface-variant">ATS Compatibility Score</span>
+              </div>
+              <div className="flex items-center gap-2 justify-end">
+                <Link
+                  href="/dashboard/reports"
+                  className="inline-flex items-center gap-1 px-3 py-1.5 bg-surface-container text-on-surface hover:bg-surface-container-high rounded-lg text-xs font-semibold transition-colors"
+                >
+                  <span className="material-symbols-outlined text-[15px]">download</span>
+                  <span>Signed PDF</span>
+                </Link>
+                <Link
+                  href="/dashboard/reports"
+                  className="inline-flex items-center gap-1 px-3 py-1.5 bg-surface-container-low text-on-surface-variant hover:text-on-surface rounded-lg text-xs font-semibold"
+                >
+                  <span className="material-symbols-outlined text-[15px]">data_object</span>
+                  <span>JSON</span>
+                </Link>
+              </div>
+            </div>
+
+            {/* Item 2: S05 Behavioral Mock */}
+            <div className="py-3 px-2 flex items-center justify-between gap-4 hover:bg-surface-container-low/40 rounded-xl transition-colors">
+              <div className="flex items-center gap-3 w-1/3">
+                <div className="w-8 h-8 rounded-lg bg-secondary-container/40 text-secondary flex items-center justify-center shrink-0">
+                  <span className="material-symbols-outlined text-[18px]">psychology</span>
+                </div>
+                <div className="flex flex-col truncate">
+                  <span className="text-xs font-bold text-on-surface truncate">S05 Behavioral STAR Drill Report</span>
+                  <span className="text-[11px] text-on-surface-variant">Mentor: Siddharth Iyer (Director Eng, Gojek)</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-secondary-container/40 text-on-secondary-container text-xs font-bold">
+                  <span className="material-symbols-outlined text-[13px]">check</span>
+                  <span>Delivered (41h)</span>
+                </span>
+                <span className="text-xs text-outline font-semibold">SLA Met</span>
+              </div>
+              <div className="flex flex-col text-right">
+                <span className="text-xs font-bold text-on-surface font-mono">7.8 / 10</span>
+                <span className="text-[11px] text-on-surface-variant">STAR Rubric Index</span>
+              </div>
+              <div className="flex items-center gap-2 justify-end">
+                <Link
+                  href="/dashboard/reports"
+                  className="inline-flex items-center gap-1 px-3 py-1.5 bg-primary text-on-primary hover:bg-primary-container hover:text-on-primary-container rounded-lg text-xs font-bold transition-all shadow-xs"
+                >
+                  <span className="material-symbols-outlined text-[15px]">visibility</span>
+                  <span>View Web Report</span>
+                </Link>
+              </div>
+            </div>
+
+            {/* Item 3: S06 Upcoming */}
+            <div className="py-3 px-2 flex items-center justify-between gap-4 bg-surface-container-low/20 rounded-xl">
+              <div className="flex items-center gap-3 w-1/3">
+                <div className="w-8 h-8 rounded-lg bg-surface-container text-outline flex items-center justify-center shrink-0">
+                  <span className="material-symbols-outlined text-[18px]">hourglass_top</span>
+                </div>
+                <div className="flex flex-col truncate">
+                  <span className="text-xs font-bold text-on-surface truncate">S06 System Design &amp; Concurrency Report</span>
+                  <span className="text-[11px] text-on-surface-variant">Mentor: Vikramaditya Rao</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-surface-container text-on-surface-variant text-xs">
+                  <span className="w-1.5 h-1.5 rounded-full bg-outline" />
+                  <span>Pending Live Session</span>
+                </span>
+              </div>
+              <div className="flex flex-col text-right">
+                <span className="text-xs font-bold text-outline font-mono">—</span>
+                <span className="text-[11px] text-outline font-mono">Window: T+48:00 max</span>
+              </div>
+              <div className="flex items-center gap-2 justify-end">
+                <span className="text-xs text-outline font-semibold">Escrow Protection Queued</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 6. Custom 3-Service Bundle Savings Banner (PRD §7.3 & §7.4) */}
+      <section className="bg-gradient-to-r from-primary-container to-primary text-on-primary p-6 sm:p-8 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-6 shadow-md">
+        <div className="flex flex-col gap-1 max-w-2xl">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-on-primary/10 text-on-primary text-xs font-bold">
+              <span className="material-symbols-outlined text-[14px]">loyalty</span>
+              <span>PRD §7.3 Transparent Model</span>
+            </span>
+            <span className="text-xs text-primary-fixed-dim font-medium">Mentors Get 100% Compensation</span>
+          </div>
+          <h3 className="text-lg sm:text-xl font-bold text-on-primary font-heading mt-1">
+            Curate a Custom 3-Service Sprint &amp; Save 5%
+          </h3>
+          <p className="text-xs sm:text-sm text-primary-fixed-dim/90 leading-relaxed">
+            Bundle any 3 individual diagnostic drills (e.g., S06 Architecture + S08 Negotiation + S09 Career Plan) into a structured package. Discount is 100% funded by DreamX. Non-stacking with seasonal codes.
           </p>
         </div>
 
-        {/* 8 Dimension Card Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Dim 1: Technical Skills */}
-          <div className="bg-surface-container-lowest rounded-xl p-4 shadow-xs flex flex-col justify-between border border-surface-container">
-            <div>
-              <div className="flex items-center justify-between gap-2 mb-2">
-                <span className="text-[11px] text-on-surface-variant uppercase font-bold">Weight 20%</span>
-                <span className="px-2 py-0.5 rounded-full bg-surface-container text-on-surface text-[11px] font-semibold">
-                  Developing
-                </span>
-              </div>
-              <h3 className="text-sm font-bold text-on-surface">Technical Skills</h3>
-              <div className="mt-2 flex items-baseline gap-1">
-                <span className="text-xl font-extrabold text-on-surface font-heading">3</span>
-                <span className="text-xs text-on-surface-variant">/ 5</span>
-              </div>
-              <div className="flex gap-1 mt-2">
-                <div className="h-1.5 flex-1 bg-primary rounded-full" />
-                <div className="h-1.5 flex-1 bg-primary rounded-full" />
-                <div className="h-1.5 flex-1 bg-primary rounded-full" />
-                <div className="h-1.5 flex-1 bg-surface-container-high rounded-full" />
-                <div className="h-1.5 flex-1 bg-surface-container-high rounded-full" />
-              </div>
-              <p className="mt-3 text-xs text-on-surface-variant leading-relaxed">
-                Assessed via online test on 4 Nov 2026. Data structures strong; OOP system design baseline needed.
-              </p>
-            </div>
-            <div className="mt-4 pt-2">
-              <Link
-                href="/services/s06-technical-mock"
-                className="text-xs font-bold text-primary hover:underline flex items-center gap-1"
-              >
-                <span>Improve technical score</span>
-                <span className="material-symbols-outlined text-xs">arrow_forward</span>
-              </Link>
-            </div>
-          </div>
-
-          {/* Dim 2: Resume */}
-          <div className="bg-surface-container-lowest rounded-xl p-4 shadow-xs flex flex-col justify-between border border-surface-container">
-            <div>
-              <div className="flex items-center justify-between gap-2 mb-2">
-                <span className="text-[11px] text-on-surface-variant uppercase font-bold">Weight 15%</span>
-                <span className="px-2 py-0.5 rounded-full bg-secondary-container/50 text-on-secondary-container text-[11px] font-bold">
-                  Strong
-                </span>
-              </div>
-              <h3 className="text-sm font-bold text-on-surface">Resume &amp; ATS Fit</h3>
-              <div className="mt-2 flex items-baseline gap-1">
-                <span className="text-xl font-extrabold text-on-surface font-heading">4</span>
-                <span className="text-xs text-on-surface-variant">/ 5</span>
-              </div>
-              <div className="flex gap-1 mt-2">
-                <div className="h-1.5 flex-1 bg-secondary rounded-full" />
-                <div className="h-1.5 flex-1 bg-secondary rounded-full" />
-                <div className="h-1.5 flex-1 bg-secondary rounded-full" />
-                <div className="h-1.5 flex-1 bg-secondary rounded-full" />
-                <div className="h-1.5 flex-1 bg-surface-container-high rounded-full" />
-              </div>
-              <p className="mt-3 text-xs text-on-surface-variant leading-relaxed">
-                Parser score 84/100. Formatting clean; metric impact statements need fine-tuning.
-              </p>
-            </div>
-            <div className="mt-4 pt-2">
-              <Link
-                href="/services/s01-resume-review"
-                className="text-xs font-bold text-primary hover:underline flex items-center gap-1"
-              >
-                <span>Review bullet points</span>
-                <span className="material-symbols-outlined text-xs">arrow_forward</span>
-              </Link>
-            </div>
-          </div>
-
-          {/* Dim 3: Interview Skills (Needs Attention) */}
-          <div className="bg-surface-container-lowest rounded-xl p-4 shadow-xs flex flex-col justify-between border border-surface-container">
-            <div>
-              <div className="flex items-center justify-between gap-2 mb-2">
-                <span className="text-[11px] text-on-surface-variant uppercase font-bold">Weight 15%</span>
-                <span className="px-2 py-0.5 rounded-full bg-error-container text-on-error-container text-[11px] font-bold flex items-center gap-0.5">
-                  <span className="material-symbols-outlined text-xs">priority_high</span> Needs Attention
-                </span>
-              </div>
-              <h3 className="text-sm font-bold text-on-surface">Interview Skills</h3>
-              <div className="mt-2 flex items-baseline gap-1">
-                <span className="text-xl font-extrabold text-error font-heading">2</span>
-                <span className="text-xs text-on-surface-variant">/ 5</span>
-              </div>
-              <div className="flex gap-1 mt-2">
-                <div className="h-1.5 flex-1 bg-error rounded-full" />
-                <div className="h-1.5 flex-1 bg-error rounded-full" />
-                <div className="h-1.5 flex-1 bg-surface-container-high rounded-full" />
-                <div className="h-1.5 flex-1 bg-surface-container-high rounded-full" />
-                <div className="h-1.5 flex-1 bg-surface-container-high rounded-full" />
-              </div>
-              <p className="mt-3 text-xs text-on-surface-variant leading-relaxed">
-                Live algorithmic communication stutter recorded under time pressure.
-              </p>
-            </div>
-            <div className="mt-4 pt-2">
-              <Link
-                href="/services/s06-technical-mock"
-                className="text-xs font-bold text-error hover:underline flex items-center gap-1"
-              >
-                <span>Book mock session (S06)</span>
-                <span className="material-symbols-outlined text-xs">arrow_forward</span>
-              </Link>
-            </div>
-          </div>
-
-          {/* Dim 4: Communication */}
-          <div className="bg-surface-container-lowest rounded-xl p-4 shadow-xs flex flex-col justify-between border border-surface-container">
-            <div>
-              <div className="flex items-center justify-between gap-2 mb-2">
-                <span className="text-[11px] text-on-surface-variant uppercase font-bold">Weight 10%</span>
-                <span className="px-2 py-0.5 rounded-full bg-secondary-container/50 text-on-secondary-container text-[11px] font-bold">
-                  Strong
-                </span>
-              </div>
-              <h3 className="text-sm font-bold text-on-surface">Communication</h3>
-              <div className="mt-2 flex items-baseline gap-1">
-                <span className="text-xl font-extrabold text-on-surface font-heading">4</span>
-                <span className="text-xs text-on-surface-variant">/ 5</span>
-              </div>
-              <div className="flex gap-1 mt-2">
-                <div className="h-1.5 flex-1 bg-secondary rounded-full" />
-                <div className="h-1.5 flex-1 bg-secondary rounded-full" />
-                <div className="h-1.5 flex-1 bg-secondary rounded-full" />
-                <div className="h-1.5 flex-1 bg-secondary rounded-full" />
-                <div className="h-1.5 flex-1 bg-surface-container-high rounded-full" />
-              </div>
-              <p className="mt-3 text-xs text-on-surface-variant leading-relaxed">
-                High clarity during scenario explanations and structured thought articulation.
-              </p>
-            </div>
-            <div className="mt-4 pt-2">
-              <Link
-                href="/dashboard/readiness"
-                className="text-xs font-bold text-primary hover:underline flex items-center gap-1"
-              >
-                <span>View feedback notes</span>
-                <span className="material-symbols-outlined text-xs">arrow_forward</span>
-              </Link>
-            </div>
-          </div>
-
-          {/* Dim 5: Problem Solving */}
-          <div className="bg-surface-container-lowest rounded-xl p-4 shadow-xs flex flex-col justify-between border border-surface-container">
-            <div>
-              <div className="flex items-center justify-between gap-2 mb-2">
-                <span className="text-[11px] text-on-surface-variant uppercase font-bold">Weight 12%</span>
-                <span className="px-2 py-0.5 rounded-full bg-surface-container text-on-surface text-[11px] font-semibold">
-                  Developing
-                </span>
-              </div>
-              <h3 className="text-sm font-bold text-on-surface">Problem Solving &amp; Portfolio</h3>
-              <div className="mt-2 flex items-baseline gap-1">
-                <span className="text-xl font-extrabold text-on-surface font-heading">3</span>
-                <span className="text-xs text-on-surface-variant">/ 5</span>
-              </div>
-              <div className="flex gap-1 mt-2">
-                <div className="h-1.5 flex-1 bg-primary rounded-full" />
-                <div className="h-1.5 flex-1 bg-primary rounded-full" />
-                <div className="h-1.5 flex-1 bg-primary rounded-full" />
-                <div className="h-1.5 flex-1 bg-surface-container-high rounded-full" />
-                <div className="h-1.5 flex-1 bg-surface-container-high rounded-full" />
-              </div>
-              <p className="mt-3 text-xs text-on-surface-variant leading-relaxed">
-                Github repo active. Needs 1 full-stack deployment with measurable production throughput.
-              </p>
-            </div>
-            <div className="mt-4 pt-2">
-              <Link
-                href="/services/s04-portfolio-review"
-                className="text-xs font-bold text-primary hover:underline flex items-center gap-1"
-              >
-                <span>Review portfolio repo</span>
-                <span className="material-symbols-outlined text-xs">arrow_forward</span>
-              </Link>
-            </div>
-          </div>
-
-          {/* Dim 6: LinkedIn */}
-          <div className="bg-surface-container-lowest rounded-xl p-4 shadow-xs flex flex-col justify-between border border-surface-container">
-            <div>
-              <div className="flex items-center justify-between gap-2 mb-2">
-                <span className="text-[11px] text-on-surface-variant uppercase font-bold">Weight 8%</span>
-                <span className="px-2 py-0.5 rounded-full bg-surface-container text-on-surface text-[11px] font-semibold">
-                  Developing
-                </span>
-              </div>
-              <h3 className="text-sm font-bold text-on-surface">LinkedIn &amp; Brand</h3>
-              <div className="mt-2 flex items-baseline gap-1">
-                <span className="text-xl font-extrabold text-on-surface font-heading">3</span>
-                <span className="text-xs text-on-surface-variant">/ 5</span>
-              </div>
-              <div className="flex gap-1 mt-2">
-                <div className="h-1.5 flex-1 bg-primary rounded-full" />
-                <div className="h-1.5 flex-1 bg-primary rounded-full" />
-                <div className="h-1.5 flex-1 bg-primary rounded-full" />
-                <div className="h-1.5 flex-1 bg-surface-container-high rounded-full" />
-                <div className="h-1.5 flex-1 bg-surface-container-high rounded-full" />
-              </div>
-              <p className="mt-3 text-xs text-on-surface-variant leading-relaxed">
-                Headline and summary in place. Inbound recruiter alignment can improve via keyword density.
-              </p>
-            </div>
-            <div className="mt-4 pt-2">
-              <Link
-                href="/services/s03-linkedin-review"
-                className="text-xs font-bold text-primary hover:underline flex items-center gap-1"
-              >
-                <span>Optimize profile</span>
-                <span className="material-symbols-outlined text-xs">arrow_forward</span>
-              </Link>
-            </div>
-          </div>
-
-          {/* Dim 7: Career Planning */}
-          <div className="bg-surface-container-lowest rounded-xl p-4 shadow-xs flex flex-col justify-between border border-surface-container">
-            <div>
-              <div className="flex items-center justify-between gap-2 mb-2">
-                <span className="text-[11px] text-on-surface-variant uppercase font-bold">Weight 10%</span>
-                <span className="px-2 py-0.5 rounded-full bg-surface-container text-on-surface text-[11px] font-semibold">
-                  Developing
-                </span>
-              </div>
-              <h3 className="text-sm font-bold text-on-surface">Career Planning</h3>
-              <div className="mt-2 flex items-baseline gap-1">
-                <span className="text-xl font-extrabold text-on-surface font-heading">3</span>
-                <span className="text-xs text-on-surface-variant">/ 5</span>
-              </div>
-              <div className="flex gap-1 mt-2">
-                <div className="h-1.5 flex-1 bg-primary rounded-full" />
-                <div className="h-1.5 flex-1 bg-primary rounded-full" />
-                <div className="h-1.5 flex-1 bg-primary rounded-full" />
-                <div className="h-1.5 flex-1 bg-surface-container-high rounded-full" />
-                <div className="h-1.5 flex-1 bg-surface-container-high rounded-full" />
-              </div>
-              <p className="mt-3 text-xs text-on-surface-variant leading-relaxed">
-                Target company tier-list defined. Needs tier-2 backup strategy mapped before campus dates.
-              </p>
-            </div>
-            <div className="mt-4 pt-2">
-              <Link
-                href="/services/s07-career-consultation"
-                className="text-xs font-bold text-primary hover:underline flex items-center gap-1"
-              >
-                <span>Review tier strategy</span>
-                <span className="material-symbols-outlined text-xs">arrow_forward</span>
-              </Link>
-            </div>
-          </div>
-
-          {/* Dim 8: Confidence */}
-          <div className="bg-surface-container-lowest rounded-xl p-4 shadow-xs flex flex-col justify-between border border-surface-container">
-            <div>
-              <div className="flex items-center justify-between gap-2 mb-2">
-                <span className="text-[11px] text-on-surface-variant uppercase font-bold">Weight 10%</span>
-                <span className="px-2 py-0.5 rounded-full bg-secondary-container/50 text-on-secondary-container text-[11px] font-bold">
-                  Strong
-                </span>
-              </div>
-              <h3 className="text-sm font-bold text-on-surface">Confidence &amp; Poise</h3>
-              <div className="mt-2 flex items-baseline gap-1">
-                <span className="text-xl font-extrabold text-on-surface font-heading">4</span>
-                <span className="text-xs text-on-surface-variant">/ 5</span>
-              </div>
-              <div className="flex gap-1 mt-2">
-                <div className="h-1.5 flex-1 bg-secondary rounded-full" />
-                <div className="h-1.5 flex-1 bg-secondary rounded-full" />
-                <div className="h-1.5 flex-1 bg-secondary rounded-full" />
-                <div className="h-1.5 flex-1 bg-secondary rounded-full" />
-                <div className="h-1.5 flex-1 bg-surface-container-high rounded-full" />
-              </div>
-              <p className="mt-3 text-xs text-on-surface-variant leading-relaxed">
-                High professional presence observed during Diagnostic intake. Steady pacing under stress.
-              </p>
-            </div>
-            <div className="mt-4 pt-2">
-              <Link
-                href="/services/s08-salary-negotiation"
-                className="text-xs font-bold text-primary hover:underline flex items-center gap-1"
-              >
-                <span>View mentor rubric</span>
-                <span className="material-symbols-outlined text-xs">arrow_forward</span>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 5. Recommended Next Steps & Bundles (Bottom Split Section) */}
-      <section aria-label="Interventions and Deliverables" className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column (2/3 width) */}
-        <div className="lg:col-span-2 flex flex-col gap-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs uppercase tracking-wider text-primary font-bold">Curated Interventions</span>
-              <span className="px-2 py-0.5 rounded-full bg-surface-container-low text-on-surface text-xs font-semibold">
-                Matched to Score Gaps
-              </span>
-            </div>
-            <h2 className="text-xl font-bold text-on-surface font-heading mt-1">Recommended Gap-Closure Services</h2>
-          </div>
-
-          {/* Service 1: S06 */}
-          <article className="bg-surface-container-lowest rounded-2xl p-5 shadow-xs flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between border border-surface-container">
-            <div className="flex gap-4 items-start">
-              <div className="w-12 h-12 rounded-xl bg-primary-fixed text-on-primary-fixed flex items-center justify-center shrink-0">
-                <span className="material-symbols-outlined text-xl">terminal</span>
-              </div>
-              <div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-xs text-primary font-extrabold">SERVICE S06</span>
-                  <span className="px-2 py-0.5 rounded-full bg-secondary-container/40 text-on-secondary-container text-[11px] font-bold">
-                    DSA &amp; System Basics
-                  </span>
-                </div>
-                <h3 className="text-sm font-bold text-on-surface mt-1 font-heading">Technical Mock Interview</h3>
-                <p className="text-xs text-on-surface-variant mt-1 leading-relaxed">
-                  Includes detailed 48h rubric report, code optimization feedback, and recorded playback link.
-                </p>
-                <div className="mt-2 flex items-center gap-3 text-xs text-on-surface-variant">
-                  <span>Duration: 60 mins</span>
-                  <span>•</span>
-                  <span>Available slots: Tomorrow</span>
-                </div>
-              </div>
-            </div>
-            <div className="sm:text-right shrink-0 flex sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto pt-2 sm:pt-0">
-              <div>
-                <div className="flex items-baseline sm:justify-end gap-1.5">
-                  <span className="text-base font-bold text-on-surface">₹949</span>
-                  <span className="text-xs text-on-surface-variant line-through">₹999</span>
-                </div>
-                <span className="text-[11px] text-secondary font-bold">Pro 5% applied</span>
-              </div>
-              <Link
-                href="/services/s06-technical-mock"
-                className="mt-2 px-4 py-2 rounded-lg bg-primary text-on-primary hover:bg-primary-container transition-colors text-xs font-bold"
-              >
-                Book S06
-              </Link>
-            </div>
-          </article>
-
-          {/* Service 2: S02 */}
-          <article className="bg-surface-container-lowest rounded-2xl p-5 shadow-xs flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between border border-surface-container">
-            <div className="flex gap-4 items-start">
-              <div className="w-12 h-12 rounded-xl bg-surface-container text-on-surface flex items-center justify-center shrink-0">
-                <span className="material-symbols-outlined text-xl">description</span>
-              </div>
-              <div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-xs text-on-surface-variant font-extrabold">SERVICE S02</span>
-                  <span className="px-2 py-0.5 rounded-full bg-surface-container text-on-surface text-[11px] font-bold">
-                    High ATS Impact
-                  </span>
-                </div>
-                <h3 className="text-sm font-bold text-on-surface mt-1 font-heading">ATS Resume Optimization</h3>
-                <p className="text-xs text-on-surface-variant mt-1 leading-relaxed">
-                  Direct 1:1 line-by-line review. Target role keyword synchronization and recruiter scanning validation.
-                </p>
-                <div className="mt-2 flex items-center gap-3 text-xs text-on-surface-variant">
-                  <span>Duration: 45 mins</span>
-                  <span>•</span>
-                  <span>Available slots: Friday</span>
-                </div>
-              </div>
-            </div>
-            <div className="sm:text-right shrink-0 flex sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto pt-2 sm:pt-0">
-              <div>
-                <div className="flex items-baseline sm:justify-end gap-1.5">
-                  <span className="text-base font-bold text-on-surface">₹759</span>
-                  <span className="text-xs text-on-surface-variant line-through">₹799</span>
-                </div>
-                <span className="text-[11px] text-secondary font-bold">Pro 5% applied</span>
-              </div>
-              <Link
-                href="/services/s02-ats-optimization"
-                className="mt-2 px-4 py-2 rounded-lg bg-surface-container-low text-on-surface hover:bg-surface-container transition-colors text-xs font-bold border border-surface-container"
-              >
-                Book S02
-              </Link>
-            </div>
-          </article>
-
-          {/* Custom 3-Service Bundle Promo Banner */}
-          <aside className="p-6 rounded-2xl bg-surface-container-high text-on-surface flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-xs">
-            <div className="flex items-start gap-3">
-              <span className="material-symbols-outlined text-primary text-2xl shrink-0 mt-1">savings</span>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs uppercase tracking-wider text-primary font-bold">Institutional Guarantee</span>
-                  <span className="px-2 py-0.5 rounded-full bg-secondary-container/60 text-on-secondary-container text-[11px] font-bold">
-                    +5% Extra Discount
-                  </span>
-                </div>
-                <p className="text-sm text-on-surface font-bold mt-1">
-                  Build your custom 3-service bundle and save 5% extra.
-                </p>
-                <p className="text-xs text-on-surface-variant mt-0.5">
-                  Absorbed fully by DreamX. Standard mentor payout is guaranteed with no fee deduction.
-                </p>
-              </div>
-            </div>
-            <Link
-              href="/services"
-              className="shrink-0 px-4 py-2.5 rounded-lg bg-primary text-on-primary hover:bg-primary-container transition-colors text-xs font-bold"
-            >
-              Configure Bundle
-            </Link>
-          </aside>
-        </div>
-
-        {/* Right Column (1/3 width) - Recent Deliverables & Action Plans */}
-        <div className="flex flex-col gap-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs uppercase tracking-wider text-on-surface-variant font-bold">Accountability Trail</span>
-            </div>
-            <h2 className="text-xl font-bold text-on-surface font-heading mt-1">Deliverables &amp; Tasks</h2>
-          </div>
-
-          {/* Report Card */}
-          <article className="bg-surface-container-lowest rounded-2xl p-5 shadow-xs flex flex-col justify-between border border-surface-container">
-            <div>
-              <div className="flex items-center justify-between gap-2 mb-2">
-                <span className="px-2 py-0.5 rounded-full bg-secondary-container/40 text-on-secondary-container text-[11px] font-bold flex items-center gap-1">
-                  <span className="material-symbols-outlined text-xs">verified</span>
-                  Delivered within 48h SLA
-                </span>
-                <span className="text-[11px] text-on-surface-variant font-semibold">2 Nov 2026</span>
-              </div>
-              <h3 className="text-sm font-bold text-on-surface font-heading">
-                Career Consultation Diagnostic Report
-              </h3>
-              <div className="mt-2 flex items-center gap-2 text-xs">
-                <span className="w-6 h-6 rounded-full bg-surface-container-high flex items-center justify-center font-bold text-xs">
-                  SR
-                </span>
-                <span className="text-on-surface-variant">
-                  Lead Mentor: <strong className="text-on-surface font-bold">Sneha Rao</strong>
-                </span>
-              </div>
-              <p className="mt-3 text-xs text-on-surface-variant leading-relaxed">
-                Covers comprehensive 8-dimension rubric calibration, industry salary benchmarks, and 6-week intervention priority.
-              </p>
-            </div>
-            <div className="mt-4 pt-3 flex items-center justify-between border-t border-surface-container">
-              <Link
-                href="/dashboard/readiness"
-                className="text-xs text-primary hover:underline font-bold flex items-center gap-1"
-              >
-                <span>View Structured Report</span>
-                <span className="material-symbols-outlined text-xs">open_in_new</span>
-              </Link>
-              <button
-                aria-label="Download PDF"
-                className="p-1 rounded text-on-surface-variant hover:text-on-surface cursor-pointer"
-                type="button"
-              >
-                <span className="material-symbols-outlined text-base">download</span>
-              </button>
-            </div>
-          </article>
-
-          {/* In-Progress Action Item Task Box */}
-          <div className="bg-surface-container-lowest rounded-2xl p-5 shadow-xs flex flex-col justify-between border border-surface-container">
-            <div>
-              <div className="flex items-center justify-between gap-2 mb-2">
-                <span className="text-[11px] uppercase tracking-wider text-error font-bold flex items-center gap-1">
-                  <span className="material-symbols-outlined text-xs">schedule</span>
-                  Due in 3 days
-                </span>
-                <span className="text-[11px] text-on-surface-variant font-semibold">Action Item #1</span>
-              </div>
-              <h3 className="text-sm font-bold text-on-surface font-heading">
-                Revise project bullet points using STAR format
-              </h3>
-              <p className="mt-2 text-xs text-on-surface-variant leading-relaxed">
-                Assigned from Diagnostic Intake. Quantify latency reduction and user volume on the &quot;Campus Exchange&quot; repository.
-              </p>
-              <div className="mt-3 flex items-center gap-2">
-                <input
-                  className="w-4 h-4 rounded text-primary focus:ring-0 cursor-pointer"
-                  id="task1"
-                  type="checkbox"
-                  checked={taskDone}
-                  onChange={(e) => setTaskDone(e.target.checked)}
-                />
-                <label
-                  className={`text-xs font-semibold cursor-pointer ${
-                    taskDone ? "line-through text-outline" : "text-on-surface"
-                  }`}
-                  htmlFor="task1"
-                >
-                  Mark complete and notify Mentor Rahul
-                </label>
-              </div>
-            </div>
-            <div className="mt-4 pt-3 flex items-center justify-between border-t border-surface-container">
-              <span className="text-[11px] text-on-surface-variant font-medium">Prerequisite for #BK-9182</span>
-              <Link
-                href="/dashboard/bookings"
-                className="px-3 py-1.5 rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high text-xs font-bold transition-colors"
-              >
-                Upload Draft
-              </Link>
-            </div>
-          </div>
-
-          {/* Quick Trust Proof Stamp */}
-          <div className="p-3.5 rounded-xl bg-surface-container-low flex items-center gap-3">
-            <span className="material-symbols-outlined text-secondary text-xl">shield_with_heart</span>
-            <div>
-              <p className="text-xs font-bold text-on-surface">DreamX 48h SLA Guarantee</p>
-              <p className="text-[11px] text-on-surface-variant leading-tight">
-                Every booking includes structured rubric notes delivered strictly within 48 hours.
-              </p>
-            </div>
-          </div>
+        <div className="flex flex-col sm:flex-row gap-2 shrink-0">
+          <Link
+            href="/membership"
+            className="inline-flex items-center justify-center gap-1.5 px-5 py-3 bg-surface-container-lowest text-primary hover:bg-surface-bright rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer"
+          >
+            <span>Build Custom Bundle</span>
+            <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+          </Link>
         </div>
       </section>
     </div>
