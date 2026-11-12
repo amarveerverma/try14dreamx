@@ -19,7 +19,7 @@ function VerifyEmailContent() {
   const email = searchParams.get("email") || "aarav.sharma@techpulse.io";
   const role = searchParams.get("role") || "student";
 
-  const [otp, setOtp] = React.useState(["8", "4", "1", "9", "2", ""]);
+  const [otp, setOtp] = React.useState(["", "", "", "", "", ""]);
   const [timer, setTimer] = React.useState(48);
   const [isVerifying, setIsVerifying] = React.useState(false);
   const [verified, setVerified] = React.useState(false);
@@ -157,15 +157,13 @@ function VerifyEmailContent() {
                         className={`w-12 h-14 sm:w-14 sm:h-16 text-center text-xl sm:text-2xl font-bold font-mono rounded-xl border-2 transition-all ${
                           digit
                             ? "border-[#3828b5] bg-white text-[#1c1b1b] shadow-xs"
-                            : i === 5
-                            ? "border-[#3828b5] bg-indigo-50/50 ring-2 ring-[#3828b5]/20 animate-pulse"
                             : "border-gray-200 bg-[#f6f3f2] text-gray-800"
                         } focus:outline-none focus:border-[#3828b5] focus:bg-white`}
                       />
                     ))}
                   </div>
                   <p className="text-[11px] text-center text-gray-500 mt-2">
-                    Enter the demo 6th digit (e.g. <strong className="font-mono text-[#3828b5]">6</strong>) to complete verification
+                    Enter the 6-digit verification code sent to your registered email
                   </p>
                 </div>
 

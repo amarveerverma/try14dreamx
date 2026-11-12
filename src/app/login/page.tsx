@@ -15,7 +15,6 @@ import {
   Shield,
   CheckCircle2,
   AlertCircle,
-  Sparkles,
 } from "lucide-react";
 
 export default function LoginPage() {
@@ -28,13 +27,6 @@ export default function LoginPage() {
   const [rememberDevice, setRememberDevice] = React.useState(true);
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
-
-  const handleFillDemo = (targetRole: "seeker" | "mentor" | "admin", demoEmail: string) => {
-    setRole(targetRole);
-    setEmail(demoEmail);
-    setPassword("password123");
-    setError(null);
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -154,40 +146,6 @@ export default function LoginPage() {
               <Shield className="w-3.5 h-3.5" />
               <span>Admin</span>
             </button>
-          </div>
-
-          {/* Quick Demo Credentials Strip */}
-          <div className="p-3 rounded-xl bg-indigo-50/70 border border-indigo-100 space-y-2 text-xs">
-            <div className="flex items-center justify-between">
-              <span className="font-bold text-[#3828b5] flex items-center gap-1">
-                <Sparkles className="w-3.5 h-3.5" />
-                Quick Demo Credentials (1-Click Fill):
-              </span>
-              <span className="text-[10px] text-gray-500 font-mono">pwd: password123</span>
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              <button
-                type="button"
-                onClick={() => handleFillDemo("seeker", "candidate@dreamx.com")}
-                className="px-2.5 py-1 rounded-md bg-white border border-indigo-200 text-[#1c1b1b] hover:bg-indigo-50 font-semibold text-[11px] shadow-2xs"
-              >
-                Candidate Demo
-              </button>
-              <button
-                type="button"
-                onClick={() => handleFillDemo("mentor", "mentor@dreamx.com")}
-                className="px-2.5 py-1 rounded-md bg-white border border-indigo-200 text-[#1c1b1b] hover:bg-indigo-50 font-semibold text-[11px] shadow-2xs"
-              >
-                Mentor Demo
-              </button>
-              <button
-                type="button"
-                onClick={() => handleFillDemo("admin", "admin@dreamx.com")}
-                className="px-2.5 py-1 rounded-md bg-white border border-indigo-200 text-[#1c1b1b] hover:bg-indigo-50 font-semibold text-[11px] shadow-2xs"
-              >
-                Super Admin Demo
-              </button>
-            </div>
           </div>
 
           {/* Social Google OAuth Button */}
