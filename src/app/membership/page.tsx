@@ -16,16 +16,40 @@ const BUNDLE_CATALOG: ServiceItem[] = [
   {
     id: "s01",
     code: "S01",
-    title: "Resume Review & ATS Optimization",
+    title: "Resume Line-by-Line Teardown",
     price: 599,
     duration: "45m",
     description: "45 min live deep-dive + ATS score diagnostic",
   },
   {
+    id: "s02",
+    code: "S02",
+    title: "ATS Keyword & Format Audit",
+    price: 799,
+    duration: "45m",
+    description: "45 min parser optimization & recruiter search match",
+  },
+  {
+    id: "s04",
+    code: "S04",
+    title: "Portfolio & GitHub Teardown",
+    price: 599,
+    duration: "45m",
+    description: "45 min live architecture critique of proof-of-work",
+  },
+  {
+    id: "s05",
+    code: "S05",
+    title: "Behavioral Mock (STAR Method)",
+    price: 799,
+    duration: "60m",
+    description: "60 min leadership principles & culture drill",
+  },
+  {
     id: "s06",
     code: "S06",
-    title: "Technical Mock & System Design",
-    price: 999,
+    title: "System Design & Technical Mock",
+    price: 1499,
     duration: "60m",
     description: "60 min bar-raiser drill with Principal Architect",
   },
@@ -33,33 +57,9 @@ const BUNDLE_CATALOG: ServiceItem[] = [
     id: "s08",
     code: "S08",
     title: "Salary Negotiation & ESOPs",
-    price: 699,
-    duration: "30m",
-    description: "30 min offer leveling, clawback & tax guidance",
-  },
-  {
-    id: "s05",
-    code: "S05",
-    title: "Behavioral STAR Mock Interview",
-    price: 799,
+    price: 999,
     duration: "45m",
-    description: "45 min leadership principles & culture drill",
-  },
-  {
-    id: "s10",
-    code: "S10",
-    title: "Live Algorithmic Coding Sprint",
-    price: 899,
-    duration: "60m",
-    description: "60 min timed problem-solving & complexity audit",
-  },
-  {
-    id: "s04",
-    code: "S04",
-    title: "Portfolio & GitHub Code Audit",
-    price: 649,
-    duration: "45m",
-    description: "45 min live architecture critique of proof-of-work",
+    description: "45 min offer leveling, clawback & tax guidance",
   },
 ];
 
@@ -70,20 +70,43 @@ export default function MembershipPage() {
   const [openFaq, setOpenFaq] = React.useState<string | null>("faq-1");
   const [toastMessage, setToastMessage] = React.useState<string | null>(null);
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = React.useState(false);
+  const [isPurchasing, setIsPurchasing] = React.useState(false);
+  const [isUpgrading, setIsUpgrading] = React.useState(false);
+  const [serverPricing, setServerPricing] = React.useState<{
+    originalAmountPaise: number;
+    discountPercentage: number;
+    discountPaise: number;
+    finalAmountPaise: number;
+    discountType: string;
+  } | null>(null);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 4000);
   };
 
-  const handleUpgrade = (tier: "pro" | "elite") => {
-    upgradeMembership(tier, billingCycle === "annual");
-    showToast(`Plan updated: DreamX ${tier.toUpperCase()} (${billingCycle === "annual" ? "Annual - 25% Off" : "Monthly"}) activated!`);
+  const handleUpgrade = async (tier: "pro" | "elite") => {
+    setIsUpgrading(true);
+    try {
+      await upgradeMembership(tier, billingCycle === "annual");
+      showToast(`Plan updated: DreamX ${tier.toUpperCase()} (${billingCycle === "annual" ? "Annual" : "Monthly"}) activated!`);
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : "Error upgrading plan.");
+    } finally {
+      setIsUpgrading(false);
+    }
   };
 
-  const handleDowngrade = () => {
-    cancelMembership();
-    showToast("Plan switched to Free Tier. Zero membership fees applied.");
+  const handleDowngrade = async () => {
+    setIsUpgrading(true);
+    try {
+      await cancelMembership();
+      showToast("Cancellation scheduled. Benefits remain active until current period ends.");
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : "Error updating plan.");
+    } finally {
+      setIsUpgrading(false);
+    }
   };
 
   const toggleService = (id: string) => {
@@ -104,12 +127,85 @@ export default function MembershipPage() {
     }
   };
 
-  // Calculations for bundle
+  // Synchronize server-verified pricing (PRD §7.3, P10 Exit Criteria 1)
+  React.useEffect(() => {
+    let isMounted = true;
+    async function fetchPricing() {
+      if (selectedServices.length === 3) {
+        try {
+          const selectedCodes = BUNDLE_CATALOG.filter((i) => selectedServices.includes(i.id)).map(
+            (i) => i.code
+          );
+          const res = await fetch("/api/pricing/calculate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              isBundle: true,
+              bundleServiceCodes: selectedCodes,
+            }),
+          });
+          const data = await res.json();
+          if (data.success && isMounted) {
+            setServerPricing({
+              originalAmountPaise: data.pricing.original_amount_paise,
+              discountPercentage: data.pricing.discount_percentage,
+              discountPaise: data.pricing.discount_paise,
+              finalAmountPaise: data.pricing.final_amount_paise,
+              discountType: data.pricing.discount_type,
+            });
+          }
+        } catch {
+          // Fallback
+        }
+      } else {
+        if (isMounted) setServerPricing(null);
+      }
+    }
+
+    fetchPricing();
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedServices]);
+
+  // Calculations for bundle using server-returned values (PRD §7.3)
   const selectedItems = BUNDLE_CATALOG.filter((item) => selectedServices.includes(item.id));
-  const grossTotal = selectedItems.reduce((acc, curr) => acc + curr.price, 0);
   const isBundleUnlocked = selectedServices.length === 3;
-  const discountAmount = isBundleUnlocked ? Math.round(grossTotal * 0.05) : 0;
-  const netPayable = grossTotal - discountAmount;
+  const grossTotal = serverPricing
+    ? Math.round(serverPricing.originalAmountPaise / 100)
+    : selectedItems.reduce((acc, curr) => acc + curr.price, 0);
+  const discountAmount = serverPricing
+    ? Math.round(serverPricing.discountPaise / 100)
+    : isBundleUnlocked
+    ? Math.round(grossTotal * 0.05)
+    : 0;
+  const netPayable = serverPricing ? Math.round(serverPricing.finalAmountPaise / 100) : grossTotal - discountAmount;
+  const appliedDiscountPct = serverPricing ? serverPricing.discountPercentage : isBundleUnlocked ? 5 : 0;
+
+  const handlePurchaseBundle = async () => {
+    setIsPurchasing(true);
+    try {
+      const selectedCodes = selectedItems.map((i) => i.code);
+      const res = await fetch("/api/bundle/purchase", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          serviceCodes: selectedCodes,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        showToast(data.error || "Failed to purchase bundle.");
+      } else {
+        setIsCheckoutModalOpen(false);
+        showToast(data.message || "Bundle purchased! 3 session credits added to your vault.");
+      }
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : "Error purchasing bundle.");
+    } finally {
+      setIsPurchasing(false);
+    }
+  };
 
   return (
     <div className="flex flex-col w-full bg-surface">
@@ -377,10 +473,11 @@ export default function MembershipPage() {
                 ) : (
                   <button
                     type="button"
+                    disabled={isUpgrading}
                     onClick={() => handleUpgrade("pro")}
-                    className="w-full py-3.5 rounded-xl text-xs sm:text-sm bg-primary text-on-primary hover:bg-primary-container hover:text-on-primary-container transition-all shadow-md font-bold text-center flex items-center justify-center gap-2 cursor-pointer"
+                    className="w-full py-3.5 rounded-xl text-xs sm:text-sm bg-primary text-on-primary hover:bg-primary-container hover:text-on-primary-container transition-all shadow-md font-bold text-center flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                   >
-                    <span>Upgrade to Pro</span>
+                    <span>{isUpgrading ? "Updating..." : "Upgrade to Pro"}</span>
                     <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
                   </button>
                 )}
@@ -488,10 +585,11 @@ export default function MembershipPage() {
                 ) : (
                   <button
                     type="button"
+                    disabled={isUpgrading}
                     onClick={() => handleUpgrade("elite")}
-                    className="w-full py-3.5 rounded-xl text-xs sm:text-sm bg-inverse-surface text-inverse-on-surface hover:bg-on-surface transition-all shadow-md font-bold text-center flex items-center justify-center gap-2 cursor-pointer"
+                    className="w-full py-3.5 rounded-xl text-xs sm:text-sm bg-inverse-surface text-inverse-on-surface hover:bg-on-surface transition-all shadow-md font-bold text-center flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                   >
-                    <span>Get Elite Access</span>
+                    <span>{isUpgrading ? "Updating..." : "Get Elite Access"}</span>
                     <span className="material-symbols-outlined text-[18px]">verified</span>
                   </button>
                 )}
@@ -1003,9 +1101,11 @@ export default function MembershipPage() {
                     <span className="font-mono font-bold text-on-surface">₹{item.price}</span>
                   </div>
                 ))}
-                {isBundleUnlocked && (
+                {isBundleUnlocked && discountAmount > 0 && (
                   <div className="flex items-center justify-between text-xs text-secondary pt-2 border-t border-surface-container-highest">
-                    <span>5% Track Bundle Discount</span>
+                    <span>
+                      {appliedDiscountPct}% {serverPricing?.discountType === "membership" ? "Membership Discount" : "Track Bundle Discount"}
+                    </span>
                     <span className="font-mono font-bold">-₹{discountAmount}</span>
                   </div>
                 )}
@@ -1019,7 +1119,7 @@ export default function MembershipPage() {
             <div className="p-3 rounded-xl bg-secondary/10 text-secondary text-xs flex items-start gap-2">
               <span className="material-symbols-outlined text-[16px] shrink-0 mt-0.5">verified_user</span>
               <span>
-                Protected by 100% Escrow and 48-Hour Rubric SLA Guarantee. Sessions can be scheduled individually at your convenience over 6 months.
+                Protected by 100% Escrow and 48-Hour Rubric SLA Guarantee. Sessions can be scheduled individually at your convenience over 90 days.
               </span>
             </div>
 
@@ -1033,14 +1133,18 @@ export default function MembershipPage() {
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  setIsCheckoutModalOpen(false);
-                  showToast(`Bundle of ${selectedItems.length} modules reserved successfully via Escrow!`);
-                }}
-                className="flex-1 py-3 rounded-xl bg-primary text-on-primary hover:bg-primary-container hover:text-on-primary-container text-xs sm:text-sm font-bold transition-all shadow-md cursor-pointer flex items-center justify-center gap-1.5"
+                disabled={isPurchasing}
+                onClick={handlePurchaseBundle}
+                className="flex-1 py-3 rounded-xl bg-primary text-on-primary hover:bg-primary-container hover:text-on-primary-container text-xs sm:text-sm font-bold transition-all shadow-md cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50"
               >
-                <span>Pay ₹{netPayable} via Escrow</span>
-                <span className="material-symbols-outlined text-[16px]">lock</span>
+                {isPurchasing ? (
+                  <span>Processing Escrow...</span>
+                ) : (
+                  <>
+                    <span>Pay ₹{netPayable} via Escrow</span>
+                    <span className="material-symbols-outlined text-[16px]">lock</span>
+                  </>
+                )}
               </button>
             </div>
           </div>

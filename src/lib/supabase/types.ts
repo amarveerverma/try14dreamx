@@ -22,6 +22,10 @@ export type SettlementStatus = 'accrued' | 'in_escrow' | 'eligible_for_payout' |
 export type SmartMatchStatus = 'pending' | 'wave_1' | 'wave_2' | 'matched' | 'timeout_fallback' | 'cancelled' | 'refunded';
 export type DispatchOfferStatus = 'dispatched' | 'accepted' | 'declined' | 'missed' | 'expired';
 export type AttendanceStatus = 'joined' | 'completed' | 'no_show' | 'dropped_early';
+export type MembershipPlan = 'free' | 'pro' | 'elite';
+export type BillingCycle = 'monthly' | 'yearly';
+export type SubscriptionStatus = 'active' | 'past_due' | 'cancelled' | 'expired';
+export type BundleStatus = 'active' | 'partially_redeemed' | 'fully_redeemed' | 'expired' | 'cancelled';
 
 export interface Database {
   public: {
@@ -915,6 +919,138 @@ export interface Database {
         };
         Relationships: [];
       };
+      user_subscriptions: {
+        Row: {
+          id: string;
+          user_id: string;
+          plan: MembershipPlan;
+          billing_cycle: BillingCycle;
+          status: SubscriptionStatus;
+          amount_paise: number;
+          current_period_start: string;
+          current_period_end: string;
+          cancel_at_period_end: boolean;
+          cancelled_at: string | null;
+          provider_subscription_id: string | null;
+          payment_reference: string | null;
+          metadata: Json;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          plan?: MembershipPlan;
+          billing_cycle?: BillingCycle;
+          status?: SubscriptionStatus;
+          amount_paise?: number;
+          current_period_start?: string;
+          current_period_end: string;
+          cancel_at_period_end?: boolean;
+          cancelled_at?: string | null;
+          provider_subscription_id?: string | null;
+          payment_reference?: string | null;
+          metadata?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          plan?: MembershipPlan;
+          billing_cycle?: BillingCycle;
+          status?: SubscriptionStatus;
+          amount_paise?: number;
+          current_period_start?: string;
+          current_period_end?: string;
+          cancel_at_period_end?: boolean;
+          cancelled_at?: string | null;
+          provider_subscription_id?: string | null;
+          payment_reference?: string | null;
+          metadata?: Json;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      service_bundles: {
+        Row: {
+          id: string;
+          student_id: string;
+          bundle_ref: string;
+          total_services: number;
+          redeemed_services: number;
+          status: BundleStatus;
+          original_amount_paise: number;
+          discount_paise: number;
+          paid_amount_paise: number;
+          discount_percentage: number;
+          expires_at: string;
+          payment_reference: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          student_id: string;
+          bundle_ref: string;
+          total_services?: number;
+          redeemed_services?: number;
+          status?: BundleStatus;
+          original_amount_paise: number;
+          discount_paise: number;
+          paid_amount_paise: number;
+          discount_percentage: number;
+          expires_at: string;
+          payment_reference?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          student_id?: string;
+          bundle_ref?: string;
+          total_services?: number;
+          redeemed_services?: number;
+          status?: BundleStatus;
+          original_amount_paise?: number;
+          discount_paise?: number;
+          paid_amount_paise?: number;
+          discount_percentage?: number;
+          expires_at?: string;
+          payment_reference?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      bundle_items: {
+        Row: {
+          id: string;
+          bundle_id: string;
+          service_code: ServiceCode;
+          booking_id: string | null;
+          is_redeemed: boolean;
+          redeemed_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          bundle_id: string;
+          service_code: ServiceCode;
+          booking_id?: string | null;
+          is_redeemed?: boolean;
+          redeemed_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          bundle_id?: string;
+          service_code?: ServiceCode;
+          booking_id?: string | null;
+          is_redeemed?: boolean;
+          redeemed_at?: string | null;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -1120,6 +1256,102 @@ export interface Database {
           mentor_rating_updated: number;
         };
       };
+      get_user_membership: {
+        Args: {
+          p_user_id: string;
+        };
+        Returns: {
+          plan: MembershipPlan;
+          discount_pct: number;
+          is_active: boolean;
+          renewal_date?: string | null;
+          current_period_end?: string | null;
+          cancel_at_period_end?: boolean;
+          billing_cycle?: BillingCycle;
+          amount_paise?: number;
+        };
+      };
+      calculate_service_checkout_price: {
+        Args: {
+          p_student_id: string;
+          p_service_code?: ServiceCode | null;
+          p_is_bundle?: boolean;
+          p_bundle_service_codes?: ServiceCode[] | null;
+        };
+        Returns: {
+          student_id: string;
+          is_bundle: boolean;
+          membership_plan: string;
+          original_amount_paise: number;
+          discount_percentage: number;
+          discount_type: string;
+          discount_paise: number;
+          final_amount_paise: number;
+          mentor_payout_paise: number;
+          platform_fee_paise: number;
+          dreamx_discount_subsidy_paise: number;
+        };
+      };
+      subscribe_membership_plan: {
+        Args: {
+          p_user_id: string;
+          p_plan: MembershipPlan;
+          p_billing_cycle?: BillingCycle;
+          p_payment_reference?: string | null;
+        };
+        Returns: {
+          success: boolean;
+          subscription_id?: string;
+          plan: string;
+          billing_cycle?: string;
+          amount_paise?: number;
+          current_period_start?: string;
+          current_period_end?: string;
+          message?: string;
+        };
+      };
+      cancel_membership_subscription: {
+        Args: {
+          p_user_id: string;
+        };
+        Returns: {
+          success: boolean;
+          subscription_id: string;
+          plan: string;
+          current_period_end: string;
+          benefits_retain_until: string;
+          message: string;
+        };
+      };
+      purchase_service_bundle: {
+        Args: {
+          p_student_id: string;
+          p_service_codes: ServiceCode[];
+          p_payment_reference?: string | null;
+        };
+        Returns: {
+          success: boolean;
+          bundle_id: string;
+          bundle_ref: string;
+          paid_amount_paise: number;
+          discount_percentage: number;
+          expires_at: string;
+        };
+      };
+      redeem_bundle_service: {
+        Args: {
+          p_bundle_id: string;
+          p_service_code: ServiceCode;
+          p_booking_id: string;
+        };
+        Returns: {
+          success: boolean;
+          bundle_id: string;
+          redeemed_service: ServiceCode;
+          booking_id: string;
+          remaining_credits: number;
+        };
+      };
     };
     Enums: {
       user_role: UserRole;
@@ -1133,6 +1365,10 @@ export interface Database {
       smart_match_status: SmartMatchStatus;
       dispatch_offer_status: DispatchOfferStatus;
       attendance_status: AttendanceStatus;
+      membership_plan: MembershipPlan;
+      billing_cycle: BillingCycle;
+      subscription_status: SubscriptionStatus;
+      bundle_status: BundleStatus;
     };
     CompositeTypes: {
       [_ in never]: never;

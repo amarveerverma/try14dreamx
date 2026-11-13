@@ -41,8 +41,8 @@ interface AuthContextType {
     phone?: string
   ) => Promise<{ success: boolean; error?: string }>;
   signInWithGoogle: () => Promise<void>;
-  upgradeMembership: (tier: "pro" | "elite", annual?: boolean) => void;
-  cancelMembership: () => void;
+  upgradeMembership: (tier: "pro" | "elite", annual?: boolean) => Promise<void>;
+  cancelMembership: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
 
@@ -84,6 +84,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (typeof window !== "undefined") {
           localStorage.setItem("dreamx_user", JSON.stringify(profile));
         }
+
+        // Fetch verified membership from database (PRD §7.2, P10 Exit Criteria 2)
+        try {
+          const { data: memberData } = await supabase.rpc("get_user_membership", {
+            p_user_id: userId,
+          });
+
+          if (memberData) {
+            const m = memberData as {
+              plan: MembershipTier;
+              is_active: boolean;
+              discount_pct: number;
+              billing_cycle?: string;
+              current_period_end?: string;
+            };
+            setMembership({
+              tier: m.plan || "free",
+              status: m.is_active ? "active" : "none",
+              discountPercent: Math.round((m.discount_pct || 0) * 100),
+              annualBilling: m.billing_cycle === "yearly",
+              renewalDate: m.current_period_end
+                ? new Date(m.current_period_end).toLocaleDateString("en-IN", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  })
+                : undefined,
+            });
+          }
+        } catch {
+          // Fallback to default
+        }
+
         return;
       }
     } catch (err) {
@@ -245,37 +278,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const upgradeMembership = (tier: "pro" | "elite", annual = false) => {
-    const discountPercent = tier === "elite" ? 10 : 5;
-    const renewal = new Date();
-    if (annual) {
-      renewal.setFullYear(renewal.getFullYear() + 1);
-    } else {
-      renewal.setMonth(renewal.getMonth() + 1);
-    }
+  const upgradeMembership = async (tier: "pro" | "elite", annual = false) => {
+    try {
+      const res = await fetch("/api/membership/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          plan: tier,
+          billingCycle: annual ? "yearly" : "monthly",
+        }),
+      });
 
-    const nextMembership: MembershipState = {
-      tier,
-      status: "active",
-      discountPercent,
-      annualBilling: annual,
-      renewalDate: renewal.toLocaleDateString("en-IN", {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-      }),
-    };
-
-    setMembership(nextMembership);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("dreamx_membership", JSON.stringify(nextMembership));
+      if (res.ok && user) {
+        await fetchProfile(user.id, user.email);
+      }
+    } catch (err) {
+      console.warn("Failed to subscribe membership:", err);
     }
   };
 
-  const cancelMembership = () => {
-    setMembership(defaultMembership);
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("dreamx_membership");
+  const cancelMembership = async () => {
+    try {
+      const res = await fetch("/api/membership/cancel", {
+        method: "POST",
+      });
+
+      if (res.ok && user) {
+        await fetchProfile(user.id, user.email);
+      }
+    } catch (err) {
+      console.warn("Failed to cancel membership:", err);
     }
   };
 

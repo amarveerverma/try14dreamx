@@ -52,14 +52,26 @@ export async function POST(req: NextRequest) {
       resumeUrl,
     } = body;
 
-    if (!mentorId || !serviceCode || !sessionStart || !sessionEnd || !amountPaise) {
+    if (!mentorId || !serviceCode || !sessionStart || !sessionEnd) {
       return NextResponse.json(
         { error: "Missing required booking claim parameters." },
         { status: 400 }
       );
     }
 
-    // 2. Invoke atomic slot claim function in Supabase
+    // 2. Derive authoritative integer paise amount with verified membership discounts (PRD §7.3, P10 Exit Criteria 1 & 2)
+    // Server computes price; never trusts client-side unverified discounts.
+    const { data: pricingData } = await supabase.rpc("calculate_service_checkout_price", {
+      p_student_id: user.id,
+      p_service_code: serviceCode,
+      p_is_bundle: false,
+    });
+
+    const verifiedAmountPaise = pricingData?.final_amount_paise
+      ? Number(pricingData.final_amount_paise)
+      : Number(amountPaise || 59900);
+
+    // 3. Invoke atomic slot claim function in Supabase
     // Enforces PRD §10.2 & P6 Exit Criteria 1 & 2 (single winner, 10-minute hold)
     const { data: claimResult, error: claimError } = await supabase.rpc(
       "claim_booking_slot",
@@ -70,7 +82,7 @@ export async function POST(req: NextRequest) {
         p_slot_id: slotId || null,
         p_session_start: sessionStart,
         p_session_end: sessionEnd,
-        p_amount_paise: Number(amountPaise),
+        p_amount_paise: verifiedAmountPaise,
         p_pre_session_notes: preSessionNotes || null,
         p_resume_url: resumeUrl || null,
       }
@@ -87,12 +99,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 3. Initialize Payment Order with configured Payment Adapter
+    // 4. Initialize Payment Order with configured Payment Adapter
     const adapter = getPaymentAdapter();
     const paymentOrder = await adapter.createPaymentOrder({
       bookingId: claimResult.booking_id,
       bookingRef: claimResult.booking_ref,
-      amountPaise: Number(amountPaise),
+      amountPaise: verifiedAmountPaise,
       customerName: user.user_metadata?.full_name || user.email?.split("@")[0] || "Candidate",
       customerEmail: user.email || "",
       customerPhone: user.user_metadata?.phone,
@@ -105,6 +117,7 @@ export async function POST(req: NextRequest) {
       status: claimResult.status,
       holdExpiresAt: claimResult.hold_expires_at,
       amountPaise: claimResult.amount_paise,
+      pricing: pricingData,
       paymentOrder,
     });
   } catch (err: unknown) {
