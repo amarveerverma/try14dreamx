@@ -179,8 +179,8 @@ export default function RefundsPage() {
             </p>
           </div>
 
-          {/* 3 Key Safeguard Stat Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+          {/* 4 Key Safeguard Stat Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
             <Card className="p-5 bg-[#fcf9f8] border-[#e7e7eb] rounded-xl hover:border-zinc-300 transition-all">
               <div className="flex items-center gap-3 mb-2">
                 <div className="w-8 h-8 rounded-lg bg-indigo-50 text-[#5145cd] flex items-center justify-center font-bold">
@@ -230,8 +230,25 @@ export default function RefundsPage() {
                 </div>
               </div>
               <p className="text-xs text-zinc-600 leading-relaxed">
-                Candidates can cancel or reschedule any upcoming 1:1 session up to 60 minutes prior to
-                call time for an immediate 100% refund with zero cancellation charges (PRD §11.1).
+                Candidates can cancel any upcoming 1:1 session up to 60 minutes prior to
+                call time for an immediate 100% refund with zero cancellation charges (PRD §12.2).
+              </p>
+            </Card>
+
+            <Card className="p-5 bg-[#fcf9f8] border-[#e7e7eb] rounded-xl hover:border-zinc-300 transition-all">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-8 h-8 rounded-lg bg-amber-50 text-[#a7670b] flex items-center justify-center font-bold">
+                  <Building2 className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="text-xs font-semibold uppercase tracking-wider text-[#a7670b]">
+                    Support Desk &amp; Hours
+                  </div>
+                  <div className="text-sm font-bold text-zinc-900">Mon–Sat 9AM–9PM IST</div>
+                </div>
+              </div>
+              <p className="text-xs text-zinc-600 leading-relaxed">
+                Dedicated operations team with guaranteed &lt; 4-hour response SLA. Reach us at support@dreamx.in or via the candidate support ticketing desk.
               </p>
             </Card>
           </div>

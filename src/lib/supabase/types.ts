@@ -26,6 +26,10 @@ export type MembershipPlan = 'free' | 'pro' | 'elite';
 export type BillingCycle = 'monthly' | 'yearly';
 export type SubscriptionStatus = 'active' | 'past_due' | 'cancelled' | 'expired';
 export type BundleStatus = 'active' | 'partially_redeemed' | 'fully_redeemed' | 'expired' | 'cancelled';
+export type DisputeStatus = 'opened' | 'under_review' | 'evidence_pending' | 'resolved_refund' | 'resolved_rejected' | 'cancelled';
+export type TicketStatus = 'open' | 'in_progress' | 'waiting_on_user' | 'resolved' | 'closed';
+export type TicketPriority = 'low' | 'normal' | 'high' | 'urgent';
+export type ApprovalStatus = 'pending' | 'first_approved' | 'fully_approved' | 'rejected';
 
 export interface Database {
   public: {
@@ -1051,6 +1055,188 @@ export interface Database {
         };
         Relationships: [];
       };
+      disputes: {
+        Row: {
+          id: string;
+          dispute_ref: string;
+          booking_id: string;
+          student_id: string;
+          mentor_id: string;
+          reason_code: string;
+          complaint_text: string;
+          status: DisputeStatus;
+          resolution_notes: string | null;
+          refund_amount_paise: number;
+          refund_id: string | null;
+          resolved_by: string | null;
+          resolved_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          dispute_ref: string;
+          booking_id: string;
+          student_id: string;
+          mentor_id: string;
+          reason_code: string;
+          complaint_text: string;
+          status?: DisputeStatus;
+          resolution_notes?: string | null;
+          refund_amount_paise?: number;
+          refund_id?: string | null;
+          resolved_by?: string | null;
+          resolved_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          dispute_ref?: string;
+          booking_id?: string;
+          student_id?: string;
+          mentor_id?: string;
+          reason_code?: string;
+          complaint_text?: string;
+          status?: DisputeStatus;
+          resolution_notes?: string | null;
+          refund_amount_paise?: number;
+          refund_id?: string | null;
+          resolved_by?: string | null;
+          resolved_at?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      financial_approvals: {
+        Row: {
+          id: string;
+          action_type: string;
+          target_id: string;
+          amount_paise: number;
+          reason: string;
+          status: ApprovalStatus;
+          requested_by: string;
+          first_approver: string | null;
+          first_approved_at: string | null;
+          second_approver: string | null;
+          second_approved_at: string | null;
+          rejection_reason: string | null;
+          rejected_by: string | null;
+          rejected_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          action_type: string;
+          target_id: string;
+          amount_paise: number;
+          reason: string;
+          status?: ApprovalStatus;
+          requested_by: string;
+          first_approver?: string | null;
+          first_approved_at?: string | null;
+          second_approver?: string | null;
+          second_approved_at?: string | null;
+          rejection_reason?: string | null;
+          rejected_by?: string | null;
+          rejected_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          action_type?: string;
+          target_id?: string;
+          amount_paise?: number;
+          reason?: string;
+          status?: ApprovalStatus;
+          requested_by?: string;
+          first_approver?: string | null;
+          first_approved_at?: string | null;
+          second_approver?: string | null;
+          second_approved_at?: string | null;
+          rejection_reason?: string | null;
+          rejected_by?: string | null;
+          rejected_at?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      support_tickets: {
+        Row: {
+          id: string;
+          ticket_ref: string;
+          user_id: string;
+          category: string;
+          subject: string;
+          description: string;
+          status: TicketStatus;
+          priority: TicketPriority;
+          assigned_to: string | null;
+          sla_target_response: string;
+          resolved_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          ticket_ref: string;
+          user_id: string;
+          category?: string;
+          subject: string;
+          description: string;
+          status?: TicketStatus;
+          priority?: TicketPriority;
+          assigned_to?: string | null;
+          sla_target_response?: string;
+          resolved_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          ticket_ref?: string;
+          user_id?: string;
+          category?: string;
+          subject?: string;
+          description?: string;
+          status?: TicketStatus;
+          priority?: TicketPriority;
+          assigned_to?: string | null;
+          sla_target_response?: string;
+          resolved_at?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      support_messages: {
+        Row: {
+          id: string;
+          ticket_id: string;
+          sender_id: string;
+          message: string;
+          is_internal: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          ticket_id: string;
+          sender_id: string;
+          message: string;
+          is_internal?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          ticket_id?: string;
+          sender_id?: string;
+          message?: string;
+          is_internal?: boolean;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -1352,6 +1538,138 @@ export interface Database {
           remaining_credits: number;
         };
       };
+      apply_booking_cancellation_policy: {
+        Args: {
+          p_booking_id: string;
+          p_cancelling_user_id: string;
+          p_reason?: string | null;
+        };
+        Returns: {
+          success: boolean;
+          booking_id: string;
+          outcome: string;
+          hours_until_start: number;
+          refund_id: string | null;
+          refund_paise: number;
+          requires_student_choice: boolean;
+          message: string;
+        };
+      };
+      execute_student_cancellation_choice: {
+        Args: {
+          p_booking_id: string;
+          p_student_id: string;
+          p_choice: 'refund' | 'reschedule_credit';
+        };
+        Returns: {
+          success: boolean;
+          choice: string;
+          refund_id?: string;
+          amount_paise?: number;
+          service_code?: ServiceCode;
+          message: string;
+        };
+      };
+      report_mentor_no_show: {
+        Args: {
+          p_booking_id: string;
+          p_student_id: string;
+        };
+        Returns: {
+          success: boolean;
+          booking_id: string;
+          status: string;
+          requires_student_choice: boolean;
+          message: string;
+        };
+      };
+      raise_booking_dispute: {
+        Args: {
+          p_booking_id: string;
+          p_student_id: string;
+          p_reason_code: string;
+          p_complaint_text: string;
+        };
+        Returns: {
+          success: boolean;
+          dispute_id: string;
+          dispute_ref: string;
+          status: DisputeStatus;
+          message: string;
+        };
+      };
+      resolve_booking_dispute: {
+        Args: {
+          p_dispute_id: string;
+          p_admin_id: string;
+          p_substantiated: boolean;
+          p_ruling_notes: string;
+          p_custom_refund_paise?: number | null;
+        };
+        Returns: {
+          success: boolean;
+          dispute_id: string;
+          ruling: string;
+          refund_id?: string;
+          refund_paise: number;
+          status?: string;
+          approval_id?: string;
+          message: string;
+        };
+      };
+      execute_financial_co_signature: {
+        Args: {
+          p_approval_id: string;
+          p_second_approver_id: string;
+          p_approve: boolean;
+          p_notes?: string | null;
+        };
+        Returns: {
+          success: boolean;
+          status: string;
+          refund_id?: string;
+          amount_paise?: number;
+          message: string;
+        };
+      };
+      complete_booking_refund: {
+        Args: {
+          p_refund_id: string;
+          p_provider_refund_id: string;
+          p_refund_arn?: string | null;
+        };
+        Returns: {
+          success: boolean;
+          refund_id: string;
+          status: RefundStatus;
+          provider_refund_id: string;
+          refund_arn?: string | null;
+          message: string;
+        };
+      };
+      get_dispute_evidence: {
+        Args: {
+          p_booking_id: string;
+        };
+        Returns: Json;
+      };
+      create_support_ticket: {
+        Args: {
+          p_user_id: string;
+          p_category: string;
+          p_subject: string;
+          p_description: string;
+          p_priority?: TicketPriority;
+        };
+        Returns: {
+          success: boolean;
+          ticket_id: string;
+          ticket_ref: string;
+          status: TicketStatus;
+          sla_target_response: string;
+          message: string;
+        };
+      };
     };
     Enums: {
       user_role: UserRole;
@@ -1369,6 +1687,10 @@ export interface Database {
       billing_cycle: BillingCycle;
       subscription_status: SubscriptionStatus;
       bundle_status: BundleStatus;
+      dispute_status: DisputeStatus;
+      ticket_status: TicketStatus;
+      ticket_priority: TicketPriority;
+      approval_status: ApprovalStatus;
     };
     CompositeTypes: {
       [_ in never]: never;
