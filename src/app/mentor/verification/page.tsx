@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useAuth } from "@/lib/auth-context";
 
 interface AuditLedgerEntry {
   timestamp: string;
@@ -55,6 +56,7 @@ const AUDIT_LEDGER: AuditLedgerEntry[] = [
 ];
 
 export default function MentorVerificationPage() {
+  const { user } = useAuth();
   const [copiedHash, setCopiedHash] = React.useState(false);
   const [s08Modal, setS08Modal] = React.useState(false);
 
@@ -201,7 +203,7 @@ export default function MentorVerificationPage() {
                     <span className="text-[#006d3a] text-[11px]">DKIM Match</span>
                   </div>
                   <span className="font-mono text-[11px] text-[#5145cd] block">
-                    vikram.singh@google.com
+                    {user?.email || "mentor.partner@dreamx.in"}
                   </span>
                 </li>
 

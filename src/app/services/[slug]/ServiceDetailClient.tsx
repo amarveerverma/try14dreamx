@@ -4,13 +4,21 @@ import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { type Service } from "@/data/services";
+import { MENTORS } from "@/data/mentors";
 
 export function ServiceDetailClient({ service }: { service: Service }) {
-  const [selectedMentor, setSelectedMentor] = React.useState<"arishta" | "vikramaditya" | "smart-match">("arishta");
+  const [selectedMentor, setSelectedMentor] = React.useState<string>("smart-match");
   const [selectedDateIdx, setSelectedDateIdx] = React.useState(1); // Fri 25 Oct by default
   const [selectedSlot, setSelectedSlot] = React.useState("08:30 PM");
   const [secondsRemaining, setSecondsRemaining] = React.useState(14 * 60 + 32);
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = React.useState(false);
+
+  const approvedMentors = React.useMemo(() => {
+    const matched = MENTORS.filter((m) =>
+      m.approvedServices.some((s) => s.startsWith(service.code))
+    );
+    return matched.length > 0 ? matched : MENTORS.slice(0, 2);
+  }, [service.code]);
 
   // 15-Minute Atomic Escrow Lock Countdown Timer
   React.useEffect(() => {
@@ -327,75 +335,42 @@ export function ServiceDetailClient({ service }: { service: Service }) {
                 </div>
 
                 <div className="grid grid-cols-1 gap-2.5">
-                  {/* Mentor Option 1 */}
-                  <label
-                    onClick={() => setSelectedMentor("arishta")}
-                    className={`relative flex items-center gap-3.5 p-3 rounded-xl cursor-pointer transition-all border ${
-                      selectedMentor === "arishta"
-                        ? "bg-primary/5 border-2 border-primary shadow-xs"
-                        : "bg-surface-container-low hover:bg-surface-container border-outline-variant/30"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="selected_mentor_choice"
-                      checked={selectedMentor === "arishta"}
-                      onChange={() => setSelectedMentor("arishta")}
-                      className="w-4 h-4 text-primary accent-primary cursor-pointer"
-                    />
-                    <div className="w-10 h-10 rounded-full bg-surface-container-highest overflow-hidden shrink-0 relative">
-                      <Image
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuDco6JQI5cz8M6MjZpRA3GSDsXG-TSIuU6moDKQoQ4DFdL97tYTwFipIzp10F8b0mgEVJIBnVY5reVmOLKtojKlw9c37UfjrPXh0MTub1YjlmWIaUg29HNVgLUKLQ5TR40tM9mmUyEBzkClYt_ULiiflHtXKOKW6iK9aIC_LqHmZ-S-8dCWTN33wT-StIOO25vsHFJehKbI2TH1HKPlmrmllF3jyW_Zx8AMi0vyrMt7"
-                        alt="Arishta Sengupta"
-                        fill
-                        className="object-cover"
-                        unoptimized
+                  {approvedMentors.map((m) => (
+                    <label
+                      key={m.slug}
+                      onClick={() => setSelectedMentor(m.slug)}
+                      className={`relative flex items-center gap-3.5 p-3 rounded-xl cursor-pointer transition-all border ${
+                        selectedMentor === m.slug
+                          ? "bg-primary/5 border-2 border-primary shadow-xs"
+                          : "bg-surface-container-low hover:bg-surface-container border-outline-variant/30"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="selected_mentor_choice"
+                        checked={selectedMentor === m.slug}
+                        onChange={() => setSelectedMentor(m.slug)}
+                        className="w-4 h-4 text-primary accent-primary cursor-pointer"
                       />
-                    </div>
-                    <div className="flex flex-col min-w-0 flex-1">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-xs sm:text-sm text-on-surface truncate font-bold font-heading">Arishta Sengupta</span>
-                        <span className="material-symbols-outlined text-[16px] text-secondary" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
+                      <div className="w-10 h-10 rounded-full bg-surface-container-highest overflow-hidden shrink-0 relative">
+                        <Image
+                          src={m.avatar}
+                          alt={m.name}
+                          fill
+                          className="object-cover"
+                          unoptimized
+                        />
                       </div>
-                      <span className="text-xs text-on-surface-variant truncate">Staff SDE @ Tier-1 GCC • Distributed Java</span>
-                    </div>
-                    <span className="text-xs text-secondary font-bold shrink-0">4.98 ★</span>
-                  </label>
-
-                  {/* Mentor Option 2 */}
-                  <label
-                    onClick={() => setSelectedMentor("vikramaditya")}
-                    className={`relative flex items-center gap-3.5 p-3 rounded-xl cursor-pointer transition-all border ${
-                      selectedMentor === "vikramaditya"
-                        ? "bg-primary/5 border-2 border-primary shadow-xs"
-                        : "bg-surface-container-low hover:bg-surface-container border-outline-variant/30"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="selected_mentor_choice"
-                      checked={selectedMentor === "vikramaditya"}
-                      onChange={() => setSelectedMentor("vikramaditya")}
-                      className="w-4 h-4 text-primary accent-primary cursor-pointer"
-                    />
-                    <div className="w-10 h-10 rounded-full bg-surface-container-highest overflow-hidden shrink-0 relative">
-                      <Image
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuCZi4V23fLUcmKs8c22tx8P7tEi0TmGH3BMqhXFYAR4yFWHcambu0p31OAlR9kiGcFpfTh9M6oRhm2I_1exsZIUMb0DCeIgf3LMSezA-pXsYvU7Zs_AoptP6QNS5VusyifnZy2xl-a6WHpixiuYxtY9A-srZNq83yh0F0l9Rq-BGrjU42MjjLZAdQ0MJmnNusq6JIa_vbG4YVVCCGgAVvizp33BH8BPRECsN9yE4Ls4"
-                        alt="Vikramaditya Rao"
-                        fill
-                        className="object-cover"
-                        unoptimized
-                      />
-                    </div>
-                    <div className="flex flex-col min-w-0 flex-1">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-xs sm:text-sm text-on-surface truncate font-bold font-heading">Vikramaditya Rao</span>
-                        <span className="material-symbols-outlined text-[16px] text-secondary" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
+                      <div className="flex flex-col min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs sm:text-sm text-on-surface truncate font-bold font-heading">{m.name}</span>
+                          <span className="material-symbols-outlined text-[16px] text-secondary" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
+                        </div>
+                        <span className="text-xs text-on-surface-variant truncate">{m.role} • {m.company}</span>
                       </div>
-                      <span className="text-xs text-on-surface-variant truncate">Lead AI Systems Architect • Go / Kubernetes</span>
-                    </div>
-                    <span className="text-xs text-secondary font-bold shrink-0">4.95 ★</span>
-                  </label>
+                      <span className="text-xs text-secondary font-bold shrink-0">{m.rating} ★</span>
+                    </label>
+                  ))}
 
                   {/* Option B: Smart Match Dispatch */}
                   <label
@@ -725,7 +700,11 @@ export function ServiceDetailClient({ service }: { service: Service }) {
                 <div className="flex justify-between text-outline">
                   <span>Mentor:</span>
                   <span className="font-medium text-on-surface">
-                    {selectedMentor === "arishta" ? "Arishta Sengupta" : selectedMentor === "vikramaditya" ? "Vikramaditya Rao" : "Automated Smart Match"}
+                    {(() => {
+                      if (selectedMentor === "smart-match") return "Automated Smart Match";
+                      const chosen = MENTORS.find((m) => m.slug === selectedMentor);
+                      return chosen ? chosen.name : "Automated Smart Match";
+                    })()}
                   </span>
                 </div>
                 <div className="flex justify-between text-outline">

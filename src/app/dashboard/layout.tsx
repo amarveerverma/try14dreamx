@@ -46,14 +46,14 @@ export default function StudentDashboardLayout({
             </div>
             <div className="flex items-center gap-2.5">
               <div className="w-9 h-9 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-xs shadow-xs">
-                {user?.name ? user.name.slice(0, 2).toUpperCase() : "AS"}
+                {user?.name ? user.name.slice(0, 2).toUpperCase() : "DX"}
               </div>
               <div className="min-w-0 flex-1">
                 <span className="font-bold text-xs text-on-surface block truncate">
-                  {user?.name || "Ananya Sharma"}
+                  {user?.name || "Candidate"}
                 </span>
                 <span className="text-[11px] text-on-surface-variant block truncate font-mono">
-                  {user?.id || "Candidate #DX-8421"}
+                  {user?.email || "candidate@dreamx.in"}
                 </span>
               </div>
             </div>

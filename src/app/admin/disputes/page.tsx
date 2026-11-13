@@ -38,9 +38,9 @@ export default function AdminDisputesPage() {
     const csvContent =
       "data:text/csv;charset=utf-8," +
       "CaseID,Candidate,Mentor,Session,EscrowHold,Protocol,Status\n" +
-      `"DSP-104","Aakash Gupta (#DX-3312)","Vikramaditya Rao (#MTR-402)","SES-7120","₹799","Protocol ${selectedProtocol}","${coSigned ? "Executed" : "Awaiting Co-Sign"}"\n` +
-      `"DSP-103","Rohan Sharma (#DX-7749)","Ananya Sen (#MTR-218)","SES-7094","₹529","Dismissed (No-Show)","Resolved"\n` +
-      `"DSP-101","Tanvi Mathur (#DX-4190)","Kunal Roy (#MTR-305)","SES-6981","₹760","50% Mutual Restitution","Resolved"\n`;
+      `"DSP-104","Candidate #DX-3312","Rajesh Kannan (#MTR-402)","SES-7120","₹799","Protocol ${selectedProtocol}","${coSigned ? "Executed" : "Awaiting Co-Sign"}"\n` +
+      `"DSP-103","Candidate #DX-7749","Dr. Neha Kapoor (#MTR-218)","SES-7094","₹529","Dismissed (No-Show)","Resolved"\n` +
+      `"DSP-101","Candidate #DX-4190","Rohan Deshmukh (#MTR-305)","SES-6981","₹760","50% Mutual Restitution","Resolved"\n`;
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
@@ -213,8 +213,8 @@ export default function AdminDisputesPage() {
               <span className="text-gray-400 uppercase tracking-wider text-[10px] font-bold block">
                 Mentor
               </span>
-              <div className="font-bold text-[#1c1b1b]">Vikramaditya Rao</div>
-              <div className="text-gray-500 text-[11px]">#MTR-402 • Lead AI Architect</div>
+              <div className="font-bold text-[#1c1b1b]">Rajesh Kannan</div>
+              <div className="text-gray-500 text-[11px]">#MTR-402 • Staff Software Engineer</div>
             </div>
 
             <div>
@@ -454,7 +454,7 @@ export default function AdminDisputesPage() {
                 </div>
               </div>
               <div className="mt-3 pt-2 text-[11px] text-gray-400 border-t border-gray-100">
-                Remediation: Advisory Note issued to Mentor Vikramaditya Rao.
+                Remediation: Advisory Note issued to Mentor Rajesh Kannan.
               </div>
             </div>
 
@@ -620,7 +620,7 @@ export default function AdminDisputesPage() {
                 </span>
               </div>
               <p className="text-[11px] text-gray-500">
-                Session SES-7094 • Rohan Sharma vs Ananya Sen • Escrow ₹529 released to mentor per PRD §11.1
+                Session SES-7094 • Case DX-7749 vs Mentor MTR-218 • Escrow ₹529 released to mentor per PRD §11.1
               </p>
             </div>
             <span className="font-mono text-gray-400 text-[11px]">Resolved Oct 28, 2026</span>

@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useAuth } from "@/lib/auth-context";
 import {
   ShieldCheck,
   CheckCircle2,
@@ -42,6 +43,7 @@ interface PayoutTransaction {
 }
 
 export default function MentorEarningsPage() {
+  const { user } = useAuth();
   // Live IST Clock
   const [istTime, setIstTime] = React.useState("23:45:10 IST");
   React.useEffect(() => {
@@ -83,7 +85,7 @@ export default function MentorEarningsPage() {
   const [bankSuccess, setBankSuccess] = React.useState(false);
   const [accountNumber, setAccountNumber] = React.useState("••••••••••••4812");
   const [ifscCode, setIfscCode] = React.useState("HDFC0000240");
-  const [upiId, setUpiId] = React.useState("vikram.singh@okhdfcbank");
+  const [upiId, setUpiId] = React.useState("mentor@okhdfcbank");
 
   const transactions: PayoutTransaction[] = [
     {
@@ -611,7 +613,7 @@ export default function MentorEarningsPage() {
                   <span className="text-[#777585] uppercase font-semibold text-[11px]">
                     Registered Entity
                   </span>
-                  <span className="font-semibold text-[#1c1b1b]">Vikramaditya Singh</span>
+                  <span className="font-semibold text-[#1c1b1b]">{user?.name || "Verified Legal Entity"}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-[#777585]">Bank Name</span>
@@ -843,7 +845,7 @@ export default function MentorEarningsPage() {
                 </div>
 
                 <div className="p-3 rounded-lg bg-[#f6f3f2] text-[11px] text-[#474554]">
-                  <strong>Penny-drop requirement:</strong> DreamX deposits ₹1.00 into this account to verify name match with PAN <em>Vikramaditya Singh</em> before disbursing settlements.
+                  <strong>Penny-drop requirement:</strong> DreamX deposits ₹1.00 into this account to verify name match with registered PAN before disbursing settlements.
                 </div>
 
                 <div className="pt-2 flex items-center justify-end gap-2">

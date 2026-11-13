@@ -16,7 +16,7 @@ import {
 
 function VerifyEmailContent() {
   const searchParams = useSearchParams();
-  const email = searchParams.get("email") || "aarav.sharma@techpulse.io";
+  const email = searchParams.get("email") || "user@dreamx.in";
   const role = searchParams.get("role") || "student";
 
   const [otp, setOtp] = React.useState(["", "", "", "", "", ""]);

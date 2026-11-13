@@ -523,7 +523,7 @@ export default function MentorAvailabilityPage() {
             </div>
             <div className="flex items-center gap-2 mb-1 truncate">
               <span className="text-base font-bold text-[#1c1b1b] truncate">
-                {user?.email || "vikram.singh@google.com"}
+                {user?.email || "mentor@dreamx.in"}
               </span>
             </div>
             <p className="text-xs text-[#474554] mt-1">
@@ -897,7 +897,7 @@ export default function MentorAvailabilityPage() {
                 <div className="p-3 rounded-xl bg-[#f6f3f2] border border-[#e7e7eb] space-y-2">
                   <div className="flex items-center justify-between text-xs">
                     <span className="font-medium text-[#1c1b1b] truncate">
-                      {user?.email || "vikram.singh@google.com"}
+                      {user?.email || "mentor@dreamx.in"}
                     </span>
                     <span className="text-[11px] text-[#777585] tabular-nums">Sync token valid</span>
                   </div>

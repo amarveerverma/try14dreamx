@@ -1774,6 +1774,20 @@ export interface Database {
         };
         Returns: Json;
       };
+      get_pilot_acceptance_review: {
+        Args: {
+          p_admin_id: string;
+        };
+        Returns: Json;
+      };
+      record_pilot_decision: {
+        Args: {
+          p_admin_id: string;
+          p_decision: string;
+          p_notes?: string;
+        };
+        Returns: Json;
+      };
     };
     Enums: {
       user_role: UserRole;

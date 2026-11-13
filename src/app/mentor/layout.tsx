@@ -22,7 +22,7 @@ export default function MentorWorkspaceLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
 
   // If in the onboarding wizard, render standalone
   if (pathname === "/mentor/onboarding") {
@@ -53,14 +53,14 @@ export default function MentorWorkspaceLayout({
             </div>
             <div className="flex items-center gap-2.5">
               <div className="w-9 h-9 rounded-full bg-[#16834a] text-white flex items-center justify-center font-bold text-xs shadow-xs">
-                VS
+                {user?.name ? user.name.slice(0, 2).toUpperCase() : "MP"}
               </div>
               <div className="min-w-0 flex-1">
                 <span className="font-bold text-xs text-[#171717] block truncate">
-                  Vikram Singh
+                  {user?.name || "Mentor Partner"}
                 </span>
                 <span className="text-[11px] text-[#5145cd] font-semibold block truncate">
-                  Senior L5 @ Google
+                  {user?.email || "mentor@dreamx.in"}
                 </span>
               </div>
             </div>

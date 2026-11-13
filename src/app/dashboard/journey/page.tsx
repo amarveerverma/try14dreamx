@@ -316,7 +316,7 @@ export default function CareerJourneyPage() {
                           <span className="px-1.5 py-0.2 rounded bg-primary text-on-primary text-[9px] font-bold">TOMORROW</span>
                         </div>
                         <span className="text-[11px] text-on-surface-variant truncate">
-                          Vikramaditya Rao (Staff SDE) • Tomorrow 07:30 PM IST
+                          Rajesh Kannan (Staff SDE) • Tomorrow 07:30 PM IST
                         </span>
                       </div>
                     </div>
@@ -433,7 +433,7 @@ export default function CareerJourneyPage() {
                       Distributed Architecture &amp; Concurrency Mock
                     </h4>
                     <p className="text-xs text-on-surface-variant mt-0.5">
-                      Assessor: Vikramaditya Rao (Lead AI/ML Architect, Ex-Swiggy)
+                      Assessor: Rajesh Kannan (Staff Software Engineer)
                     </p>
                     <div className="flex items-center gap-2 mt-1 text-[11px] text-on-surface-variant">
                       <span className="flex items-center gap-1">
@@ -628,7 +628,7 @@ export default function CareerJourneyPage() {
                     <td className="py-3.5 px-4 font-bold text-primary">Stage 03</td>
                     <td className="py-3.5 px-4 font-medium">Distributed Concurrency &amp; Sharding</td>
                     <td className="py-3.5 px-4 font-mono text-on-surface font-semibold">DEL-BK-90241</td>
-                    <td className="py-3.5 px-4">Vikramaditya Rao (Staff SDE)</td>
+                    <td className="py-3.5 px-4">Rajesh Kannan (Staff SDE)</td>
                     <td className="py-3.5 px-4 font-mono text-outline text-[11px]">Audit Pending</td>
                     <td className="py-3.5 px-4 text-right">
                       <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-primary text-on-primary text-[11px] font-bold">

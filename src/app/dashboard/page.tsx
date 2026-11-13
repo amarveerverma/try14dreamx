@@ -7,8 +7,8 @@ import { useAuth } from "@/lib/auth-context";
 export default function StudentDashboardPage() {
   const { user, membership } = useAuth();
 
-  const candidateName = user?.name ? user.name.split(" ")[0] : "Rohan";
-  const candidateId = user?.id || "DX-7749";
+  const candidateName = user?.name ? user.name.split(" ")[0] : "Candidate";
+  const candidateId = user?.id ? user.id.slice(0, 8).toUpperCase() : "DX-NEW";
   const isPro = membership?.tier === "pro" || membership?.tier === "elite";
 
   return (
@@ -209,17 +209,17 @@ export default function StudentDashboardPage() {
             {/* Mentor Metadata */}
             <div className="flex items-center gap-3 p-3 bg-surface-container-low rounded-xl border border-outline-variant/20">
               <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs shrink-0">
-                VR
+                RK
               </div>
               <div className="flex flex-col min-w-0">
                 <div className="flex items-center gap-1">
-                  <span className="text-xs font-bold text-on-surface truncate">Vikramaditya Rao</span>
+                  <span className="text-xs font-bold text-on-surface truncate">Rajesh Kannan</span>
                   <span className="material-symbols-outlined text-primary text-[14px]" style={{ fontVariationSettings: "'FILL' 1" }} title="Tier-1 Verified Mentor">
                     verified
                   </span>
                 </div>
                 <span className="text-[11px] text-on-surface-variant truncate">
-                  Lead AI/ML Architect • Ex-Swiggy
+                  Staff SWE • Tier-1 Product Tech
                 </span>
               </div>
             </div>
@@ -658,7 +658,7 @@ export default function StudentDashboardPage() {
                 </div>
                 <div className="flex flex-col truncate">
                   <span className="text-xs font-bold text-on-surface truncate">S06 System Design &amp; Concurrency Report</span>
-                  <span className="text-[11px] text-on-surface-variant">Mentor: Vikramaditya Rao</span>
+                  <span className="text-[11px] text-on-surface-variant">Mentor: Rajesh Kannan</span>
                 </div>
               </div>
               <div className="flex items-center gap-2">

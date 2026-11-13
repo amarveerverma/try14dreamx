@@ -130,8 +130,10 @@ export function MentorProfileView({ mentor }: { mentor: Mentor }) {
 
     try {
       const timings = getSlotTimings();
-      // Mentor UUID in Supabase (fallback to seeded mentor ID)
-      const mentorUuid = "00000000-0000-0000-0000-000000000002";
+      // Authoritative mentor UUID in Supabase
+      const mentorUuid = mentor.id && mentor.id.length === 36
+        ? mentor.id
+        : "d1111111-1111-4111-8111-111111111101";
 
       const res = await fetch("/api/checkout/claim", {
         method: "POST",
@@ -629,7 +631,7 @@ export function MentorProfileView({ mentor }: { mentor: Mentor }) {
                         VG
                       </div>
                       <div>
-                        <span className="text-xs sm:text-sm font-bold text-on-surface block">Vikramaditya G.</span>
+                        <span className="text-xs sm:text-sm font-bold text-on-surface block">Varun G.</span>
                         <span className="text-[11px] text-outline">Lead Engineer @ Fintech Startup</span>
                       </div>
                     </div>

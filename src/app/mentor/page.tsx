@@ -551,7 +551,7 @@ export default function MentorDashboardPage() {
             {/* Tier 2 (Active) */}
             <div className="bg-white border-2 border-[#5145cd] rounded-2xl p-5 shadow-md space-y-3 relative">
               <div className="absolute -top-3 right-4 px-2.5 py-0.5 rounded-full bg-[#5145cd] text-white text-[10px] font-bold tracking-wider uppercase shadow-xs">
-                Active Tier (Vikram Singh)
+                Active Tier (Accredited)
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold uppercase tracking-wider text-[#5145cd]">Tier 2</span>

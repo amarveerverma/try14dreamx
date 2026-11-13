@@ -99,8 +99,8 @@ const RUBRIC_DETAILS: Record<string, RubricModalData> = {
     score: "3.8 / 5.0",
     status: "Developing",
     weight: "15.8%",
-    assessor: "Vikramaditya Rao",
-    assessorRole: "Lead AI/ML Architect • Ex-Swiggy, Ex-Google",
+    assessor: "Rajesh Kannan",
+    assessorRole: "Staff Software Engineer • Tier-1 Product Tech",
     deliverableId: "S06-DRILL-PRE",
     auditDate: "Pending Live Drill (25 Oct, 17:30 IST)",
     subMetrics: [
@@ -988,7 +988,7 @@ export default function CareerReadinessVectorPage() {
 
                 <div className="mt-3.5 pt-1">
                   <span className="text-[11px] text-on-surface-variant block">Upcoming Assessor:</span>
-                  <span className="text-xs font-bold text-on-surface">Vikramaditya Rao (Lead AI/ML Arch)</span>
+                  <span className="text-xs font-bold text-on-surface">Rajesh Kannan (Staff SWE)</span>
                   <span className="text-[11px] text-tertiary font-bold block mt-0.5">Session S06 Scheduled</span>
                 </div>
               </div>
@@ -1296,8 +1296,8 @@ export default function CareerReadinessVectorPage() {
                     <span className="text-[11px] text-primary font-semibold">Pending Evaluation Session</span>
                   </td>
                   <td className="py-4 px-4 sm:px-6">
-                    <span className="font-semibold text-on-surface block">Vikramaditya Rao</span>
-                    <span className="text-[11px] text-on-surface-variant">Lead AI/ML Architect</span>
+                    <span className="font-semibold text-on-surface block">Rajesh Kannan</span>
+                    <span className="text-[11px] text-on-surface-variant">Staff Software Engineer</span>
                   </td>
                   <td className="py-4 px-4 sm:px-6">
                     <span className="px-2 py-0.5 rounded-md bg-primary/10 text-primary text-[11px] font-bold">

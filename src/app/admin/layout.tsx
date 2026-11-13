@@ -8,6 +8,7 @@ import {
   Users,
   Scale,
   ShieldCheck,
+  CheckCircle2,
   FileCode2,
   Sliders,
   LogOut,
@@ -77,6 +78,13 @@ export default function AdminWorkspaceLayout({
       icon: ShieldCheck,
       badge: "PRD §22.3",
       badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-400/30",
+    },
+    {
+      name: "Pilot Acceptance (P14)",
+      href: "/admin/pilot",
+      icon: CheckCircle2,
+      badge: "PRD §22",
+      badgeColor: "bg-purple-500/20 text-purple-300 border-purple-400/30",
     },
     {
       name: "Smart Match Dispatch",

@@ -118,55 +118,47 @@ export default function MentorOnboardingPage() {
   const [completedSteps, setCompletedSteps] = React.useState<number[]>([1]);
 
   // Step 1: Professional Track & Role
-  const [fullName, setFullName] = React.useState(() => user?.name || "Vikramaditya Singh");
-  const [email, setEmail] = React.useState(() => user?.email || "vikram.singh@google.com");
-  const [phone, setPhone] = React.useState(() => user?.phone || "+91 98765 43210");
+  const [fullName, setFullName] = React.useState(() => user?.name || "");
+  const [email, setEmail] = React.useState(() => user?.email || "");
+  const [phone, setPhone] = React.useState(() => user?.phone || "");
   const [password, setPassword] = React.useState("");
-  const [currentEmployer, setCurrentEmployer] = React.useState("Google India");
-  const [jobTitle, setJobTitle] = React.useState("Staff Software Engineer (L6)");
-  const [yearsOfExperience, setYearsOfExperience] = React.useState<number>(9);
-  const [linkedinUrl, setLinkedinUrl] = React.useState("https://linkedin.com/in/vikram-singh-tech");
+  const [currentEmployer, setCurrentEmployer] = React.useState("");
+  const [jobTitle, setJobTitle] = React.useState("");
+  const [yearsOfExperience, setYearsOfExperience] = React.useState<number>(5);
+  const [linkedinUrl, setLinkedinUrl] = React.useState("");
   const [selectedDomains, setSelectedDomains] = React.useState<string[]>([
     "Distributed Systems & Architecture",
-    "Backend & Cloud Infrastructure",
-    "AI / Machine Learning Systems",
   ]);
-  const [bio, setBio] = React.useState(
-    "Staff Software Engineer at Google Core Systems. 9+ years architecting multi-region streaming pipelines. Bar-raiser interviewer for 120+ senior candidates across Google and Microsoft."
-  );
+  const [bio, setBio] = React.useState("");
 
   // Step 2: Service Module Selection (S01–S10)
   const [selectedServices, setSelectedServices] = React.useState<ServiceCode[]>([
     "S01",
-    "S05",
     "S06",
   ]);
 
   // Step 3: Identity & Credential Audit
-  const [workEmail, setWorkEmail] = React.useState("vikram.singh@google.com");
-  const [workEmailOtp, setWorkEmailOtp] = React.useState("492817");
-  const [emailOtpVerified, setEmailOtpVerified] = React.useState(true);
-  const [uploadedBadge, setUploadedBadge] = React.useState<string | null>(
-    "Google_L6_Corp_Badge_Redacted.pdf (3.4 MB)"
-  );
+  const [workEmail, setWorkEmail] = React.useState("");
+  const [workEmailOtp, setWorkEmailOtp] = React.useState("");
+  const [emailOtpVerified, setEmailOtpVerified] = React.useState(false);
+  const [uploadedBadge, setUploadedBadge] = React.useState<string | null>(null);
   const [showSampleGuide, setShowSampleGuide] = React.useState(false);
-  const [idType, setIdType] = React.useState("aadhaar");
-  const [idNumber, setIdNumber] = React.useState("•••• •••• 8912");
+  const [idType, setIdType] = React.useState("pan");
+  const [idNumber, setIdNumber] = React.useState("");
   const [showId, setShowId] = React.useState(false);
 
   // Step 4: Availability & Settlement Rails
-  const [weeklyHours, setWeeklyHours] = React.useState("6");
+  const [weeklyHours, setWeeklyHours] = React.useState("5");
   const [preferredWindows, setPreferredWindows] = React.useState<string[]>([
     "weekday_evening",
-    "weekend_morning",
   ]);
   const [payoutMethod, setPayoutMethod] = React.useState<"upi" | "bank">("upi");
-  const [upiId, setUpiId] = React.useState("vikramaditya@okhdfcbank");
-  const [accountNumber, setAccountNumber] = React.useState("50100234918231");
-  const [ifscCode, setIfscCode] = React.useState("HDFC0001024");
-  const [accountHolderName, setAccountHolderName] = React.useState("Vikramaditya Singh");
-  const [agreedToEscrow, setAgreedToEscrow] = React.useState(true);
-  const [agreedToConduct, setAgreedToConduct] = React.useState(true);
+  const [upiId, setUpiId] = React.useState("");
+  const [accountNumber, setAccountNumber] = React.useState("");
+  const [ifscCode, setIfscCode] = React.useState("");
+  const [accountHolderName, setAccountHolderName] = React.useState(() => user?.name || "");
+  const [agreedToEscrow, setAgreedToEscrow] = React.useState(false);
+  const [agreedToConduct, setAgreedToConduct] = React.useState(false);
 
   // Submission & Feedback State
   const [saving, setSaving] = React.useState(false);
@@ -730,7 +722,7 @@ export default function MentorOnboardingPage() {
                           type="text"
                           value={fullName}
                           onChange={(e) => setFullName(e.target.value)}
-                          placeholder="e.g. Vikramaditya Singh"
+                          placeholder="e.g. Legal Full Name (as per ID)"
                           className="w-full px-3.5 py-2.5 rounded-xl border border-[#e7e7eb] bg-[#f6f3f2] text-xs font-medium text-[#1c1b1b] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5145cd]"
                         />
                       </div>
@@ -1183,7 +1175,7 @@ export default function MentorOnboardingPage() {
                                 Photo
                               </div>
                               <div className="space-y-0.5">
-                                <div className="font-bold text-gray-900 text-xs">Vikramaditya Rao</div>
+                                <div className="font-bold text-gray-900 text-xs">Sample Legal Name</div>
                                 <div className="text-[10px] text-[#5145cd] font-semibold">Lead Systems Architect</div>
                                 <div className="text-[9px] text-gray-400">Emp ID: AC-882104 • Valid 2026</div>
                               </div>
