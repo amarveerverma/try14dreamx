@@ -21,6 +21,7 @@ export type RefundStatus = 'initiated' | 'processing' | 'completed' | 'failed';
 export type SettlementStatus = 'accrued' | 'in_escrow' | 'eligible_for_payout' | 'processing' | 'settled' | 'on_hold' | 'forfeited';
 export type SmartMatchStatus = 'pending' | 'wave_1' | 'wave_2' | 'matched' | 'timeout_fallback' | 'cancelled' | 'refunded';
 export type DispatchOfferStatus = 'dispatched' | 'accepted' | 'declined' | 'missed' | 'expired';
+export type AttendanceStatus = 'joined' | 'completed' | 'no_show' | 'dropped_early';
 
 export interface Database {
   public: {
@@ -775,6 +776,145 @@ export interface Database {
         };
         Relationships: [];
       };
+      session_attendance: {
+        Row: {
+          id: string;
+          booking_id: string;
+          user_id: string;
+          role: UserRole;
+          joined_at: string;
+          left_at: string | null;
+          duration_seconds: number;
+          status: AttendanceStatus;
+          metadata: Json;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          booking_id: string;
+          user_id: string;
+          role: UserRole;
+          joined_at?: string;
+          left_at?: string | null;
+          duration_seconds?: number;
+          status?: AttendanceStatus;
+          metadata?: Json;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          booking_id?: string;
+          user_id?: string;
+          role?: UserRole;
+          joined_at?: string;
+          left_at?: string | null;
+          duration_seconds?: number;
+          status?: AttendanceStatus;
+          metadata?: Json;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      session_reports: {
+        Row: {
+          id: string;
+          booking_id: string;
+          mentor_id: string;
+          student_id: string;
+          service_code: ServiceCode;
+          version: number;
+          is_latest: boolean;
+          rubric_scores: Json;
+          summary_notes: string;
+          strengths: string[];
+          growth_areas: string[];
+          action_items: Json;
+          deliverable_pdf_url: string | null;
+          deliverable_sha256: string | null;
+          sla_deadline_at: string;
+          submitted_at: string;
+          is_late: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          booking_id: string;
+          mentor_id: string;
+          student_id: string;
+          service_code: ServiceCode;
+          version?: number;
+          is_latest?: boolean;
+          rubric_scores?: Json;
+          summary_notes: string;
+          strengths?: string[];
+          growth_areas?: string[];
+          action_items?: Json;
+          deliverable_pdf_url?: string | null;
+          deliverable_sha256?: string | null;
+          sla_deadline_at: string;
+          submitted_at?: string;
+          is_late?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          booking_id?: string;
+          mentor_id?: string;
+          student_id?: string;
+          service_code?: ServiceCode;
+          version?: number;
+          is_latest?: boolean;
+          rubric_scores?: Json;
+          summary_notes?: string;
+          strengths?: string[];
+          growth_areas?: string[];
+          action_items?: Json;
+          deliverable_pdf_url?: string | null;
+          deliverable_sha256?: string | null;
+          sla_deadline_at?: string;
+          submitted_at?: string;
+          is_late?: boolean;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      session_feedback: {
+        Row: {
+          id: string;
+          booking_id: string;
+          student_id: string;
+          mentor_id: string;
+          rating: number;
+          feedback_text: string | null;
+          recommend_to_peers: boolean;
+          is_self_reported: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          booking_id: string;
+          student_id: string;
+          mentor_id: string;
+          rating: number;
+          feedback_text?: string | null;
+          recommend_to_peers?: boolean;
+          is_self_reported?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          booking_id?: string;
+          student_id?: string;
+          mentor_id?: string;
+          rating?: number;
+          feedback_text?: string | null;
+          recommend_to_peers?: boolean;
+          is_self_reported?: boolean;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -928,6 +1068,58 @@ export interface Database {
           redirect_url?: string;
         };
       };
+      submit_session_report: {
+        Args: {
+          p_booking_id: string;
+          p_mentor_id: string;
+          p_rubric_scores: Json;
+          p_summary_notes: string;
+          p_strengths?: string[];
+          p_growth_areas?: string[];
+          p_action_items?: Json;
+          p_deliverable_pdf_url?: string | null;
+          p_deliverable_sha256?: string | null;
+        };
+        Returns: {
+          success: boolean;
+          report_id: string;
+          booking_id: string;
+          version: number;
+          is_late: boolean;
+          sha256: string;
+          escrow_unlocked: boolean;
+        };
+      };
+      get_late_reports_operations_queue: {
+        Args: Record<string, never>;
+        Returns: {
+          booking_id: string;
+          booking_ref: string;
+          service_code: ServiceCode;
+          mentor_id: string;
+          mentor_name: string;
+          student_id: string;
+          student_name: string;
+          session_end: string;
+          sla_deadline: string;
+          hours_overdue: number;
+          report_status: string;
+        }[];
+      };
+      submit_session_feedback: {
+        Args: {
+          p_booking_id: string;
+          p_student_id: string;
+          p_rating: number;
+          p_feedback_text?: string | null;
+          p_recommend_to_peers?: boolean;
+        };
+        Returns: {
+          success: boolean;
+          feedback_id: string;
+          mentor_rating_updated: number;
+        };
+      };
     };
     Enums: {
       user_role: UserRole;
@@ -940,6 +1132,7 @@ export interface Database {
       settlement_status: SettlementStatus;
       smart_match_status: SmartMatchStatus;
       dispatch_offer_status: DispatchOfferStatus;
+      attendance_status: AttendanceStatus;
     };
     CompositeTypes: {
       [_ in never]: never;
