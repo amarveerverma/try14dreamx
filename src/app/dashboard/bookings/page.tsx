@@ -4,6 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { createClient } from "@/lib/supabase/client";
+import { downloadIcsFile } from "@/lib/calendar";
 
 type BookingFilterTab = "all" | "upcoming" | "in_progress" | "completed" | "cancelled";
 
@@ -256,11 +257,21 @@ export default function CandidateBookingsPage() {
   };
 
   const handleSyncIcal = () => {
-    setSyncFeedback("Syncing with Google Calendar via DreamX Meet API...");
-    setTimeout(() => {
-      setSyncFeedback("Calendar synchronized! 2 active sessions confirmed in Google Calendar.");
-      setTimeout(() => setSyncFeedback(""), 4000);
-    }, 1200);
+    const active = bookings.find((b) => b.status === "upcoming" || b.status === "in_progress") || bookings[0];
+    if (active) {
+      downloadIcsFile({
+        title: `DreamX 1:1: ${active.serviceName}`,
+        description: `Mentor: ${active.mentorName}\nBooking Ref: ${active.ref}\nMeeting: ${active.meetingUrl || "Google Meet"}\nProtected by DreamX 80% Escrow Guarantee.`,
+        location: active.meetingUrl || "Google Meet",
+        startTime: new Date(),
+        endTime: new Date(Date.now() + 60 * 60 * 1000),
+        bookingRef: active.ref,
+      });
+      setSyncFeedback(`Generated & downloaded .ics calendar invite for ${active.ref}. Works with Google Calendar & Outlook.`);
+    } else {
+      setSyncFeedback("No upcoming bookings found to export to calendar.");
+    }
+    setTimeout(() => setSyncFeedback(""), 5000);
   };
 
   return (
@@ -986,14 +997,13 @@ export default function CandidateBookingsPage() {
                 </span>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={() => alert("Connecting you with DreamX Escrow Concierge desk...")}
+            <a
+              href="mailto:escrow@dreamx.in?subject=Escrow%20Concierge%20Assistance%20Request&body=Please%20provide%20your%20Booking%20Ref%20ID%20and%20issue%20description:"
               className="px-3.5 py-2 rounded-xl bg-surface-container-lowest text-on-surface hover:bg-surface font-semibold text-xs border border-outline-variant/30 shadow-xs flex items-center gap-1.5 self-start sm:self-auto"
             >
               <span className="material-symbols-outlined text-[16px]">headset_mic</span>
               <span>Contact Escrow Concierge</span>
-            </button>
+            </a>
           </div>
         </div>
 
