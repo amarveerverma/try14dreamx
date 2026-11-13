@@ -15,6 +15,10 @@ export type UserRole = 'student' | 'mentor' | 'admin';
 export type CandidateSegment = 'student' | 'fresh_graduate' | 'early_career' | 'career_switcher';
 export type VerificationStatus = 'pending' | 'in_review' | 'approved' | 'rejected';
 export type ServiceCode = 'S01' | 'S02' | 'S03' | 'S04' | 'S05' | 'S06' | 'S07' | 'S08' | 'S09' | 'S10';
+export type BookingStatus = 'draft' | 'held' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'refunded';
+export type PaymentStatus = 'unpaid' | 'authorized' | 'captured' | 'refunded' | 'failed';
+export type RefundStatus = 'initiated' | 'processing' | 'completed' | 'failed';
+export type SettlementStatus = 'accrued' | 'in_escrow' | 'eligible_for_payout' | 'processing' | 'settled' | 'on_hold' | 'forfeited';
 
 export interface Database {
   public: {
@@ -469,6 +473,206 @@ export interface Database {
         };
         Relationships: [];
       };
+      bookings: {
+        Row: {
+          id: string;
+          booking_ref: string;
+          student_id: string;
+          mentor_id: string;
+          service_code: ServiceCode;
+          slot_id: string | null;
+          session_start: string;
+          session_end: string;
+          duration_minutes: number;
+          amount_paise: number;
+          status: BookingStatus;
+          payment_status: PaymentStatus;
+          payment_reference: string | null;
+          hold_expires_at: string | null;
+          pre_session_notes: string | null;
+          candidate_resume_url: string | null;
+          meeting_url: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          booking_ref: string;
+          student_id: string;
+          mentor_id: string;
+          service_code: ServiceCode;
+          slot_id?: string | null;
+          session_start: string;
+          session_end: string;
+          duration_minutes?: number;
+          amount_paise: number;
+          status?: BookingStatus;
+          payment_status?: PaymentStatus;
+          payment_reference?: string | null;
+          hold_expires_at?: string | null;
+          pre_session_notes?: string | null;
+          candidate_resume_url?: string | null;
+          meeting_url?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          booking_ref?: string;
+          student_id?: string;
+          mentor_id?: string;
+          service_code?: ServiceCode;
+          slot_id?: string | null;
+          session_start?: string;
+          session_end?: string;
+          duration_minutes?: number;
+          amount_paise?: number;
+          status?: BookingStatus;
+          payment_status?: PaymentStatus;
+          payment_reference?: string | null;
+          hold_expires_at?: string | null;
+          pre_session_notes?: string | null;
+          candidate_resume_url?: string | null;
+          meeting_url?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      payment_transactions: {
+        Row: {
+          id: string;
+          booking_id: string;
+          provider: string;
+          provider_order_id: string;
+          provider_payment_id: string | null;
+          idempotency_key: string;
+          amount_paise: number;
+          currency: string;
+          status: string;
+          webhook_signature: string | null;
+          raw_payload: Json | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          booking_id: string;
+          provider: string;
+          provider_order_id: string;
+          provider_payment_id?: string | null;
+          idempotency_key: string;
+          amount_paise: number;
+          currency?: string;
+          status?: string;
+          webhook_signature?: string | null;
+          raw_payload?: Json | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          booking_id?: string;
+          provider?: string;
+          provider_order_id?: string;
+          provider_payment_id?: string | null;
+          idempotency_key?: string;
+          amount_paise?: number;
+          currency?: string;
+          status?: string;
+          webhook_signature?: string | null;
+          raw_payload?: Json | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      refunds: {
+        Row: {
+          id: string;
+          booking_id: string;
+          payment_transaction_id: string | null;
+          amount_paise: number;
+          reason: string;
+          status: RefundStatus;
+          provider_refund_id: string | null;
+          refund_arn: string | null;
+          idempotency_key: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          booking_id: string;
+          payment_transaction_id?: string | null;
+          amount_paise: number;
+          reason: string;
+          status?: RefundStatus;
+          provider_refund_id?: string | null;
+          refund_arn?: string | null;
+          idempotency_key: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          booking_id?: string;
+          payment_transaction_id?: string | null;
+          amount_paise?: number;
+          reason?: string;
+          status?: RefundStatus;
+          provider_refund_id?: string | null;
+          refund_arn?: string | null;
+          idempotency_key?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      mentor_settlements: {
+        Row: {
+          id: string;
+          mentor_id: string;
+          booking_id: string;
+          gross_amount_paise: number;
+          platform_fee_paise: number;
+          tds_deduction_paise: number;
+          net_payout_paise: number;
+          payout_status: SettlementStatus;
+          payout_batch_id: string | null;
+          payout_utr: string | null;
+          settled_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          mentor_id: string;
+          booking_id: string;
+          gross_amount_paise: number;
+          platform_fee_paise?: number;
+          tds_deduction_paise?: number;
+          net_payout_paise: number;
+          payout_status?: SettlementStatus;
+          payout_batch_id?: string | null;
+          payout_utr?: string | null;
+          settled_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          mentor_id?: string;
+          booking_id?: string;
+          gross_amount_paise?: number;
+          platform_fee_paise?: number;
+          tds_deduction_paise?: number;
+          net_payout_paise?: number;
+          payout_status?: SettlementStatus;
+          payout_batch_id?: string | null;
+          payout_utr?: string | null;
+          settled_at?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -482,12 +686,97 @@ export interface Database {
         };
         Returns: string;
       };
+      claim_booking_slot: {
+        Args: {
+          p_student_id: string;
+          p_mentor_id: string;
+          p_service_code: ServiceCode;
+          p_slot_id: string | null;
+          p_session_start: string;
+          p_session_end: string;
+          p_amount_paise: number;
+          p_pre_session_notes?: string | null;
+          p_resume_url?: string | null;
+        };
+        Returns: {
+          success: boolean;
+          booking_id: string;
+          booking_ref: string;
+          status: BookingStatus;
+          hold_expires_at: string;
+          amount_paise: number;
+        };
+      };
+      confirm_booking_payment: {
+        Args: {
+          p_booking_id: string;
+          p_payment_reference: string;
+          p_meeting_url?: string | null;
+        };
+        Returns: {
+          success: boolean;
+          booking_id: string;
+          booking_ref: string;
+          status: BookingStatus;
+          payment_status: PaymentStatus;
+        };
+      };
+      process_payment_webhook: {
+        Args: {
+          p_idempotency_key: string;
+          p_booking_id: string;
+          p_provider: string;
+          p_provider_order_id: string;
+          p_provider_payment_id: string;
+          p_amount_paise: number;
+          p_status: string;
+          p_signature: string;
+          p_raw_payload: Json;
+        };
+        Returns: {
+          status: string;
+          transaction_id: string;
+          booking_id?: string;
+          payment_status?: string;
+          message?: string;
+        };
+      };
+      initiate_booking_refund: {
+        Args: {
+          p_booking_id: string;
+          p_amount_paise: number;
+          p_reason: string;
+          p_idempotency_key: string;
+        };
+        Returns: {
+          success: boolean;
+          refund_id: string;
+          status: string;
+        };
+      };
+      reconcile_daily_payments: {
+        Args: {
+          p_date: string;
+        };
+        Returns: {
+          total_transactions: number;
+          total_gross_paise: number;
+          total_platform_fees_paise: number;
+          total_mentor_net_paise: number;
+          total_refunds_count: number;
+          total_refunded_paise: number;
+        }[];
+      };
     };
     Enums: {
       user_role: UserRole;
       candidate_segment: CandidateSegment;
       verification_status: VerificationStatus;
       service_code: ServiceCode;
+      booking_status: BookingStatus;
+      payment_status: PaymentStatus;
+      refund_status: RefundStatus;
+      settlement_status: SettlementStatus;
     };
     CompositeTypes: {
       [_ in never]: never;
