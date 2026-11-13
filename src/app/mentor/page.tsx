@@ -2,6 +2,8 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useAuth } from "@/lib/auth-context";
+import { createClient } from "@/lib/supabase/client";
 
 interface InboundClaim {
   id: string;
@@ -19,42 +21,130 @@ interface InboundClaim {
   mode: "live" | "async";
 }
 
-const INITIAL_CLAIMS: InboundClaim[] = [
-  {
-    id: "REQ-8902",
-    serviceCode: "S06",
-    serviceTitle: "Technical Mock Interview & Distributed Systems",
-    duration: "60 min Live Session + 8-D Diagnostic Scorecard",
-    remainingMinutes: 24,
-    candidateId: "#DX-9124",
-    candidateLevel: "Early Career Backend • 0-2 YoE",
-    targetTrack: "Google L4 / Swiggy L5 Systems",
-    dossierName: "Resume_Rohan_v2.pdf (Audited)",
-    slotText: "Tomorrow, Oct 26 • 07:30 PM – 08:30 PM IST",
-    slotSubtext: "(Matches your Friday evening window)",
-    payout: 799,
-    mode: "live",
-  },
-  {
-    id: "REQ-8905",
-    serviceCode: "S01",
-    serviceTitle: "Resume Line-by-Line Teardown & ATS Audit",
-    duration: "Async 48h Scorecard SLA (No call required)",
-    remainingMinutes: 18,
-    candidateId: "#DX-8411",
-    candidateLevel: "Career Switcher • 3 YoE",
-    targetTrack: "FinTech GCC Senior Backend • Distributed Kafka",
-    dossierName: "Resume_Deepak_Fintech.pdf (2.1 MB)",
-    slotText: "Async Delivery: 48h Scorecard SLA Clock",
-    slotSubtext: "(Turnaround begins upon acceptance)",
-    payout: 479,
-    mode: "async",
-  },
-];
+interface RemoteBooking {
+  id: string;
+  booking_ref: string;
+  service_code: string;
+  session_start: string;
+  session_end: string;
+  amount_paise: number;
+  status: string;
+  payment_status: string;
+  meeting_url: string | null;
+  pre_session_notes: string | null;
+  created_at: string;
+  student: {
+    id: string;
+    full_name: string | null;
+    email: string | null;
+    target_role: string | null;
+  } | null;
+  session_reports?: Array<{
+    id: string;
+    version: number;
+    is_latest: boolean;
+    sla_deadline_at: string;
+    submitted_at: string;
+    is_late: boolean;
+    deliverable_sha256: string | null;
+  }>;
+  mentor_settlements?: Array<{
+    id: string;
+    gross_amount_paise: number;
+    net_payout_paise: number;
+    payout_status: string;
+  }>;
+}
 
 export default function MentorDashboardPage() {
-  const [claims, setClaims] = React.useState<InboundClaim[]>(INITIAL_CLAIMS);
+  const { user } = useAuth();
+  const supabase = React.useMemo(() => createClient(), []);
+
+  const [claims, setClaims] = React.useState<InboundClaim[]>([]);
+  const [bookings, setBookings] = React.useState<RemoteBooking[]>([]);
+  const [loading, setLoading] = React.useState(true);
   const [actionNotice, setActionNotice] = React.useState<string | null>(null);
+
+  // Load real bookings and metrics from Supabase
+  React.useEffect(() => {
+    let isMounted = true;
+    async function loadData() {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+      try {
+        const { data, error } = await supabase
+          .from("bookings")
+          .select(`
+            id,
+            booking_ref,
+            service_code,
+            session_start,
+            session_end,
+            amount_paise,
+            status,
+            payment_status,
+            meeting_url,
+            pre_session_notes,
+            created_at,
+            student:profiles!bookings_student_id_fkey(id, full_name, email, target_role),
+            session_reports(id, version, is_latest, sla_deadline_at, submitted_at, is_late, deliverable_sha256),
+            mentor_settlements(id, gross_amount_paise, net_payout_paise, payout_status)
+          `)
+          .eq("mentor_id", user.id)
+          .order("session_start", { ascending: false });
+
+        if (!error && data && isMounted) {
+          setBookings(data as unknown as RemoteBooking[]);
+        }
+      } catch (err) {
+        console.warn("Failed to load mentor bookings:", err);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    }
+
+    loadData();
+    return () => {
+      isMounted = false;
+    };
+  }, [user, supabase]);
+
+  // Derived financial metrics
+  const financialMetrics = React.useMemo(() => {
+    let accruedNetPaise = 0;
+    let inEscrowNetPaise = 0;
+    let completedCount = 0;
+    let lateCount = 0;
+
+    bookings.forEach((b) => {
+      b.mentor_settlements?.forEach((s) => {
+        if (s.payout_status === "eligible_for_payout" || s.payout_status === "disbursed") {
+          accruedNetPaise += s.net_payout_paise;
+        } else if (s.payout_status === "in_escrow") {
+          inEscrowNetPaise += s.net_payout_paise;
+        }
+      });
+
+      b.session_reports?.forEach((r) => {
+        if (r.is_latest) {
+          completedCount += 1;
+          if (r.is_late) lateCount += 1;
+        }
+      });
+    });
+
+    const slaCompliance = completedCount > 0 ? Math.round(((completedCount - lateCount) / completedCount) * 100) : 100;
+
+    return {
+      accruedRupees: Math.round(accruedNetPaise / 100),
+      escrowRupees: Math.round(inEscrowNetPaise / 100),
+      completedCount,
+      slaCompliance,
+      activeEngagements: bookings.filter((b) => b.status === "confirmed" || b.status === "in_progress").length,
+    };
+  }, [bookings]);
 
   const handleAccept = (id: string, title: string) => {
     setClaims((prev) => prev.filter((c) => c.id !== id));
@@ -144,17 +234,17 @@ export default function MentorDashboardPage() {
                 </span>
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#eaf5ef] text-[#006d3a]">
                   <span className="material-symbols-outlined text-[13px]">check</span>
-                  Weekly Payout Cleared
+                  {financialMetrics.accruedRupees > 0 ? "Weekly Payout Accruing" : "Direct Escrow Protected"}
                 </span>
               </div>
               <div className="flex items-baseline gap-2 mt-1">
                 <span className="text-3xl font-extrabold text-[#1c1b1b] tracking-tight tabular-nums font-heading">
-                  ₹18,450
+                  ₹{financialMetrics.accruedRupees.toLocaleString("en-IN")}
                 </span>
-                <span className="text-xs text-[#006d3a] font-bold">100% Payout Basis</span>
+                <span className="text-xs text-[#006d3a] font-bold">80% Net Rate Basis</span>
               </div>
               <p className="text-xs text-[#474554] mt-2 leading-relaxed">
-                Auto-settlement via UPI/NEFT to HDFC Bank (**** 4812) on Monday • 0% commission deductions on core rate
+                Direct weekly disbursement via Razorpay UPI/NEFT • 20% platform cut &amp; 10% Section 194J TDS computed per session
               </p>
             </div>
             <div className="mt-4 pt-3 border-t border-[#e7e7eb] flex items-center justify-between text-xs">
@@ -162,7 +252,9 @@ export default function MentorDashboardPage() {
                 <span className="material-symbols-outlined text-sm text-[#777585]">lock_clock</span>
                 Pending in 48h Escrow Lock:
               </span>
-              <span className="font-bold text-[#1c1b1b] tabular-nums">₹2,597</span>
+              <span className="font-bold text-[#1c1b1b] tabular-nums">
+                ₹{financialMetrics.escrowRupees.toLocaleString("en-IN")}
+              </span>
             </div>
           </div>
 
@@ -175,26 +267,31 @@ export default function MentorDashboardPage() {
                 </span>
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#eaf5ef] text-[#006d3a]">
                   <span className="material-symbols-outlined text-[13px]">verified</span>
-                  Zero SLA Breaches
+                  PRD §10.5 Guaranteed
                 </span>
               </div>
               <div className="flex items-baseline gap-2 mt-1">
                 <span className="text-3xl font-extrabold text-[#1c1b1b] tracking-tight tabular-nums font-heading">
-                  100%
+                  {financialMetrics.slaCompliance}%
                 </span>
-                <span className="text-xs text-[#006d3a] font-bold">24 Scorecards Signed</span>
+                <span className="text-xs text-[#006d3a] font-bold">
+                  {financialMetrics.completedCount} Reports Audited
+                </span>
               </div>
               <p className="text-xs text-[#474554] mt-2 leading-relaxed">
-                Average turnaround: 28.4 hrs (vs 48h SLA) across 24 completed candidate scorecards
+                48-hour diagnostic turnaround SLA required to unlock escrow settlements and maintain calibrated rank
               </p>
             </div>
             <div className="mt-4 pt-3 border-t border-[#e7e7eb] flex flex-col gap-1.5">
               <div className="flex justify-between text-xs">
                 <span className="text-[#474554]">SLA Margin Buffer</span>
-                <span className="font-bold text-[#006d3a]">19.6h buffer remaining</span>
+                <span className="font-bold text-[#006d3a]">48h max turnaround</span>
               </div>
               <div className="w-full bg-[#f0eded] h-2 rounded-full overflow-hidden">
-                <div className="bg-[#006d3a] h-full rounded-full" style={{ width: "59%" }} />
+                <div
+                  className="bg-[#006d3a] h-full rounded-full transition-all duration-500"
+                  style={{ width: `${financialMetrics.slaCompliance}%` }}
+                />
               </div>
             </div>
           </div>
@@ -217,7 +314,7 @@ export default function MentorDashboardPage() {
                 </span>
               </div>
               <p className="text-xs text-[#474554] mt-2 leading-relaxed">
-                High-affinity candidate requests matched to your approved services (S06 &amp; S01)
+                Candidate requests dynamically routed by the PRD §10 affinity matcher based on your calibration
               </p>
             </div>
             <div className="mt-4 pt-3 border-t border-[#e7e7eb] flex items-center justify-between text-xs">
@@ -226,7 +323,7 @@ export default function MentorDashboardPage() {
                 Auto-expires to Wave 2 in:
               </span>
               <span className="font-bold text-amber-900 bg-amber-100 px-2 py-0.5 rounded font-mono">
-                &lt;25 mins
+                {claims.length > 0 ? "<25 mins" : "Idle"}
               </span>
             </div>
           </div>
@@ -250,8 +347,12 @@ export default function MentorDashboardPage() {
           </div>
 
           {claims.length === 0 ? (
-            <div className="p-8 bg-white border border-[#e7e7eb] rounded-2xl text-center text-xs text-[#777585]">
-              No pending claims right now. All dispatched offers have been accepted or processed.
+            <div className="p-8 bg-white border border-[#e7e7eb] rounded-2xl text-center text-xs text-[#777585] flex flex-col items-center justify-center gap-2">
+              <span className="material-symbols-outlined text-3xl text-gray-400">inbox</span>
+              <p className="font-semibold text-gray-700">No pending inbound claims right now</p>
+              <p className="max-w-md text-gray-500">
+                When candidates initiate Smart Match requests matching your calibrated tier and approved services, dispatch alerts will appear here in real time.
+              </p>
             </div>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
@@ -361,149 +462,145 @@ export default function MentorDashboardPage() {
                 PRD §11.1 &amp; §11.2 Tracking
               </span>
             </div>
-            <span className="text-xs text-[#474554]">3 Active Engagements</span>
+            <span className="text-xs text-[#474554]">
+              {financialMetrics.activeEngagements} Active Engagement{financialMetrics.activeEngagements === 1 ? "" : "s"}
+            </span>
           </div>
 
           <div className="bg-white border border-[#e7e7eb] rounded-2xl overflow-hidden shadow-xs">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse text-xs">
-                <thead>
-                  <tr className="bg-[#f6f3f2] border-b border-[#e7e7eb] text-[11px] font-bold text-[#777585] uppercase tracking-wider">
-                    <th className="py-3 px-4">Candidate &amp; Goal</th>
-                    <th className="py-3 px-4">Service Module</th>
-                    <th className="py-3 px-4">Scheduled Date &amp; Time</th>
-                    <th className="py-3 px-4">Meet Telemetry Link</th>
-                    <th className="py-3 px-4">48h Deliverable SLA Countdown</th>
-                    <th className="py-3 px-4 text-right">Status &amp; Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#e7e7eb]">
-                  {/* Row 1: Upcoming Live Call */}
-                  <tr className="hover:bg-[#f6f3f2]/50 transition-colors">
-                    <td className="py-3.5 px-4">
-                      <div className="font-bold text-[#1c1b1b]">Aarav Sharma</div>
-                      <div className="text-[11px] text-[#474554]">#DX-8419 • Target: SDE-2</div>
-                    </td>
-                    <td className="py-3.5 px-4">
-                      <span className="font-bold text-[#1c1b1b]">S06 Technical Mock</span>
-                      <span className="block text-[11px] text-[#777585]">60 min Live Call</span>
-                    </td>
-                    <td className="py-3.5 px-4">
-                      <div className="font-bold text-[#1c1b1b]">Today, Oct 25</div>
-                      <div className="text-[11px] text-[#474554]">07:30 PM IST</div>
-                    </td>
-                    <td className="py-3.5 px-4">
-                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#eaf5ef] text-[#006d3a] font-mono text-[11px] font-bold">
-                        <span className="material-symbols-outlined text-[14px]">videocam</span>
-                        meet.google.com/qxr-mkpv-yzt
-                      </div>
-                      <span className="block text-[10px] text-[#777585] mt-0.5">Opens 15m prior to start</span>
-                    </td>
-                    <td className="py-3.5 px-4">
-                      <div className="flex items-center gap-1.5 text-[#5145cd] font-bold">
-                        <span className="w-2 h-2 rounded-full bg-[#5145cd] animate-pulse" />
-                        Session Live in 3h 15m
-                      </div>
-                      <span className="text-[10px] text-[#777585]">SLA starts post-call</span>
-                    </td>
-                    <td className="py-3.5 px-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <Link
-                          href="/mentor/sessions"
-                          className="px-2.5 py-1.5 border border-[#e7e7eb] hover:bg-[#f6f3f2] text-[#1c1b1b] rounded-lg text-xs font-bold transition-colors"
-                        >
-                          Review Dossier
-                        </Link>
-                        <a
-                          href="https://meet.google.com/qxr-mkpv-yzt"
-                          target="_blank"
-                          rel="noreferrer"
-                          className="px-3 py-1.5 bg-[#006d3a] text-white rounded-lg text-xs font-bold hover:bg-[#00522b] transition-all flex items-center gap-1 shadow-xs"
-                        >
-                          <span className="material-symbols-outlined text-[14px]">play_arrow</span>
-                          Join Call
-                        </a>
-                      </div>
-                    </td>
-                  </tr>
+            {bookings.length === 0 ? (
+              <div className="p-12 text-center flex flex-col items-center justify-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-[#f6f3f2] flex items-center justify-center text-[#777585]">
+                  <span className="material-symbols-outlined text-2xl">event_available</span>
+                </div>
+                <div className="max-w-md">
+                  <h3 className="font-bold text-[#1c1b1b] text-sm">No Active Engagements</h3>
+                  <p className="text-xs text-[#777585] mt-1">
+                    You do not have any sessions booked yet. Open weekly slots in Availability so matching candidates can schedule 1:1 sessions with you.
+                  </p>
+                </div>
+                <Link
+                  href="/mentor/availability"
+                  className="mt-2 inline-flex items-center gap-2 px-4 py-2 bg-[#5145cd] text-white text-xs font-bold rounded-xl hover:bg-[#3828b5] transition-all shadow-xs"
+                >
+                  <span className="material-symbols-outlined text-sm">calendar_month</span>
+                  <span>Configure Weekly Availability</span>
+                </Link>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr className="bg-[#f6f3f2] border-b border-[#e7e7eb] text-[11px] font-bold text-[#777585] uppercase tracking-wider">
+                      <th className="py-3 px-4">Candidate &amp; Goal</th>
+                      <th className="py-3 px-4">Service Module</th>
+                      <th className="py-3 px-4">Scheduled Date &amp; Time</th>
+                      <th className="py-3 px-4">Meet Telemetry Link</th>
+                      <th className="py-3 px-4">48h Deliverable SLA Countdown</th>
+                      <th className="py-3 px-4 text-right">Status &amp; Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#e7e7eb]">
+                    {bookings.map((booking) => {
+                      const start = new Date(booking.session_start);
+                      const latestReport = booking.session_reports?.find((r) => r.is_latest);
+                      const isCompleted = booking.status === "completed" || !!latestReport;
+                      const candidateName = booking.student?.full_name || "Verified Candidate";
+                      const candidateId = booking.student?.id ? booking.student.id.slice(0, 8).toUpperCase() : "DX-CAND";
+                      const candidateGoal = booking.student?.target_role || "Target: Software Engineering";
 
-                  {/* Row 2: Report Due */}
-                  <tr className="hover:bg-[#f6f3f2]/50 transition-colors bg-amber-50/30">
-                    <td className="py-3.5 px-4">
-                      <div className="font-bold text-[#1c1b1b]">Kavya Nair</div>
-                      <div className="text-[11px] text-[#474554]">#DX-7832 • Target: ML Platform Eng</div>
-                    </td>
-                    <td className="py-3.5 px-4">
-                      <span className="font-bold text-[#1c1b1b]">S05 Behavioral STAR Framework</span>
-                      <span className="block text-[11px] text-[#777585]">60 min Call Completed</span>
-                    </td>
-                    <td className="py-3.5 px-4">
-                      <div className="font-bold text-[#1c1b1b]">Oct 24 • Completed</div>
-                      <div className="text-[11px] text-[#777585]">Yesterday 08:30 PM</div>
-                    </td>
-                    <td className="py-3.5 px-4">
-                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#006d3a]">
-                        <span className="material-symbols-outlined text-xs">check_circle</span>
-                        100% Attendance Verified
-                      </span>
-                    </td>
-                    <td className="py-3.5 px-4">
-                      <div className="flex items-center gap-1.5 text-amber-800 font-bold">
-                        <span className="material-symbols-outlined text-xs text-amber-600">alarm</span>
-                        18h 45m left to submit
-                      </div>
-                      <span className="text-[10px] text-amber-700">80% refund risk if missed</span>
-                    </td>
-                    <td className="py-3.5 px-4 text-right">
-                      <Link
-                        href="/mentor/sessions"
-                        className="px-3 py-1.5 bg-[#5145cd] text-white rounded-lg text-xs font-bold hover:bg-[#3828b5] transition-all inline-flex items-center gap-1 shadow-xs"
-                      >
-                        <span className="material-symbols-outlined text-[14px]">upload_file</span>
-                        Upload 8-D Scorecard
-                      </Link>
-                    </td>
-                  </tr>
-
-                  {/* Row 3: Delivered & Signed */}
-                  <tr className="hover:bg-[#f6f3f2]/50 transition-colors">
-                    <td className="py-3.5 px-4">
-                      <div className="font-bold text-[#1c1b1b]">Tanmay Roy</div>
-                      <div className="text-[11px] text-[#474554]">#DX-6941 • Target: Frontend Lead</div>
-                    </td>
-                    <td className="py-3.5 px-4">
-                      <span className="font-bold text-[#1c1b1b]">S09 Career Roadmap Session</span>
-                      <span className="block text-[11px] text-[#777585]">60 min Call Completed</span>
-                    </td>
-                    <td className="py-3.5 px-4">
-                      <div className="font-bold text-[#1c1b1b]">Oct 22 • Completed</div>
-                      <div className="text-[11px] text-[#777585]">3 Days Ago</div>
-                    </td>
-                    <td className="py-3.5 px-4">
-                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#006d3a]">
-                        <span className="material-symbols-outlined text-xs">check_circle</span>
-                        Google Meet Verified
-                      </span>
-                    </td>
-                    <td className="py-3.5 px-4">
-                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#006d3a]">
-                        <span className="material-symbols-outlined text-xs">verified</span>
-                        Delivered &amp; Signed
-                      </span>
-                      <span className="block text-[10px] text-[#777585] font-mono">SHA-256: 0x8f2d..91b</span>
-                    </td>
-                    <td className="py-3.5 px-4 text-right">
-                      <Link
-                        href="/mentor/sessions"
-                        className="px-3 py-1.5 border border-[#e7e7eb] hover:bg-[#f6f3f2] text-[#1c1b1b] rounded-lg text-xs font-bold transition-colors inline-block"
-                      >
-                        View Report
-                      </Link>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+                      return (
+                        <tr key={booking.id} className="hover:bg-[#f6f3f2]/50 transition-colors">
+                          <td className="py-3.5 px-4">
+                            <div className="font-bold text-[#1c1b1b]">{candidateName}</div>
+                            <div className="text-[11px] text-[#474554]">#{candidateId} • {candidateGoal}</div>
+                          </td>
+                          <td className="py-3.5 px-4">
+                            <span className="font-bold text-[#1c1b1b]">{booking.service_code} Session</span>
+                            <span className="block text-[11px] text-[#777585]">Ref: {booking.booking_ref}</span>
+                          </td>
+                          <td className="py-3.5 px-4">
+                            <div className="font-bold text-[#1c1b1b]">
+                              {start.toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" })}
+                            </div>
+                            <div className="text-[11px] text-[#474554]">
+                              {start.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })} IST
+                            </div>
+                          </td>
+                          <td className="py-3.5 px-4">
+                            {booking.meeting_url ? (
+                              <div>
+                                <a
+                                  href={booking.meeting_url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#eaf5ef] text-[#006d3a] font-mono text-[11px] font-bold hover:underline"
+                                >
+                                  <span className="material-symbols-outlined text-[14px]">videocam</span>
+                                  {booking.meeting_url.replace(/^https?:\/\//, "").slice(0, 24)}...
+                                </a>
+                                <span className="block text-[10px] text-[#777585] mt-0.5">Google Meet Live</span>
+                              </div>
+                            ) : (
+                              <span className="text-[11px] text-[#777585]">Link generated 15m prior</span>
+                            )}
+                          </td>
+                          <td className="py-3.5 px-4">
+                            {latestReport ? (
+                              <div>
+                                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#006d3a]">
+                                  <span className="material-symbols-outlined text-xs">verified</span>
+                                  Delivered &amp; Signed
+                                </span>
+                                {latestReport.deliverable_sha256 && (
+                                  <span className="block text-[10px] text-[#777585] font-mono">
+                                    SHA-256: {latestReport.deliverable_sha256.slice(0, 10)}...
+                                  </span>
+                                )}
+                              </div>
+                            ) : isCompleted ? (
+                              <div>
+                                <div className="flex items-center gap-1.5 text-amber-800 font-bold">
+                                  <span className="material-symbols-outlined text-xs text-amber-600">alarm</span>
+                                  Report Due
+                                </div>
+                                <span className="text-[10px] text-amber-700">48h SLA Active</span>
+                              </div>
+                            ) : (
+                              <div>
+                                <span className="text-[11px] text-[#5145cd] font-bold">Session Upcoming</span>
+                                <span className="block text-[10px] text-[#777585]">SLA begins post-call</span>
+                              </div>
+                            )}
+                          </td>
+                          <td className="py-3.5 px-4 text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <Link
+                                href="/mentor/sessions"
+                                className="px-2.5 py-1.5 border border-[#e7e7eb] hover:bg-[#f6f3f2] text-[#1c1b1b] rounded-lg text-xs font-bold transition-colors"
+                              >
+                                {latestReport ? "View Scorecard" : "Open Dossier"}
+                              </Link>
+                              {booking.meeting_url && !latestReport && (
+                                <a
+                                  href={booking.meeting_url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="px-3 py-1.5 bg-[#006d3a] text-white rounded-lg text-xs font-bold hover:bg-[#00522b] transition-all flex items-center gap-1 shadow-xs"
+                                >
+                                  <span className="material-symbols-outlined text-[14px]">play_arrow</span>
+                                  Join Call
+                                </a>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </section>
 

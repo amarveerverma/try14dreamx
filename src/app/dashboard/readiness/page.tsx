@@ -305,8 +305,8 @@ export default function CareerReadinessVectorPage() {
       {
         engine: "DreamX Vector Core v3.0-PROD",
         schemaVersion: "2024.11-PROD",
-        candidateId: user?.id || "DX-8419",
-        candidateName: user?.name || "Aarav Sharma",
+        candidateId: user?.id || "DX-CANDIDATE",
+        candidateName: user?.name || "Verified Candidate",
         targetRole: "SDE-2 Backend (GCC & Indian Unicorns)",
         evaluationTimestamp: "2024-10-24T14:45:00+05:30",
         compositeIndex: compositeScore,

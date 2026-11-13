@@ -215,7 +215,7 @@ export default function SignUpPage() {
               </label>
               <input
                 type="text"
-                placeholder="e.g. Aarav Sharma"
+                placeholder="e.g. Rahul Verma"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required

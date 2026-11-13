@@ -3,6 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
+import { createClient } from "@/lib/supabase/client";
 import {
   ShieldCheck,
   CheckCircle2,
@@ -87,61 +88,102 @@ export default function MentorEarningsPage() {
   const [ifscCode, setIfscCode] = React.useState("HDFC0000240");
   const [upiId, setUpiId] = React.useState("mentor@okhdfcbank");
 
-  const transactions: PayoutTransaction[] = [
-    {
-      id: "PAY-1099",
-      date: "Nov 12, 2026",
-      timeInfo: "Scheduled Monday 10:00 AM",
-      sessionsCount: 21,
-      sessionBreakdown: "Pending cutoff batch",
-      gross: 18450,
-      tds: 1845,
-      net: 16605,
-      isEstimate: true,
-      reference: "Pending Batch Cutoff (Sun 23:59 IST)",
-      status: "Queued for Disbursal",
-      isInFlight: true,
-    },
-    {
-      id: "PAY-1082",
-      date: "Nov 05, 2026",
-      timeInfo: "10:02:14 AM IST",
-      sessionsCount: 8,
-      sessionBreakdown: "S06 Mock x5, S01 Resume x3",
-      gross: 7102,
-      tds: 710,
-      net: 6392,
-      reference: "HDFC-NEFT-9921418",
-      verifiedTime: "Verified 10:02 AM",
-      status: "Settled",
-    },
-    {
-      id: "PAY-1044",
-      date: "Oct 29, 2026",
-      timeInfo: "10:01:05 AM IST",
-      sessionsCount: 15,
-      sessionBreakdown: "S06 Mock x10, S05 STAR x5",
-      gross: 13398,
-      tds: 1340,
-      net: 12058,
-      reference: "HDFC-NEFT-8812903",
-      verifiedTime: "Verified 10:01 AM",
-      status: "Settled",
-    },
-    {
-      id: "PAY-1011",
-      date: "Oct 22, 2026",
-      timeInfo: "10:05:42 AM IST",
-      sessionsCount: 12,
-      sessionBreakdown: "S06 Mock x8, S09 Roadmap x4",
-      gross: 10500,
-      tds: 1050,
-      net: 9450,
-      reference: "HDFC-NEFT-7719204",
-      verifiedTime: "Verified 10:05 AM",
-      status: "Settled",
-    },
-  ];
+  const supabase = React.useMemo(() => createClient(), []);
+  const [transactions, setTransactions] = React.useState<PayoutTransaction[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    let isMounted = true;
+    async function loadSettlements() {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+      try {
+        const { data, error } = await supabase
+          .from("mentor_settlements")
+          .select(`
+            id,
+            booking_id,
+            gross_amount_paise,
+            net_payout_paise,
+            tds_deduction_paise,
+            payout_status,
+            disbursed_at,
+            created_at,
+            bookings(booking_ref, service_code)
+          `)
+          .eq("mentor_id", user.id)
+          .order("created_at", { ascending: false });
+
+        if (!error && data && data.length > 0 && isMounted) {
+          const mapped: PayoutTransaction[] = data.map((s: any) => {
+            const dt = new Date(s.disbursed_at || s.created_at);
+            const isInFlight = s.payout_status === "in_escrow";
+            const isSettled = s.payout_status === "disbursed";
+            const status: "Queued for Disbursal" | "Settled" | "Escrow Pending" = isSettled
+              ? "Settled"
+              : isInFlight
+              ? "Escrow Pending"
+              : "Queued for Disbursal";
+
+            return {
+              id: `PAY-${s.id.slice(0, 8).toUpperCase()}`,
+              date: dt.toLocaleDateString("en-IN", { month: "short", day: "numeric", year: "numeric" }),
+              timeInfo: `${dt.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })} IST`,
+              sessionsCount: 1,
+              sessionBreakdown: `${s.bookings?.service_code || "1:1"} (${s.bookings?.booking_ref || "Direct"})`,
+              gross: Math.round(s.gross_amount_paise / 100),
+              tds: Math.round(s.tds_deduction_paise / 100),
+              net: Math.round(s.net_payout_paise / 100),
+              isEstimate: isInFlight,
+              reference: isSettled ? `NEFT-${s.id.slice(0, 8)}` : "Pending 48h SLA Review",
+              status,
+              isInFlight,
+            };
+          });
+          setTransactions(mapped);
+        } else if (isMounted) {
+          setTransactions([]);
+        }
+      } catch (err) {
+        console.warn("Failed to load settlements:", err);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    }
+    loadSettlements();
+    return () => {
+      isMounted = false;
+    };
+  }, [user, supabase]);
+
+  // Derived financial summary cards
+  const financials = React.useMemo(() => {
+    let cleared = 0;
+    let inEscrow = 0;
+    let lifetimeNet = 0;
+    let lifetimeTds = 0;
+
+    transactions.forEach((tx) => {
+      if (tx.status === "Queued for Disbursal") {
+        cleared += tx.net;
+      } else if (tx.status === "Escrow Pending") {
+        inEscrow += tx.net;
+      } else if (tx.status === "Settled") {
+        lifetimeNet += tx.net;
+        lifetimeTds += tx.tds;
+      }
+    });
+
+    return {
+      cleared,
+      inEscrow,
+      lifetimeNet,
+      lifetimeTds,
+      escrowCount: transactions.filter((t) => t.status === "Escrow Pending").length,
+    };
+  }, [transactions]);
 
   const filteredTransactions = transactions.filter((t) => {
     if (activeTab === "settled" && t.status !== "Settled") return false;
@@ -266,7 +308,7 @@ export default function MentorEarningsPage() {
             </div>
             <div className="my-2">
               <div className="text-3xl font-extrabold text-[#1c1b1b] tabular-nums">
-                ₹18,450
+                ₹{financials.cleared.toLocaleString("en-IN")}
               </div>
               <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#eaf5ef] text-[#16834a] border border-[#d1edd9]">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#16834a]" />
@@ -275,7 +317,7 @@ export default function MentorEarningsPage() {
             </div>
             <div className="pt-3 border-t border-[#e7e7eb] text-xs text-[#474554] flex items-center gap-1.5">
               <Building className="w-3.5 h-3.5 text-[#777585]" />
-              <span>Settling to HDFC Bank (**** 4812) • 24 scorecards cleared</span>
+              <span>Settling to verified UPI/NEFT • Deliverables approved</span>
             </div>
           </div>
 
@@ -291,11 +333,11 @@ export default function MentorEarningsPage() {
             </div>
             <div className="my-2">
               <div className="text-3xl font-extrabold text-[#1c1b1b] tabular-nums">
-                ₹3,296
+                ₹{financials.inEscrow.toLocaleString("en-IN")}
               </div>
               <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#fbf4e8] text-[#a7670b] border border-[#f5e3c8]">
                 <Clock className="w-3.5 h-3.5" />
-                3 Active bookings in 48h deliverable window
+                {financials.escrowCount} active booking{financials.escrowCount === 1 ? "" : "s"} in 48h deliverable window
               </div>
             </div>
             <div className="pt-3 border-t border-[#e7e7eb] text-xs text-[#474554] flex items-center gap-1.5">
@@ -316,16 +358,16 @@ export default function MentorEarningsPage() {
             </div>
             <div className="my-2">
               <div className="text-3xl font-extrabold text-[#1c1b1b] tabular-nums">
-                ₹1,42,800
+                ₹{financials.lifetimeNet.toLocaleString("en-IN")}
               </div>
               <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#eaf5ef] text-[#16834a] border border-[#d1edd9]">
                 <CheckCircle2 className="w-3.5 h-3.5" />
-                100% on-time delivery record
+                Disbursed to bank account
               </div>
             </div>
             <div className="pt-3 border-t border-[#e7e7eb] text-xs text-[#474554] flex items-center gap-1.5">
               <Check className="w-3.5 h-3.5 text-[#16834a]" />
-              <span>68 verified sessions completed • 0 disputes</span>
+              <span>Total TDS Withheld: ₹{financials.lifetimeTds.toLocaleString("en-IN")} (Sec 194J)</span>
             </div>
           </div>
 
@@ -333,7 +375,7 @@ export default function MentorEarningsPage() {
           <div className="bg-white border border-[#e7e7eb] rounded-xl p-5 shadow-xs flex flex-col justify-between">
             <div className="flex items-center justify-between pb-3">
               <span className="text-xs font-semibold text-[#777585] uppercase tracking-wider">
-                PLATFORM FEE DEDUCTION
+                COMMISSION TRANSPARENCY
               </span>
               <div className="w-8 h-8 rounded-lg bg-[#e3dfff]/60 text-[#5145cd] flex items-center justify-center">
                 <ShieldCheck className="w-4 h-4" />
@@ -341,16 +383,16 @@ export default function MentorEarningsPage() {
             </div>
             <div className="my-2">
               <div className="text-3xl font-extrabold text-[#1c1b1b] tabular-nums">
-                ₹0 <span className="text-base text-[#777585] font-normal">(0.0% Comm.)</span>
+                20.0% <span className="text-base text-[#777585] font-normal">Platform Cut</span>
               </div>
               <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#e3dfff] text-[#130068] border border-[#c5c0ff]">
                 <Sparkles className="w-3.5 h-3.5" />
-                100% Gross Fee Retained by Mentor
+                80% Net Rate Retained by Mentor
               </div>
             </div>
             <div className="pt-3 border-t border-[#e7e7eb] text-xs text-[#474554] flex items-center gap-1.5">
               <AlertCircle className="w-3.5 h-3.5 text-[#777585]" />
-              <span>Student discounts funded 100% by DreamX treasury</span>
+              <span>Covers Razorpay gateway fees &amp; escrow audit infrastructure</span>
             </div>
           </div>
         </section>
@@ -430,7 +472,20 @@ export default function MentorEarningsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#e7e7eb] text-xs">
-                {filteredTransactions.map((tx) => (
+                {filteredTransactions.length === 0 ? (
+                  <tr>
+                    <td colSpan={9} className="py-12 text-center text-xs text-[#777585]">
+                      <div className="flex flex-col items-center justify-center gap-2">
+                        <Receipt className="w-8 h-8 text-gray-300" />
+                        <span className="font-semibold text-gray-700">No settlement records found</span>
+                        <span className="text-gray-500 max-w-sm">
+                          Payouts and Section 194J TDS deductions will appear here once you complete scheduled sessions and submit diagnostic scorecards within the 48-hour SLA.
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  filteredTransactions.map((tx) => (
                   <tr
                     key={tx.id}
                     className={`transition-colors ${
@@ -552,7 +607,7 @@ export default function MentorEarningsPage() {
                       )}
                     </td>
                   </tr>
-                ))}
+                )))}
               </tbody>
             </table>
           </div>

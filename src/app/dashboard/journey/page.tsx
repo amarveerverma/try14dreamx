@@ -301,7 +301,7 @@ export default function CareerJourneyPage() {
                       <span className="material-symbols-outlined text-[18px] text-secondary">check_circle</span>
                       <div className="flex flex-col truncate">
                         <span className="font-bold text-on-surface truncate">S05 Behavioral STAR Drill</span>
-                        <span className="text-[11px] text-on-surface-variant">Siddharth Iyer • Deliverable #DEL-SCR-3108</span>
+                        <span className="text-[11px] text-on-surface-variant">Verified Staff Mentor • Deliverable Verified</span>
                       </div>
                     </div>
                     <span className="font-bold text-secondary shrink-0 ml-2">+8 pts</span>
@@ -313,10 +313,10 @@ export default function CareerJourneyPage() {
                       <div className="flex flex-col truncate">
                         <div className="flex items-center gap-1.5">
                           <span className="font-bold text-on-surface truncate">S06 Technical Mock: Distributed Systems</span>
-                          <span className="px-1.5 py-0.2 rounded bg-primary text-on-primary text-[9px] font-bold">TOMORROW</span>
+                          <span className="px-1.5 py-0.2 rounded bg-primary text-on-primary text-[9px] font-bold">UPCOMING</span>
                         </div>
                         <span className="text-[11px] text-on-surface-variant truncate">
-                          Rajesh Kannan (Staff SDE) • Tomorrow 07:30 PM IST
+                          Scheduled Live Calibration • Google Meet Enabled
                         </span>
                       </div>
                     </div>
@@ -355,7 +355,7 @@ export default function CareerJourneyPage() {
                       </h3>
                     </div>
                   </div>
-                  <span className="text-xs font-mono text-outline">Sprint Target: Nov 10</span>
+                  <span className="text-xs font-mono text-outline">Sprint Target: Post Mock</span>
                 </div>
                 <p className="text-xs text-on-surface-variant leading-relaxed">
                   Prerequisite: Technical mock competence score ≥ 3.8/5.0. Will cover Bangalore SDE-2 banding (₹32L–₹44L CTC), equity cliff &amp; strike price analysis, and dual counter-offer timing.
@@ -364,7 +364,7 @@ export default function CareerJourneyPage() {
                   <div className="flex items-center gap-2 truncate">
                     <span className="material-symbols-outlined text-[18px] text-outline">event_available</span>
                     <span className="text-on-surface-variant truncate">
-                      Reserved Sprint: S08 Salary Negotiation Strategy (Smart Match: Arishta Sengupta)
+                      Reserved Sprint: S08 Salary Negotiation Strategy (Smart Match Algorithm)
                     </span>
                   </div>
                   <span className="text-primary font-bold shrink-0 ml-2">Scheduled</span>

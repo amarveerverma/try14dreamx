@@ -28,7 +28,7 @@ const INITIAL_DIMENSIONS: DimensionItem[] = [
     levelBadge: "3 - Developing",
     tag: "",
     icon: "description",
-    attachedFile: "Rohan_Sharma_v2.pdf",
+    attachedFile: "Resume_Candidate_Draft.pdf",
     attachedFileSize: "1.4 MB",
   },
   {

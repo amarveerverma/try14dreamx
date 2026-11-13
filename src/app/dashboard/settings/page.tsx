@@ -11,12 +11,19 @@ export default function CandidateAccountSettingsPage() {
   const [activeTab, setActiveTab] = React.useState<SettingsTab>("profile");
 
   // Form states
-  const [fullName, setFullName] = React.useState(user?.name || "Aarav Sharma");
-  const [phone, setPhone] = React.useState("+91 98765 43210");
+  const [fullName, setFullName] = React.useState(user?.name || "Verified Candidate");
+  const [phone, setPhone] = React.useState("+91 98000 00000");
   const [timezone, setTimezone] = React.useState("Asia/Kolkata (IST • UTC+05:30)");
   const [segmentTrack, setSegmentTrack] = React.useState("Early Career (0–2 YoE) Backend [PRD §8.2]");
   const [careerGoal, setCareerGoal] = React.useState("SDE-2 Distributed Systems @ Tier-1 GCC / Product Unicorn");
   const [targetComp, setTargetComp] = React.useState("₹32L – ₹44L CTC");
+
+  // Keep state updated when user context loads
+  React.useEffect(() => {
+    if (user?.name) {
+      setFullName(user.name);
+    }
+  }, [user]);
 
   // Privacy toggles
   const [privateProfile, setPrivateProfile] = React.useState(true);
@@ -43,7 +50,7 @@ export default function CandidateAccountSettingsPage() {
     const archiveData = {
       candidateId: user?.id || "DX-8419",
       name: fullName,
-      email: user?.email || "aarav.sharma@techpulse.io",
+      email: user?.email || "candidate@dreamx.in",
       phone: phone,
       timezone: timezone,
       segment: segmentTrack,
@@ -242,7 +249,7 @@ export default function CandidateAccountSettingsPage() {
                       </div>
                       <p className="text-xs text-on-surface-variant flex items-center gap-1.5">
                         <span className="material-symbols-outlined text-secondary text-[16px]">domain_verification</span>
-                        <span>{user?.email || "aarav.sharma@techpulse.io"} (Verified via Work Domain)</span>
+                        <span>{user?.email || "candidate@dreamx.in"} (Verified Account)</span>
                       </p>
                     </div>
                     <div className="flex sm:flex-col gap-2 shrink-0">
@@ -278,7 +285,7 @@ export default function CandidateAccountSettingsPage() {
                         <input
                           type="email"
                           readOnly
-                          value={user?.email || "aarav.sharma@techpulse.io"}
+                          value={user?.email || "candidate@dreamx.in"}
                           className="w-full h-10 pl-3.5 pr-9 rounded-xl bg-surface-container text-xs text-on-surface font-medium cursor-not-allowed opacity-90 border border-outline-variant/20"
                         />
                         <span className="material-symbols-outlined text-secondary text-[18px] absolute right-3">lock</span>
@@ -364,7 +371,7 @@ export default function CandidateAccountSettingsPage() {
                   <button
                     type="button"
                     onClick={() => {
-                      setFullName("Aarav Sharma");
+                      setFullName(user?.name || "Verified Candidate");
                       setCareerGoal("SDE-2 Distributed Systems @ Tier-1 GCC / Product Unicorn");
                       setTargetComp("₹32L – ₹44L CTC");
                     }}
@@ -798,7 +805,7 @@ export default function CandidateAccountSettingsPage() {
                       <span className="material-symbols-outlined text-outline text-[18px]">corporate_fare</span>
                       <div>
                         <span className="font-bold text-on-surface block leading-tight">Google Workspace (SSO)</span>
-                        <span className="text-on-surface-variant text-[11px] block">{user?.email || "aarav.sharma@techpulse.io"}</span>
+                        <span className="text-on-surface-variant text-[11px] block">{user?.email || "candidate@dreamx.in"}</span>
                       </div>
                     </div>
                     <span className="material-symbols-outlined text-secondary text-[18px]">link</span>
