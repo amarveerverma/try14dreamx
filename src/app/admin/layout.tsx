@@ -72,6 +72,13 @@ export default function AdminWorkspaceLayout({
       badgeColor: "bg-red-500/20 text-red-300 border-red-500/30",
     },
     {
+      name: "Launch Gates Matrix",
+      href: "/admin/launch-gates",
+      icon: ShieldCheck,
+      badge: "PRD §22.3",
+      badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-400/30",
+    },
+    {
       name: "Smart Match Dispatch",
       href: "/mentor/dispatch",
       icon: ShieldCheck,

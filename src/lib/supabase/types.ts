@@ -1755,6 +1755,25 @@ export interface Database {
         };
         Returns: Json;
       };
+      execute_scheduled_retention_purge: {
+        Args: {
+          p_admin_id?: string | null;
+        };
+        Returns: Json;
+      };
+      verify_database_recovery_drill: {
+        Args: {
+          p_admin_id: string;
+          p_drill_type?: string;
+        };
+        Returns: Json;
+      };
+      get_launch_gates_readiness_audit: {
+        Args: {
+          p_admin_id: string;
+        };
+        Returns: Json;
+      };
     };
     Enums: {
       user_role: UserRole;
