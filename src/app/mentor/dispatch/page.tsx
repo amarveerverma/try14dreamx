@@ -2,9 +2,12 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useAuth } from "@/lib/auth-context";
+import { createClient } from "@/lib/supabase/client";
 
 interface DispatchOffer {
   id: string;
+  requestId: string;
   serviceCode: string;
   serviceTitle: string;
   duration: string;
@@ -21,58 +24,159 @@ interface DispatchOffer {
   payout: number;
 }
 
-const INITIAL_OFFERS: DispatchOffer[] = [
-  {
-    id: "REQ-8902",
-    serviceCode: "S06",
-    serviceTitle: "Technical Mock Interview & Distributed Architecture Drill",
-    duration: "60 min Live Call + 8-D Diagnostic Scorecard",
-    waveTag: "Wave 1 (Direct Fit • 98% Match Score)",
-    matchScore: 98,
-    initialSeconds: 1420, // ~23m 40s
-    candidateId: "#DX-9124",
-    candidateLevel: "Early Career Backend • 0-2 YoE",
-    targetTrack: "Google L4 / Swiggy L5 Systems",
-    focusArea: "Microservice race conditions, distributed locking (Redlock), and Redis cache invalidation.",
-    resumeFileName: "Resume_Rohan_v2.pdf (ATS Audited)",
-    slotText: "Tomorrow, Oct 26 • 07:30 PM – 08:30 PM IST",
-    deliveryType: "live",
-    payout: 799,
-  },
-  {
-    id: "REQ-8905",
-    serviceCode: "S01",
-    serviceTitle: "Resume Line-by-Line Teardown & ATS Benchmark",
-    duration: "Async 48h Scorecard SLA (No call required)",
-    waveTag: "Wave 1 (High Seniority Fit • 96% Match Score)",
-    matchScore: 96,
-    initialSeconds: 890, // ~14m 50s
-    candidateId: "#DX-8411",
-    candidateLevel: "Career Switcher • 3 YoE",
-    targetTrack: "FinTech GCC Senior Backend",
-    focusArea: "Distributed Kafka & Transactional Logging.",
-    resumeFileName: "Resume_Deepak_Fintech.pdf (2.1 MB)",
-    slotText: "Async 48h SLA (Scorecard due by Oct 28 • 18:00 IST)",
-    deliveryType: "async",
-    payout: 479,
-  },
-];
+interface RemoteDispatchRow {
+  id: string;
+  request_id: string;
+  wave: number;
+  match_score: number;
+  status: string;
+  request: {
+    id: string;
+    request_ref: string;
+    service_code: string;
+    amount_paise: number;
+    target_role: string | null;
+    pre_session_notes: string | null;
+    resume_url: string | null;
+    current_wave: number;
+    timeout_at: string;
+    created_at: string;
+  } | null;
+}
 
 export default function MentorDispatchPage() {
-  const [offers, setOffers] = React.useState<DispatchOffer[]>(INITIAL_OFFERS);
+  const { user } = useAuth();
+  const supabase = React.useMemo(() => createClient(), []);
+  const [offers, setOffers] = React.useState<DispatchOffer[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
   const [activeTab, setActiveTab] = React.useState<"all" | "wave1" | "wave2" | "archived">("all");
   const [paused, setPaused] = React.useState(false);
   const [claimNotice, setClaimNotice] = React.useState<string | null>(null);
+  const [claimNoticeType, setClaimNoticeType] = React.useState<"success" | "conflict">("success");
 
-  const handleClaim = (id: string, title: string) => {
-    setOffers((prev) => prev.filter((o) => o.id !== id));
-    setClaimNotice(`Offer ${id} (${title}) claimed successfully! Session locked on your calendar & Razorpay escrow hold activated.`);
-    setTimeout(() => setClaimNotice(null), 5000);
+  // Load real dispatches for this mentor from Supabase
+  React.useEffect(() => {
+    let isMounted = true;
+    async function loadDispatches() {
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
+      try {
+        const { data, error } = await supabase
+          .from("smart_match_dispatches")
+          .select(`
+            id,
+            request_id,
+            wave,
+            match_score,
+            status,
+            request:smart_match_requests(
+              id,
+              request_ref,
+              service_code,
+              amount_paise,
+              target_role,
+              pre_session_notes,
+              resume_url,
+              current_wave,
+              timeout_at,
+              created_at
+            )
+          `)
+          .eq("mentor_id", user.id)
+          .eq("status", "dispatched");
+
+        if (error) {
+          console.warn("Could not load dispatches:", error);
+          if (isMounted) setOffers([]);
+        } else if (data && data.length > 0) {
+          const mapped: DispatchOffer[] = (data as unknown as RemoteDispatchRow[]).map((row) => {
+            const req = row.request;
+            const netPayout = req ? Math.round((req.amount_paise * 0.8) / 100) : 799;
+            const timeoutDate = req ? new Date(req.timeout_at) : new Date(Date.now() + 1800000);
+            const remainingSec = Math.max(0, Math.round((timeoutDate.getTime() - Date.now()) / 1000));
+
+            return {
+              id: req ? req.request_ref : row.id.slice(0, 8),
+              requestId: row.request_id,
+              serviceCode: req?.service_code || "S06",
+              serviceTitle:
+                req?.service_code === "S06"
+                  ? "Technical Mock Interview & Distributed Architecture Drill"
+                  : req?.service_code === "S01"
+                  ? "Resume Line-by-Line Teardown & ATS Benchmark"
+                  : `Service ${req?.service_code || "S06"}`,
+              duration: "60 min Live Call + 8-D Diagnostic Scorecard",
+              waveTag: `Wave ${row.wave} (${row.wave === 1 ? "Priority Direct Fit" : "Expanded Pool"} • ${row.match_score}% Match Score)`,
+              matchScore: Number(row.match_score),
+              initialSeconds: remainingSec,
+              candidateId: `#DX-${req ? req.id.slice(0, 4) : "CAND"}`,
+              candidateLevel: req?.target_role || "Candidate Track",
+              targetTrack: req?.target_role || "Tier-1 Product Systems",
+              focusArea: req?.pre_session_notes || "Core engineering and trade-off evaluation drill.",
+              resumeFileName: req?.resume_url ? "Candidate_Resume.pdf" : undefined,
+              slotText: "Flexible IST Evening Window (Next 48 Hours)",
+              deliveryType: "live",
+              payout: netPayout,
+            };
+          });
+          if (isMounted) setOffers(mapped);
+        } else {
+          if (isMounted) setOffers([]);
+        }
+      } catch (err) {
+        console.warn("Dispatch fetch error:", err);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    }
+
+    loadDispatches();
+    return () => {
+      isMounted = false;
+    };
+  }, [user, supabase]);
+
+  const handleClaim = async (requestId: string, title: string) => {
+    try {
+      const res = await fetch("/api/smart-match/accept", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ requestId }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        if (res.status === 409 || data.code === "OFFER_ALREADY_ACCEPTED") {
+          // Exit Criteria 1 notice
+          setClaimNoticeType("conflict");
+          setClaimNotice("Notice: Another mentor accepted this offer in Wave 1 (Single-winner mutex lock). Your queue has been refreshed.");
+          setOffers((prev) => prev.filter((o) => o.requestId !== requestId));
+        } else {
+          setClaimNoticeType("conflict");
+          setClaimNotice(data.error || "Failed to accept offer.");
+        }
+        setTimeout(() => setClaimNotice(null), 6000);
+        return;
+      }
+
+      setOffers((prev) => prev.filter((o) => o.requestId !== requestId));
+      setClaimNoticeType("success");
+      setClaimNotice(`Offer ${data.booking_ref} (${title}) claimed successfully! Calendar invite & Google Meet link generated. Escrow funded.`);
+      setTimeout(() => setClaimNotice(null), 6000);
+    } catch (err) {
+      setClaimNoticeType("conflict");
+      setClaimNotice(err instanceof Error ? err.message : "Error accepting offer.");
+      setTimeout(() => setClaimNotice(null), 6000);
+    }
   };
 
-  const handleDecline = (id: string) => {
-    setOffers((prev) => prev.filter((o) => o.id !== id));
-    setClaimNotice(`Offer ${id} declined. Cascaded to expanded Wave 2 mentor pool.`);
+  const handleDecline = (requestId: string) => {
+    setOffers((prev) => prev.filter((o) => o.requestId !== requestId));
+    setClaimNoticeType("success");
+    setClaimNotice(`Offer declined. Cascaded to expanded Wave 2 mentor pool.`);
     setTimeout(() => setClaimNotice(null), 4000);
   };
 
@@ -97,12 +201,20 @@ export default function MentorDispatchPage() {
       </div>
 
       {claimNotice && (
-        <div className="mx-4 sm:mx-6 lg:mx-8 mt-4 p-3.5 rounded-xl bg-[#eaf5ef] border border-[#94f7b2] text-[#006d3a] text-xs font-semibold flex items-center justify-between shadow-xs animate-in fade-in">
+        <div
+          className={`mx-4 sm:mx-6 lg:mx-8 mt-4 p-3.5 rounded-xl border text-xs font-semibold flex items-center justify-between shadow-xs animate-in fade-in ${
+            claimNoticeType === "conflict"
+              ? "bg-amber-50 border-amber-300 text-amber-900"
+              : "bg-[#eaf5ef] border-[#94f7b2] text-[#006d3a]"
+          }`}
+        >
           <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-[16px]">verified</span>
+            <span className="material-symbols-outlined text-[16px]">
+              {claimNoticeType === "conflict" ? "error" : "verified"}
+            </span>
             <span>{claimNotice}</span>
           </div>
-          <button type="button" onClick={() => setClaimNotice(null)} className="text-[#006d3a]">
+          <button type="button" onClick={() => setClaimNotice(null)} className="cursor-pointer">
             <span className="material-symbols-outlined text-[16px]">close</span>
           </button>
         </div>
@@ -257,7 +369,12 @@ export default function MentorDispatchPage() {
         </div>
 
         {/* Inbound Offer Cards */}
-        {offers.length === 0 ? (
+        {isLoading ? (
+          <div className="p-12 bg-white border border-[#e7e7eb] rounded-2xl text-center space-y-3">
+            <div className="w-8 h-8 rounded-full border-2 border-[#5145cd] border-t-transparent animate-spin mx-auto" />
+            <p className="text-xs text-[#777585]">Polling live Smart Match dispatch queue...</p>
+          </div>
+        ) : offers.length === 0 ? (
           <div className="p-12 bg-white border border-[#e7e7eb] rounded-2xl text-center space-y-2">
             <span className="material-symbols-outlined text-4xl text-[#777585]">task_alt</span>
             <h3 className="text-base font-bold text-[#1c1b1b]">No Pending Claims</h3>
@@ -348,15 +465,15 @@ export default function MentorDispatchPage() {
                   <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end">
                     <button
                       type="button"
-                      onClick={() => handleDecline(offer.id)}
-                      className="px-4 py-2 border border-[#e7e7eb] hover:bg-red-50 hover:text-red-700 text-[#474554] rounded-xl text-xs font-bold transition-colors"
+                      onClick={() => handleDecline(offer.requestId)}
+                      className="px-4 py-2 border border-[#e7e7eb] hover:bg-red-50 hover:text-red-700 text-[#474554] rounded-xl text-xs font-bold transition-colors cursor-pointer"
                     >
                       Decline Request
                     </button>
                     <button
                       type="button"
-                      onClick={() => handleClaim(offer.id, offer.serviceTitle)}
-                      className="px-5 py-2 bg-[#5145cd] hover:bg-[#3828b5] text-white rounded-xl text-xs font-bold shadow-xs transition-all flex items-center gap-1.5 focus:ring-2 focus:ring-offset-2 focus:ring-[#5145cd]"
+                      onClick={() => handleClaim(offer.requestId, offer.serviceTitle)}
+                      className="px-5 py-2 bg-[#5145cd] hover:bg-[#3828b5] text-white rounded-xl text-xs font-bold shadow-xs transition-all flex items-center gap-1.5 focus:ring-2 focus:ring-offset-2 focus:ring-[#5145cd] cursor-pointer"
                     >
                       <span className="material-symbols-outlined text-[14px]">check</span>
                       <span>Accept Offer &amp; Lock Slot</span>

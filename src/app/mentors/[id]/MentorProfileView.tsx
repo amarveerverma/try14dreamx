@@ -92,6 +92,15 @@ export function MentorProfileView({ mentor }: { mentor: Mentor }) {
   const [confirmError, setConfirmError] = React.useState<string | null>(null);
   const [confirmedSuccess, setConfirmedSuccess] = React.useState(false);
 
+  // Phase P8 Smart Match State
+  const [isRequestingSmartMatch, setIsRequestingSmartMatch] = React.useState(false);
+  const [smartMatchError, setSmartMatchError] = React.useState<string | null>(null);
+  const [smartMatchResult, setSmartMatchResult] = React.useState<{
+    requestRef: string;
+    dispatchedMentors: number;
+    timeoutAt: string;
+  } | null>(null);
+
   const basePrice = selectedService.price;
   const discountAmount = hasProDiscount ? Math.round(basePrice * 0.1) : 0;
   const netPayable = basePrice - discountAmount;
@@ -184,6 +193,46 @@ export function MentorProfileView({ mentor }: { mentor: Mentor }) {
       setConfirmError(err instanceof Error ? err.message : "Payment capture failed.");
     } finally {
       setIsConfirmingPayment(false);
+    }
+  };
+
+  const handleTriggerSmartMatch = async () => {
+    if (!isAuthenticated) {
+      router.push(`/login?returnUrl=/mentors/${mentor.slug}`);
+      return;
+    }
+
+    setIsRequestingSmartMatch(true);
+    setSmartMatchError(null);
+
+    try {
+      const res = await fetch("/api/smart-match/request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          serviceCode: selectedService.code,
+          amountPaise: netPayable * 100,
+          preferredWindows: [{ day: "Tomorrow Evening", window: "07:00 PM – 10:00 PM IST" }],
+          targetRole: "Senior Backend / ML Systems",
+          preSessionNotes: "Triggered via Smart Match Dispatch alternative",
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        setSmartMatchError(data.error || "Failed to initialize Smart Match dispatch.");
+        return;
+      }
+
+      setSmartMatchResult({
+        requestRef: data.request_ref,
+        dispatchedMentors: data.dispatched_mentors,
+        timeoutAt: data.timeout_at,
+      });
+    } catch (err) {
+      setSmartMatchError(err instanceof Error ? err.message : "Error initiating Smart Match.");
+    } finally {
+      setIsRequestingSmartMatch(false);
     }
   };
 
@@ -1051,52 +1100,110 @@ export function MentorProfileView({ mentor }: { mentor: Mentor }) {
             <div className="flex items-center justify-between border-b border-outline-variant/20 pb-3">
               <div className="flex items-center gap-2 text-primary font-bold text-sm">
                 <span className="material-symbols-outlined text-[20px]">bolt</span>
-                <span>Smart Match Wave 1 Dispatch</span>
+                <span>
+                  {smartMatchResult
+                    ? "Smart Match Dispatch Dispatched"
+                    : "Smart Match Two-Wave Engine"}
+                </span>
               </div>
               <button
                 type="button"
-                onClick={() => setSmartMatchRequested(false)}
-                className="text-outline hover:text-on-surface text-sm"
+                onClick={() => {
+                  setSmartMatchRequested(false);
+                  setSmartMatchResult(null);
+                  setSmartMatchError(null);
+                }}
+                className="text-outline hover:text-on-surface text-sm cursor-pointer"
               >
                 ✕
               </button>
             </div>
 
-            <div className="space-y-3 text-xs text-on-surface-variant leading-relaxed">
-              <p className="text-sm font-semibold text-on-surface">
-                Matching across verified Staff SDEs in India:
-              </p>
-              <ul className="space-y-2">
-                <li className="flex items-start gap-2">
-                  <span className="w-2 h-2 rounded-full bg-secondary shrink-0 mt-1" />
-                  <span><strong>Wave 1:</strong> Immediate ping to 4 calibrated Tier-1 mentors.</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="w-2 h-2 rounded-full bg-secondary shrink-0 mt-1" />
-                  <span><strong>Wave 2:</strong> Automatic escalation at 30 minutes if unaccepted.</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="w-2 h-2 rounded-full bg-primary shrink-0 mt-1" />
-                  <span><strong>Guaranteed SLA:</strong> 100% matched within 2 hours or instant wallet refund.</span>
-                </li>
-              </ul>
-            </div>
+            {smartMatchResult ? (
+              <div className="py-2 space-y-4">
+                <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-950 text-xs space-y-2">
+                  <div className="flex justify-between items-center font-bold">
+                    <span>Reference: {smartMatchResult.requestRef}</span>
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-200 text-emerald-900 text-[10px]">
+                      Wave 1 Active
+                    </span>
+                  </div>
+                  <p className="leading-relaxed">
+                    Dispatched to <strong>{smartMatchResult.dispatchedMentors} accredited Tier-1 mentors</strong> matching your service requirements.
+                  </p>
+                  <div className="pt-1 text-[11px] text-emerald-800 space-y-1">
+                    <p>• Wave 2 expands automatically at 30 minutes if unclaimed.</p>
+                    <p>• 2-Hour Guarantee: At 120 minutes, choose alternate slot or receive 100% instant refund (PRD §10.3).</p>
+                  </div>
+                </div>
 
-            <div className="flex items-center gap-3 pt-2">
-              <button
-                type="button"
-                onClick={() => setSmartMatchRequested(false)}
-                className="flex-1 py-2.5 px-4 rounded-xl border border-outline-variant text-on-surface text-xs font-semibold hover:bg-surface-container-low"
-              >
-                Dismiss
-              </button>
-              <Link
-                href="/mentor/dispatch"
-                className="flex-1 py-2.5 px-4 rounded-xl bg-primary text-on-primary text-xs font-bold text-center hover:bg-primary-container shadow-md"
-              >
-                View Live Dispatch Queue
-              </Link>
-            </div>
+                <div className="flex items-center gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSmartMatchRequested(false);
+                      setSmartMatchResult(null);
+                    }}
+                    className="flex-1 py-2.5 px-4 rounded-xl border border-outline-variant text-on-surface text-xs font-semibold hover:bg-surface-container-low cursor-pointer"
+                  >
+                    Close
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => router.push("/dashboard/bookings")}
+                    className="flex-1 py-2.5 px-4 rounded-xl bg-primary text-on-primary text-xs font-bold text-center hover:bg-primary-container shadow-md cursor-pointer"
+                  >
+                    Track in Dashboard →
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="space-y-3 text-xs text-on-surface-variant leading-relaxed">
+                  <p className="text-sm font-semibold text-on-surface">
+                    Deterministic Matching across verified Staff Engineers:
+                  </p>
+                  <ul className="space-y-2">
+                    <li className="flex items-start gap-2">
+                      <span className="w-2 h-2 rounded-full bg-secondary shrink-0 mt-1" />
+                      <span><strong>Wave 1 (0–30 min):</strong> Immediate ping to highest-affinity accredited mentors.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="w-2 h-2 rounded-full bg-secondary shrink-0 mt-1" />
+                      <span><strong>Wave 2 (30–120 min):</strong> Automated expansion to secondary qualified pool.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="w-2 h-2 rounded-full bg-primary shrink-0 mt-1" />
+                      <span><strong>2-Hour Guarantee:</strong> Candidate choice of open slot or 100% instant escrow refund.</span>
+                    </li>
+                  </ul>
+                </div>
+
+                {smartMatchError && (
+                  <p className="text-xs text-red-600 bg-red-50 p-2.5 rounded-lg border border-red-200">
+                    {smartMatchError}
+                  </p>
+                )}
+
+                <div className="flex items-center gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setSmartMatchRequested(false)}
+                    className="flex-1 py-2.5 px-4 rounded-xl border border-outline-variant text-on-surface text-xs font-semibold hover:bg-surface-container-low cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isRequestingSmartMatch}
+                    onClick={handleTriggerSmartMatch}
+                    className="flex-1 py-2.5 px-4 rounded-xl bg-primary text-on-primary text-xs font-bold text-center hover:bg-primary-container shadow-md cursor-pointer disabled:opacity-50"
+                  >
+                    {isRequestingSmartMatch ? "Dispatching..." : `Trigger Wave 1 (₹${netPayable})`}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

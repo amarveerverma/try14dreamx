@@ -19,6 +19,8 @@ export type BookingStatus = 'draft' | 'held' | 'confirmed' | 'in_progress' | 'co
 export type PaymentStatus = 'unpaid' | 'authorized' | 'captured' | 'refunded' | 'failed';
 export type RefundStatus = 'initiated' | 'processing' | 'completed' | 'failed';
 export type SettlementStatus = 'accrued' | 'in_escrow' | 'eligible_for_payout' | 'processing' | 'settled' | 'on_hold' | 'forfeited';
+export type SmartMatchStatus = 'pending' | 'wave_1' | 'wave_2' | 'matched' | 'timeout_fallback' | 'cancelled' | 'refunded';
+export type DispatchOfferStatus = 'dispatched' | 'accepted' | 'declined' | 'missed' | 'expired';
 
 export interface Database {
   public: {
@@ -673,6 +675,106 @@ export interface Database {
         };
         Relationships: [];
       };
+      smart_match_requests: {
+        Row: {
+          id: string;
+          request_ref: string;
+          student_id: string;
+          service_code: ServiceCode;
+          target_role: string | null;
+          preferred_windows: Json;
+          pre_session_notes: string | null;
+          resume_url: string | null;
+          amount_paise: number;
+          status: SmartMatchStatus;
+          current_wave: number;
+          wave_1_dispatched_at: string;
+          wave_2_dispatched_at: string | null;
+          timeout_at: string;
+          matched_mentor_id: string | null;
+          matched_booking_id: string | null;
+          match_reasons: Json | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          request_ref: string;
+          student_id: string;
+          service_code: ServiceCode;
+          target_role?: string | null;
+          preferred_windows?: Json;
+          pre_session_notes?: string | null;
+          resume_url?: string | null;
+          amount_paise: number;
+          status?: SmartMatchStatus;
+          current_wave?: number;
+          wave_1_dispatched_at?: string;
+          wave_2_dispatched_at?: string | null;
+          timeout_at?: string;
+          matched_mentor_id?: string | null;
+          matched_booking_id?: string | null;
+          match_reasons?: Json | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          request_ref?: string;
+          student_id?: string;
+          service_code?: ServiceCode;
+          target_role?: string | null;
+          preferred_windows?: Json;
+          pre_session_notes?: string | null;
+          resume_url?: string | null;
+          amount_paise?: number;
+          status?: SmartMatchStatus;
+          current_wave?: number;
+          wave_1_dispatched_at?: string;
+          wave_2_dispatched_at?: string | null;
+          timeout_at?: string;
+          matched_mentor_id?: string | null;
+          matched_booking_id?: string | null;
+          match_reasons?: Json | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      smart_match_dispatches: {
+        Row: {
+          id: string;
+          request_id: string;
+          mentor_id: string;
+          wave: number;
+          match_score: number;
+          status: DispatchOfferStatus;
+          responded_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          request_id: string;
+          mentor_id: string;
+          wave: number;
+          match_score?: number;
+          status?: DispatchOfferStatus;
+          responded_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          request_id?: string;
+          mentor_id?: string;
+          wave?: number;
+          match_score?: number;
+          status?: DispatchOfferStatus;
+          responded_at?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -767,6 +869,65 @@ export interface Database {
           total_refunded_paise: number;
         }[];
       };
+      create_smart_match_request: {
+        Args: {
+          p_student_id: string;
+          p_service_code: ServiceCode;
+          p_amount_paise: number;
+          p_preferred_windows?: Json;
+          p_target_role?: string | null;
+          p_pre_session_notes?: string | null;
+          p_resume_url?: string | null;
+        };
+        Returns: {
+          success: boolean;
+          request_id: string;
+          request_ref: string;
+          wave: number;
+          dispatched_mentors: number;
+          timeout_at: string;
+        };
+      };
+      accept_smart_match_offer: {
+        Args: {
+          p_request_id: string;
+          p_mentor_id: string;
+          p_session_start?: string | null;
+          p_session_end?: string | null;
+        };
+        Returns: {
+          success: boolean;
+          booking_id: string;
+          booking_ref: string;
+          mentor_id: string;
+          status: string;
+        };
+      };
+      escalate_smart_match_wave: {
+        Args: {
+          p_request_id: string;
+        };
+        Returns: {
+          success: boolean;
+          request_id: string;
+          new_dispatches_count: number;
+          status: string;
+        };
+      };
+      resolve_smart_match_timeout: {
+        Args: {
+          p_request_id: string;
+          p_student_id: string;
+          p_choice: string;
+        };
+        Returns: {
+          success: boolean;
+          choice: string;
+          status: string;
+          amount_paise?: number;
+          redirect_url?: string;
+        };
+      };
     };
     Enums: {
       user_role: UserRole;
@@ -777,6 +938,8 @@ export interface Database {
       payment_status: PaymentStatus;
       refund_status: RefundStatus;
       settlement_status: SettlementStatus;
+      smart_match_status: SmartMatchStatus;
+      dispatch_offer_status: DispatchOfferStatus;
     };
     CompositeTypes: {
       [_ in never]: never;
