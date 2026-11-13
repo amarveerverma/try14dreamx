@@ -24,6 +24,16 @@ export default function AdminWorkspaceLayout({
 }) {
   const pathname = usePathname();
   const [currentTime, setCurrentTime] = React.useState<string>("");
+  const [counts, setCounts] = React.useState<{ verifications?: number; disputes?: number }>({});
+
+  React.useEffect(() => {
+    fetch('/api/admin/queues?adminId=00000000-0000-0000-0000-000000000001')
+      .then((r) => r.json())
+      .then((d) => {
+        if (d?.counts) setCounts(d.counts);
+      })
+      .catch(() => {});
+  }, [pathname]);
 
   React.useEffect(() => {
     const updateTime = () => {
@@ -51,14 +61,14 @@ export default function AdminWorkspaceLayout({
       name: "Mentor Verification",
       href: "/admin/verification",
       icon: Users,
-      badge: "4 Pending",
+      badge: counts.verifications !== undefined ? `${counts.verifications} Pending` : "4 Pending",
       badgeColor: "bg-amber-500/20 text-amber-300 border-amber-500/30",
     },
     {
       name: "Disputes & Escrow",
       href: "/admin/disputes",
       icon: Scale,
-      badge: "1 Active",
+      badge: counts.disputes !== undefined ? `${counts.disputes} Active` : "1 Active",
       badgeColor: "bg-red-500/20 text-red-300 border-red-500/30",
     },
     {

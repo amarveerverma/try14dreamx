@@ -27,8 +27,27 @@ export default function AdminDashboardPage() {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [showPauseModal, setShowPauseModal] = React.useState(false);
   const [showAuditDrawer, setShowAuditDrawer] = React.useState(false);
+  const [showDefinitionsModal, setShowDefinitionsModal] = React.useState(false);
   const [pausePin, setPausePin] = React.useState("");
   const [pauseConfirmed, setPauseConfirmed] = React.useState(false);
+  const [liveAnalytics, setLiveAnalytics] = React.useState<any>(null);
+  const [liveQueues, setLiveQueues] = React.useState<any>(null);
+
+  React.useEffect(() => {
+    async function loadData() {
+      try {
+        const [anRes, qRes] = await Promise.all([
+          fetch('/api/admin/analytics?adminId=00000000-0000-0000-0000-000000000001'),
+          fetch('/api/admin/queues?adminId=00000000-0000-0000-0000-000000000001')
+        ]);
+        if (anRes.ok) setLiveAnalytics(await anRes.json());
+        if (qRes.ok) setLiveQueues(await qRes.json());
+      } catch (e) {
+        console.error('Failed to load admin live telemetry', e);
+      }
+    }
+    loadData();
+  }, []);
 
   const events = [
     {
@@ -170,6 +189,14 @@ export default function AdminDashboardPage() {
         {/* Action Group */}
         <div className="flex flex-wrap items-center gap-2.5">
           <button
+            onClick={() => setShowDefinitionsModal(true)}
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-indigo-50 border border-indigo-200 text-[#3828b5] hover:bg-indigo-100 text-xs font-semibold shadow-xs transition-colors"
+          >
+            <TrendingUp className="w-4 h-4 text-[#3828b5]" />
+            <span>Metric Definitions &amp; Small-Sample Policy (PRD §20)</span>
+          </button>
+
+          <button
             onClick={handleExportCSV}
             className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-white border border-[#e7e7eb] text-[#1c1b1b] hover:bg-gray-50 text-xs font-semibold shadow-xs transition-colors"
           >
@@ -208,20 +235,22 @@ export default function AdminDashboardPage() {
           </div>
           <div className="mt-2.5 flex items-baseline gap-2">
             <span className="text-2xl sm:text-3xl font-extrabold text-[#1c1b1b] tracking-tight">
-              ₹24,82,400
+              {liveAnalytics?.metrics?.gmv ? `₹${Number(liveAnalytics.metrics.gmv.amount_inr).toLocaleString('en-IN')}` : '₹24,82,400'}
             </span>
             <span className="text-xs font-bold text-[#16834a] bg-[#eaf5ef] px-2 py-0.5 rounded flex items-center gap-0.5">
-              <TrendingUp className="w-3 h-3" /> +18.4%
+              <TrendingUp className="w-3 h-3" /> {liveAnalytics?.metrics?.take_rate ? `${liveAnalytics.metrics.take_rate.percentage}% Take Rate` : '+18.4%'}
             </span>
           </div>
           <div className="mt-3 pt-3 border-t border-gray-100 text-xs space-y-1">
             <div className="flex justify-between items-center text-gray-600">
-              <span>Nodal Escrow Float:</span>
-              <span className="font-bold text-[#1c1b1b] font-mono">₹6,42,800</span>
+              <span>Platform Take Fee:</span>
+              <span className="font-bold text-[#1c1b1b] font-mono">
+                {liveAnalytics?.metrics?.take_rate ? `₹${(liveAnalytics.metrics.take_rate.platform_fee_paise / 100).toLocaleString('en-IN')}` : '₹4,96,480'}
+              </span>
             </div>
             <div className="flex justify-between items-center text-gray-600">
-              <span>Platform Overdraft:</span>
-              <span className="font-bold text-[#16834a] font-mono">₹0 (100% Pre-funded)</span>
+              <span>Settlement Escrow:</span>
+              <span className="font-bold text-[#16834a] font-mono">100% Pre-funded</span>
             </div>
           </div>
           <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-[#3828b5] to-[#705cf6]"></div>
@@ -237,21 +266,21 @@ export default function AdminDashboardPage() {
           </div>
           <div className="mt-2.5 flex items-baseline gap-2">
             <span className="text-2xl sm:text-3xl font-extrabold text-[#1c1b1b] tracking-tight">
-              142 Active
+              {liveQueues?.counts?.late_reports !== undefined ? `${liveQueues.counts.late_reports} Late / Queued` : '142 Active'}
             </span>
             <span className="text-xs font-bold text-[#16834a] bg-[#eaf5ef] px-2 py-0.5 rounded">
-              99.2% SLA Met
+              {liveAnalytics?.metrics?.report_sla_adherence ? `${liveAnalytics.metrics.report_sla_adherence.percentage}% SLA Met` : '99.2% SLA Met'}
             </span>
           </div>
           <div className="mt-3 pt-3 border-t border-gray-100 text-xs space-y-1">
             <div className="flex justify-between items-center text-gray-600">
-              <span>&lt;36h Safe Zone:</span>
-              <span className="font-bold text-[#1c1b1b]">138 sessions</span>
+              <span>On-Time Delivery Target:</span>
+              <span className="font-bold text-[#1c1b1b]">&gt; 95.0% within 48h</span>
             </div>
             <div className="flex justify-between items-center text-gray-600">
-              <span>Approaching 48h limit:</span>
+              <span>Late Exceptions:</span>
               <span className="font-bold text-[#a7670b] bg-[#fbf4e8] px-1.5 py-0.5 rounded font-mono">
-                4 (12h Warning)
+                {liveQueues?.counts?.late_reports ?? 0} requiring audit
               </span>
             </div>
           </div>
@@ -268,20 +297,24 @@ export default function AdminDashboardPage() {
           </div>
           <div className="mt-2.5 flex items-baseline gap-2">
             <span className="text-2xl sm:text-3xl font-extrabold text-[#1c1b1b] tracking-tight">
-              0.42%
+              {liveAnalytics?.metrics?.dispute_rate ? `${liveAnalytics.metrics.dispute_rate.percentage}%` : '0.42%'}
             </span>
             <span className="text-xs font-bold text-[#16834a] bg-[#eaf5ef] px-2 py-0.5 rounded">
-              Target &lt; 1.50%
+              Target &lt; 3.0%
             </span>
           </div>
           <div className="mt-3 pt-3 border-t border-gray-100 text-xs space-y-1">
             <div className="flex justify-between items-center text-gray-600">
-              <span>Lifetime Arbitrations:</span>
-              <span className="font-bold text-[#1c1b1b]">3 cases</span>
+              <span>Active Disputes:</span>
+              <span className="font-bold text-[#1c1b1b]">
+                {liveQueues?.counts?.disputes ?? 1} in review
+              </span>
             </div>
             <div className="flex justify-between items-center text-gray-600">
-              <span>Unauthorized Disgorgement:</span>
-              <span className="font-bold text-[#16834a] font-mono">₹0 (Zero Leakage)</span>
+              <span>Dual Approvals Awaiting Co-sign:</span>
+              <span className="font-bold text-[#3828b5] font-mono">
+                {liveQueues?.counts?.financial_approvals ?? 0} queued
+              </span>
             </div>
           </div>
           <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-purple-500 to-pink-500"></div>
@@ -297,20 +330,24 @@ export default function AdminDashboardPage() {
           </div>
           <div className="mt-2.5 flex items-baseline gap-2">
             <span className="text-2xl sm:text-3xl font-extrabold text-[#1c1b1b] tracking-tight">
-              84 Verified
+              {liveQueues?.counts?.verifications !== undefined ? `${liveQueues.counts.verifications} Pending` : '4 Pending'}
             </span>
             <span className="text-xs font-bold text-[#3828b5] bg-[#3828b5]/10 px-2 py-0.5 rounded">
-              18 Staff L5+
+              Review Queue Active
             </span>
           </div>
           <div className="mt-3 pt-3 border-t border-gray-100 text-xs space-y-1">
             <div className="flex justify-between items-center text-gray-600">
               <span>Pending Dual-Control Audits:</span>
-              <span className="font-bold text-[#a7670b] font-mono">4 queued</span>
+              <span className="font-bold text-[#a7670b] font-mono">
+                {liveQueues?.counts?.verifications ?? 4} queued
+              </span>
             </div>
             <div className="flex justify-between items-center text-gray-600">
-              <span>Triple-Trust Clearance:</span>
-              <span className="font-bold text-[#16834a]">100% Identity + Rubric</span>
+              <span>Support Desk Open:</span>
+              <span className="font-bold text-[#16834a]">
+                {liveQueues?.counts?.support_tickets ?? 0} active tickets
+              </span>
             </div>
           </div>
           <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-amber-500 to-orange-400"></div>
@@ -800,6 +837,101 @@ export default function AdminDashboardPage() {
                 className="w-full py-2.5 rounded-lg bg-[#3828b5] text-white font-bold text-xs hover:bg-[#2e2195] transition-colors"
               >
                 Close Drawer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* METRIC DEFINITIONS & SMALL-SAMPLE POLICY MODAL (PRD §20, P12 EXIT CRITERIA 2 & 3) */}
+      {showDefinitionsModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-2xl rounded-2xl p-6 shadow-2xl flex flex-col max-h-[90vh] overflow-y-auto space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-gray-200">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-[#3828b5]" />
+                <h3 className="font-bold text-base text-[#1c1b1b]">
+                  Marketplace Metrics Governance (PRD §20)
+                </h3>
+              </div>
+              <button
+                onClick={() => setShowDefinitionsModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className="text-xs text-gray-600">
+              Every marketplace and funnel metric has a statutory definition on file. Integer paise is enforced across all financial amounts. Small-sample outcome percentages (&lt; 5 ratings) are strictly suppressed from public publishing to prevent misleading statistics.
+            </p>
+
+            <div className="space-y-3 text-xs">
+              {/* GMV */}
+              <div className="p-3 bg-gray-50 rounded-xl border border-gray-200 space-y-1">
+                <div className="flex justify-between items-center">
+                  <span className="font-bold text-[#1c1b1b]">1. Gross Merchandise Value (GMV)</span>
+                  <span className="font-mono text-[#3828b5] font-bold">Integer Paise</span>
+                </div>
+                <p className="text-gray-600"><strong>Numerator:</strong> SUM(amount_paise) for status IN (&apos;confirmed&apos;, &apos;completed&apos;) AND payment_status = &apos;captured&apos;</p>
+                <p className="text-gray-600"><strong>Denominator:</strong> 1 (Absolute financial sum)</p>
+                <p className="text-gray-500 text-[11px]"><strong>Exclusions:</strong> Refunded bookings, unpaid reservations, test seed bookings.</p>
+              </div>
+
+              {/* Take Rate */}
+              <div className="p-3 bg-gray-50 rounded-xl border border-gray-200 space-y-1">
+                <div className="flex justify-between items-center">
+                  <span className="font-bold text-[#1c1b1b]">2. Platform Take Rate</span>
+                  <span className="font-mono text-emerald-700 font-bold">Nominal 20.0%</span>
+                </div>
+                <p className="text-gray-600"><strong>Numerator:</strong> SUM(platform_fee_paise) in active escrow or payout</p>
+                <p className="text-gray-600"><strong>Denominator:</strong> SUM(gross_amount_paise)</p>
+                <p className="text-gray-500 text-[11px]"><strong>Exclusions:</strong> Forfeited escrow due to full student cancellation refunds.</p>
+              </div>
+
+              {/* Dispute Rate */}
+              <div className="p-3 bg-gray-50 rounded-xl border border-gray-200 space-y-1">
+                <div className="flex justify-between items-center">
+                  <span className="font-bold text-[#1c1b1b]">3. Dispute Rate</span>
+                  <span className="font-mono text-indigo-700 font-bold">Target &lt; 3.0%</span>
+                </div>
+                <p className="text-gray-600"><strong>Numerator:</strong> COUNT(disputes) opened within time window</p>
+                <p className="text-gray-600"><strong>Denominator:</strong> COUNT(bookings) with status = &apos;completed&apos;</p>
+                <p className="text-gray-500 text-[11px]"><strong>Exclusions:</strong> Student cancellations &gt;= 1 hour before session start.</p>
+              </div>
+
+              {/* Report SLA */}
+              <div className="p-3 bg-gray-50 rounded-xl border border-gray-200 space-y-1">
+                <div className="flex justify-between items-center">
+                  <span className="font-bold text-[#1c1b1b]">4. Report Delivery SLA Adherence</span>
+                  <span className="font-mono text-amber-700 font-bold">Target &gt; 95.0%</span>
+                </div>
+                <p className="text-gray-600"><strong>Numerator:</strong> COUNT(session_reports) with is_late = false</p>
+                <p className="text-gray-600"><strong>Denominator:</strong> COUNT(session_reports) total submitted</p>
+                <p className="text-gray-500 text-[11px]"><strong>Exclusions:</strong> Rescheduled sessions or unheld bookings.</p>
+              </div>
+
+              {/* Small-Sample Suppression Rule */}
+              <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 space-y-1">
+                <div className="flex justify-between items-center">
+                  <span className="font-bold text-amber-900">5. Small-Sample Suppression Rule (PRD §20)</span>
+                  <span className="font-mono text-amber-800 font-bold">Threshold &lt; 5 Ratings</span>
+                </div>
+                <p className="text-amber-800">
+                  Candidate self-reported feedback ratings are kept strictly distinct from verified mentor rubric scorecards. If any category contains fewer than 5 ratings, percentage/averages are suppressed from public marketing to protect statistical validity.
+                </p>
+                <div className="mt-2 p-2 bg-white rounded border border-amber-200 text-[11px] font-mono text-gray-700">
+                  Current Status: {liveAnalytics?.metrics?.outcomes_separation?.self_reported?.display_text || "Insufficient Sample (< 5 ratings) - Suppressed"}
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-3 border-t border-gray-200 flex justify-end">
+              <button
+                onClick={() => setShowDefinitionsModal(false)}
+                className="px-5 py-2 rounded-lg bg-[#3828b5] text-white font-bold text-xs hover:bg-[#2e2195] transition-colors"
+              >
+                Close Metrics Guide
               </button>
             </div>
           </div>

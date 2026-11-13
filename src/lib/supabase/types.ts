@@ -30,6 +30,7 @@ export type DisputeStatus = 'opened' | 'under_review' | 'evidence_pending' | 're
 export type TicketStatus = 'open' | 'in_progress' | 'waiting_on_user' | 'resolved' | 'closed';
 export type TicketPriority = 'low' | 'normal' | 'high' | 'urgent';
 export type ApprovalStatus = 'pending' | 'first_approved' | 'fully_approved' | 'rejected';
+export type AdminSubrole = 'super_admin' | 'ops_agent' | 'reviewer' | 'finance_controller';
 
 export interface Database {
   public: {
@@ -47,6 +48,7 @@ export interface Database {
           target_company_tier: string | null;
           experience_years: number;
           bio: string | null;
+          admin_subrole?: AdminSubrole | null;
           created_at: string;
           updated_at: string;
         };
@@ -62,6 +64,7 @@ export interface Database {
           target_company_tier?: string | null;
           experience_years?: number;
           bio?: string | null;
+          admin_subrole?: AdminSubrole | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -77,7 +80,44 @@ export interface Database {
           target_company_tier?: string | null;
           experience_years?: number;
           bio?: string | null;
+          admin_subrole?: AdminSubrole | null;
           updated_at?: string;
+        };
+        Relationships: [];
+      };
+      privacy_purge_requests: {
+        Row: {
+          id: string;
+          user_id: string;
+          requested_by: string;
+          request_type: 'export' | 'soft_delete' | 'hard_purge';
+          status: 'pending' | 'completed' | 'scheduled';
+          scheduled_purge_date: string | null;
+          completed_at: string | null;
+          notes: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          requested_by: string;
+          request_type: 'export' | 'soft_delete' | 'hard_purge';
+          status?: 'pending' | 'completed' | 'scheduled';
+          scheduled_purge_date?: string | null;
+          completed_at?: string | null;
+          notes?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          requested_by?: string;
+          request_type?: 'export' | 'soft_delete' | 'hard_purge';
+          status?: 'pending' | 'completed' | 'scheduled';
+          scheduled_purge_date?: string | null;
+          completed_at?: string | null;
+          notes?: string | null;
+          created_at?: string;
         };
         Relationships: [];
       };
@@ -1670,6 +1710,51 @@ export interface Database {
           message: string;
         };
       };
+      get_admin_ops_queues: {
+        Args: {
+          p_admin_id: string;
+        };
+        Returns: Json;
+      };
+      get_marketplace_analytics: {
+        Args: {
+          p_admin_id: string;
+          p_days_interval?: number;
+        };
+        Returns: Json;
+      };
+      co_sign_financial_approval_p12: {
+        Args: {
+          p_approval_id: string;
+          p_admin_id: string;
+          p_approve: boolean;
+          p_notes?: string | null;
+        };
+        Returns: Json;
+      };
+      query_admin_audit_logs: {
+        Args: {
+          p_admin_id: string;
+          p_target_type?: string | null;
+          p_limit?: number;
+        };
+        Returns: Json;
+      };
+      request_user_data_export: {
+        Args: {
+          p_admin_id: string;
+          p_target_user_id: string;
+        };
+        Returns: Json;
+      };
+      execute_privacy_soft_delete: {
+        Args: {
+          p_admin_id: string;
+          p_target_user_id: string;
+          p_reason?: string;
+        };
+        Returns: Json;
+      };
     };
     Enums: {
       user_role: UserRole;
@@ -1691,6 +1776,7 @@ export interface Database {
       ticket_status: TicketStatus;
       ticket_priority: TicketPriority;
       approval_status: ApprovalStatus;
+      admin_subrole: AdminSubrole;
     };
     CompositeTypes: {
       [_ in never]: never;
