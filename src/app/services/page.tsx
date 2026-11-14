@@ -1033,6 +1033,28 @@ export default function ServicesCatalogPage() {
               </div>
             </div>
 
+            {/* Authenticated Account Pill */}
+            {user ? (
+              <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs flex items-center justify-between text-emerald-900">
+                <div className="flex items-center gap-2 truncate">
+                  <span className="material-symbols-outlined text-emerald-600 text-[18px] shrink-0">account_circle</span>
+                  <span className="truncate">
+                    Paying as: <strong className="font-semibold">{user.name}</strong> ({user.email})
+                  </span>
+                </div>
+                <span className="text-[10px] font-bold text-emerald-700 bg-white px-2 py-0.5 rounded-full border border-emerald-200 shrink-0 uppercase">
+                  Connected
+                </span>
+              </div>
+            ) : (
+              <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-xs flex items-center justify-between text-amber-900">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-amber-600 text-[18px]">info</span>
+                  <span>You will be prompted to sign in before finalizing payment.</span>
+                </div>
+              </div>
+            )}
+
             {purchaseSuccess ? (
               <div className="p-5 bg-secondary/10 border border-secondary/20 rounded-xl text-center space-y-2">
                 <span className="material-symbols-outlined text-secondary text-3xl">verified</span>
@@ -1071,7 +1093,7 @@ export default function ServicesCatalogPage() {
                       </>
                     ) : (
                       <>
-                        <span>Proceed to Escrow Payment (₹{bundleFinalPrice})</span>
+                        <span>{user ? `Proceed to Escrow Payment (₹${bundleFinalPrice})` : `Sign In & Pay ₹${bundleFinalPrice} →`}</span>
                         <span className="material-symbols-outlined text-[16px]">lock</span>
                       </>
                     )}

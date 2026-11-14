@@ -646,11 +646,11 @@ export default function CandidateBookingsPage() {
         {/* 2. Filter Bar & Navigation Tabs */}
         <div className="bg-surface-container-lowest rounded-2xl p-2 sm:p-2.5 border border-outline-variant/30 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-3">
           {/* Tabs */}
-          <div className="flex items-center gap-1 overflow-x-auto pb-1 lg:pb-0">
+          <div className="flex items-center gap-1 overflow-x-auto no-scrollbar pb-1 lg:pb-0">
             <button
               type="button"
               onClick={() => setActiveTab("all")}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all whitespace-nowrap ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all whitespace-nowrap shrink-0 ${
                 activeTab === "all"
                   ? "bg-primary-container text-on-primary font-bold shadow-xs"
                   : "text-on-surface-variant hover:bg-surface-container"
@@ -661,51 +661,51 @@ export default function CandidateBookingsPage() {
             <button
               type="button"
               onClick={() => setActiveTab("upcoming")}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all whitespace-nowrap ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all whitespace-nowrap shrink-0 ${
                 activeTab === "upcoming"
                   ? "bg-primary-container text-on-primary font-bold shadow-xs"
                   : "text-on-surface-variant hover:bg-surface-container"
               }`}
             >
-              Upcoming &amp; Escrow Locked ({counts.upcoming})
+              Upcoming ({counts.upcoming})
             </button>
             <button
               type="button"
               onClick={() => setActiveTab("in_progress")}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all whitespace-nowrap ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all whitespace-nowrap shrink-0 ${
                 activeTab === "in_progress"
                   ? "bg-primary-container text-on-primary font-bold shadow-xs"
                   : "text-on-surface-variant hover:bg-surface-container"
               }`}
             >
-              In Progress / Deliverable Due ({counts.in_progress})
+              In Progress ({counts.in_progress})
             </button>
             <button
               type="button"
               onClick={() => setActiveTab("completed")}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all whitespace-nowrap ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all whitespace-nowrap shrink-0 ${
                 activeTab === "completed"
                   ? "bg-primary-container text-on-primary font-bold shadow-xs"
                   : "text-on-surface-variant hover:bg-surface-container"
               }`}
             >
-              Completed &amp; Scorecards Ready ({counts.completed})
+              Completed ({counts.completed})
             </button>
             <button
               type="button"
               onClick={() => setActiveTab("cancelled")}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all whitespace-nowrap ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all whitespace-nowrap shrink-0 ${
                 activeTab === "cancelled"
                   ? "bg-primary-container text-on-primary font-bold shadow-xs"
                   : "text-on-surface-variant hover:bg-surface-container"
               }`}
             >
-              Cancelled / Refunded ({counts.cancelled})
+              Cancelled ({counts.cancelled})
             </button>
           </div>
 
           {/* Search & Sort Controls */}
-          <div className="flex items-center gap-2.5">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
             <div className="relative flex-1 sm:w-64">
               <span className="material-symbols-outlined absolute left-3 top-2 text-on-surface-variant text-[18px]">
                 search

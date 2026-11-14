@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 
 interface ServiceItem {
@@ -96,7 +97,8 @@ const BUNDLE_CATALOG: ServiceItem[] = [
 ];
 
 export default function MembershipPage() {
-  const { membership, upgradeMembership, cancelMembership } = useAuth();
+  const router = useRouter();
+  const { user, membership, upgradeMembership, cancelMembership } = useAuth();
   const [billingCycle, setBillingCycle] = React.useState<"monthly" | "annual">("monthly");
   const [selectedServices, setSelectedServices] = React.useState<string[]>(["s01", "s06", "s08"]);
   const [openFaq, setOpenFaq] = React.useState<string | null>("faq-1");
@@ -118,6 +120,10 @@ export default function MembershipPage() {
   };
 
   const handleUpgrade = async (tier: "pro" | "elite") => {
+    if (!user) {
+      router.push(`/login?redirect=${encodeURIComponent("/membership")}`);
+      return;
+    }
     setIsUpgrading(true);
     try {
       await upgradeMembership(tier, billingCycle === "annual");

@@ -67,8 +67,8 @@ export default function StudentDashboardPage() {
         </div>
 
         {/* Right Header Actions */}
-        <div className="flex flex-wrap items-center gap-3 pt-2 lg:pt-0">
-          <div className="flex items-center gap-2 bg-secondary-container/30 border border-secondary/20 px-3 py-1.5 rounded-xl text-on-secondary-container">
+        <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 pt-2 lg:pt-0 w-full lg:w-auto">
+          <div className="flex items-center gap-2 bg-secondary-container/30 border border-secondary/20 px-3 py-1.5 rounded-xl text-on-secondary-container w-full sm:w-auto">
             <span className="material-symbols-outlined text-secondary text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>
               workspace_premium
             </span>
@@ -82,21 +82,23 @@ export default function StudentDashboardPage() {
             </div>
           </div>
 
-          <Link
-            href="/dashboard/readiness"
-            className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-surface-container text-on-surface hover:bg-surface-container-high rounded-xl text-xs font-bold transition-colors border border-outline-variant/30"
-          >
-            <span className="material-symbols-outlined text-[18px]">assignment</span>
-            <span>Baseline Test</span>
-          </Link>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <Link
+              href="/dashboard/readiness"
+              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-surface-container text-on-surface hover:bg-surface-container-high rounded-xl text-xs font-bold transition-colors border border-outline-variant/30 text-center"
+            >
+              <span className="material-symbols-outlined text-[18px]">assignment</span>
+              <span>Baseline Test</span>
+            </Link>
 
-          <Link
-            href="/services"
-            className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-primary text-on-primary hover:bg-primary-container hover:text-on-primary-container rounded-xl text-xs font-bold transition-all shadow-sm"
-          >
-            <span className="material-symbols-outlined text-[18px]">calendar_add_on</span>
-            <span>Book 1:1 Service</span>
-          </Link>
+            <Link
+              href="/services"
+              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-primary text-on-primary hover:bg-primary-container hover:text-on-primary-container rounded-xl text-xs font-bold transition-all shadow-sm text-center"
+            >
+              <span className="material-symbols-outlined text-[18px]">calendar_add_on</span>
+              <span>Book 1:1 Service</span>
+            </Link>
+          </div>
         </div>
       </section>
 
