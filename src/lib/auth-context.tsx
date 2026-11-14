@@ -14,6 +14,7 @@ export interface UserProfile {
   avatar?: string;
   phone?: string;
   segment?: string | null;
+  onboarding_completed?: boolean;
 }
 
 export interface MembershipState {
@@ -32,7 +33,7 @@ interface AuthContextType {
   membership: MembershipState;
   login: (role: UserRole, email?: string, name?: string) => void;
   logout: () => Promise<void>;
-  signInWithEmail: (email: string, password: string) => Promise<{ success: boolean; error?: string; role?: UserRole }>;
+  signInWithEmail: (email: string, password: string) => Promise<{ success: boolean; error?: string; role?: UserRole; onboarding_completed?: boolean }>;
   signUpWithEmail: (
     email: string,
     password: string,
@@ -44,6 +45,7 @@ interface AuthContextType {
   upgradeMembership: (tier: "pro" | "elite", annual?: boolean) => Promise<void>;
   cancelMembership: () => Promise<void>;
   refreshProfile: () => Promise<void>;
+  completeOnboarding: () => Promise<void>;
 }
 
 const defaultMembership: MembershipState = {
@@ -66,7 +68,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, full_name, email, role, avatar_url, phone, segment")
+        .select("id, full_name, email, role, avatar_url, phone, segment, onboarding_completed")
         .eq("id", userId)
         .maybeSingle();
 
@@ -79,6 +81,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           avatar: data.avatar_url || undefined,
           phone: data.phone || undefined,
           segment: data.segment || null,
+          onboarding_completed: data.onboarding_completed ?? false,
         };
         setUser(profile);
         if (typeof window !== "undefined") {
@@ -203,14 +206,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (data.user) {
         await fetchProfile(data.user.id, data.user.email);
-        // Determine role for routing
+        // Determine role and onboarding state for routing
         const { data: profile } = await supabase
           .from("profiles")
-          .select("role")
+          .select("role, onboarding_completed")
           .eq("id", data.user.id)
           .maybeSingle();
 
-        return { success: true, role: (profile?.role as UserRole) || "student" };
+        return {
+          success: true,
+          role: (profile?.role as UserRole) || "student",
+          onboarding_completed: profile?.onboarding_completed ?? false,
+        };
       }
 
       return { success: true };
@@ -336,6 +343,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const completeOnboarding = async () => {
+    if (!user?.id) return;
+    try {
+      await supabase
+        .from("profiles")
+        .update({ onboarding_completed: true, updated_at: new Date().toISOString() })
+        .eq("id", user.id);
+
+      setUser((prev) => (prev ? { ...prev, onboarding_completed: true } : null));
+      if (typeof window !== "undefined") {
+        const stored = localStorage.getItem("dreamx_user");
+        if (stored) {
+          try {
+            const parsed = JSON.parse(stored);
+            parsed.onboarding_completed = true;
+            localStorage.setItem("dreamx_user", JSON.stringify(parsed));
+          } catch {
+            // ignore
+          }
+        }
+      }
+    } catch (err) {
+      console.warn("Failed to complete onboarding:", err);
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -352,6 +385,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         upgradeMembership,
         cancelMembership,
         refreshProfile,
+        completeOnboarding,
       }}
     >
       {children}

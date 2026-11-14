@@ -110,7 +110,7 @@ const DOMAIN_OPTIONS = [
 ];
 
 export default function MentorOnboardingPage() {
-  const { user } = useAuth();
+  const { user, completeOnboarding } = useAuth();
   const supabase = React.useMemo(() => createClient(), []);
 
   // Wizard Navigation State
@@ -359,10 +359,23 @@ export default function MentorOnboardingPage() {
           },
           { onConflict: "id" }
         );
+
+        // Update public.profiles to mark onboarding completed and assign mentor role
+        await supabase
+          .from("profiles")
+          .update({
+            onboarding_completed: true,
+            role: "mentor",
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", resolvedUserId);
+
+        await completeOnboarding();
       } else {
         // Fallback for demo preview
         const generatedId = `MTR-APP-${Math.floor(1000 + Math.random() * 9000)}`;
         setSubmittedAppId(generatedId);
+        await completeOnboarding();
       }
 
       setSuccessNotice(true);

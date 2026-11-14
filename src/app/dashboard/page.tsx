@@ -13,6 +13,29 @@ export default function StudentDashboardPage() {
 
   return (
     <div className="flex flex-col w-full p-4 sm:p-6 lg:p-8 gap-6 bg-background min-h-screen">
+      {/* Pending Baseline Assessment Notice */}
+      {user && user.onboarding_completed === false && (
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs shadow-xs animate-in fade-in">
+          <div className="flex items-start sm:items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center shrink-0">
+              <span className="material-symbols-outlined text-[20px]">assignment_late</span>
+            </div>
+            <div>
+              <h3 className="font-bold text-amber-900 text-sm">Baseline Career Calibration Pending</h3>
+              <p className="text-amber-800 text-xs mt-0.5">
+                You haven&apos;t calibrated your 8-dimension readiness starting point yet. Completing the 2-minute diagnostic unlocks personalized rubrics and tailored mentor match recommendations.
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/dashboard/onboarding"
+            className="px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shrink-0 text-center transition-colors shadow-xs"
+          >
+            Complete Onboarding Wizard →
+          </Link>
+        </div>
+      )}
+
       {/* 1. Student Dashboard Header & Contextual Greeting */}
       <section className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-surface-container-lowest p-6 rounded-2xl shadow-xs border border-outline-variant/30">
         <div className="flex flex-col gap-1.5">

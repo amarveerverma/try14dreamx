@@ -49,6 +49,7 @@ export interface Database {
           experience_years: number;
           bio: string | null;
           admin_subrole?: AdminSubrole | null;
+          onboarding_completed?: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -65,6 +66,7 @@ export interface Database {
           experience_years?: number;
           bio?: string | null;
           admin_subrole?: AdminSubrole | null;
+          onboarding_completed?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -81,6 +83,7 @@ export interface Database {
           experience_years?: number;
           bio?: string | null;
           admin_subrole?: AdminSubrole | null;
+          onboarding_completed?: boolean;
           updated_at?: string;
         };
         Relationships: [];

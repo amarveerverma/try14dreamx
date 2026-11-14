@@ -294,7 +294,7 @@ function VerifyEmailContent() {
                 <div className="text-center pt-1">
                   <Link
                     href={`/login?email=${encodeURIComponent(email)}&redirect=${encodeURIComponent(
-                      redirectUrl || "/dashboard"
+                      redirectUrl || (role === "mentor" ? "/mentor/onboarding" : "/dashboard/onboarding")
                     )}`}
                     className="text-xs font-bold text-[#3828b5] hover:underline"
                   >

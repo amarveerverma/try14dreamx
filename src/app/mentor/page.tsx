@@ -190,6 +190,29 @@ export default function MentorDashboardPage() {
 
       {/* Main Container */}
       <main className="p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-6">
+        {/* Pending Mentor Accreditation Banner */}
+        {user && user.onboarding_completed === false && (
+          <div className="p-4 sm:p-5 rounded-2xl bg-indigo-50 border border-indigo-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs animate-in fade-in">
+            <div className="flex items-start sm:items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-indigo-100 text-[#5145cd] flex items-center justify-center shrink-0">
+                <span className="material-symbols-outlined text-[20px]">how_to_reg</span>
+              </div>
+              <div>
+                <h3 className="font-bold text-indigo-950 text-sm">Tier-1 Mentor Accreditation Incomplete</h3>
+                <p className="text-indigo-800 text-xs mt-0.5">
+                  Complete the 4-step accreditation dossier (employer work email verification, service module approvals, and Razorpay nodal payout setup) to receive live candidate dispatches.
+                </p>
+              </div>
+            </div>
+            <Link
+              href="/mentor/onboarding"
+              className="px-4 py-2.5 rounded-xl bg-[#5145cd] hover:bg-[#3828b5] text-white font-bold text-xs shrink-0 text-center transition-colors shadow-xs"
+            >
+              Complete Mentor Onboarding →
+            </Link>
+          </div>
+        )}
+
         {/* Title Bar */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>

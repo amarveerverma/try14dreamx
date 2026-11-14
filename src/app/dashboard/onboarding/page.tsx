@@ -3,6 +3,8 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/auth-context";
+import { createClient } from "@/lib/supabase/client";
 
 interface DimensionItem {
   id: number;
@@ -106,6 +108,8 @@ const INITIAL_DIMENSIONS: DimensionItem[] = [
 
 export default function OnboardingWizardPage() {
   const router = useRouter();
+  const { user, completeOnboarding } = useAuth();
+  const supabase = React.useMemo(() => createClient(), []);
 
   // Dynamic Ratings State (1–5)
   const [ratings, setRatings] = React.useState<Record<number, number>>({
@@ -121,6 +125,7 @@ export default function OnboardingWizardPage() {
 
   const [isArtifactExempt, setIsArtifactExempt] = React.useState(false);
   const [isSavedModalOpen, setIsSavedModalOpen] = React.useState(false);
+  const [isSaving, setIsSaving] = React.useState(false);
 
   // Score Calculation
   const calculatedScore = React.useMemo(() => {
@@ -179,8 +184,30 @@ export default function OnboardingWizardPage() {
     });
   };
 
-  const handleSaveAndLock = () => {
-    setIsSavedModalOpen(true);
+  const handleSaveAndLock = async () => {
+    setIsSaving(true);
+    try {
+      if (user?.id) {
+        // Record baseline readiness score and mark onboarding as complete
+        await supabase
+          .from("profiles")
+          .update({
+            onboarding_completed: true,
+            segment: calculatedScore >= 75 ? "early_career" : calculatedScore >= 50 ? "fresh_graduate" : "student",
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", user.id);
+
+        await completeOnboarding();
+      } else {
+        await completeOnboarding();
+      }
+    } catch (err) {
+      console.warn("Could not persist onboarding calibration:", err);
+    } finally {
+      setIsSaving(false);
+      setIsSavedModalOpen(true);
+    }
   };
 
   return (
@@ -740,10 +767,11 @@ export default function OnboardingWizardPage() {
               </button>
               <button
                 type="button"
+                disabled={isSaving}
                 onClick={handleSaveAndLock}
-                className="px-6 py-2.5 rounded-xl bg-primary text-on-primary hover:bg-primary-container hover:text-on-primary-container text-xs sm:text-sm font-bold shadow-md transition-all flex items-center gap-2 cursor-pointer"
+                className="px-6 py-2.5 rounded-xl bg-primary text-on-primary hover:bg-primary-container hover:text-on-primary-container text-xs sm:text-sm font-bold shadow-md transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
               >
-                <span>Save &amp; Lock Baseline Assessment</span>
+                <span>{isSaving ? "Calibrating & Locking..." : "Save & Lock Baseline Assessment"}</span>
                 <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
               </button>
             </div>

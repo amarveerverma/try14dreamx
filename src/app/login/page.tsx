@@ -52,17 +52,26 @@ export default function LoginPage() {
       ? new URLSearchParams(window.location.search).get("redirect")
       : null;
 
-    if (redirectParam && redirectParam.startsWith("/")) {
+    // If user was in the middle of booking a specific service or custom checkout, preserve it
+    if (
+      redirectParam &&
+      redirectParam.startsWith("/") &&
+      redirectParam !== "/dashboard" &&
+      redirectParam !== "/mentor"
+    ) {
       router.push(redirectParam);
       return;
     }
 
-    if (role === "admin" || res.role === "admin") {
+    const effectiveRole = res.role || (role === "mentor" ? "mentor" : role === "admin" ? "admin" : "student");
+    const isOnboarded = res.onboarding_completed ?? false;
+
+    if (effectiveRole === "admin") {
       router.push("/admin");
-    } else if (role === "mentor" || res.role === "mentor") {
-      router.push("/mentor");
+    } else if (effectiveRole === "mentor") {
+      router.push(isOnboarded ? "/mentor" : "/mentor/onboarding");
     } else {
-      router.push("/dashboard");
+      router.push(isOnboarded ? "/dashboard" : "/dashboard/onboarding");
     }
   };
 
