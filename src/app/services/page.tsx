@@ -2,6 +2,8 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/auth-context";
 
 interface ServiceCardData {
   id: string;
@@ -267,6 +269,56 @@ export default function ServicesCatalogPage() {
   const [selectedTargetStage, setSelectedTargetStage] = React.useState<string>("all");
   const [selectedServices, setSelectedServices] = React.useState<ServiceCardData[]>([]);
   const [isModalOpen, setIsModalOpen] = React.useState(false);
+  const [bundleNotice, setBundleNotice] = React.useState<string | null>(null);
+
+  const { user } = useAuth();
+  const router = useRouter();
+  const [isPurchasing, setIsPurchasing] = React.useState(false);
+  const [purchaseSuccess, setPurchaseSuccess] = React.useState<string | null>(null);
+  const [purchaseError, setPurchaseError] = React.useState<string | null>(null);
+
+  const handleProceedCheckout = async () => {
+    if (!user) {
+      router.push(`/login?redirect=/services`);
+      return;
+    }
+
+    if (selectedServices.length !== 3) {
+      setPurchaseError("Please select exactly 3 services to lock in your custom bundle.");
+      return;
+    }
+
+    setIsPurchasing(true);
+    setPurchaseError(null);
+
+    try {
+      const res = await fetch("/api/bundle/purchase", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          serviceCodes: selectedServices.map((s) => s.code),
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        setPurchaseError(data.error || "Failed to initiate escrow checkout.");
+      } else {
+        setPurchaseSuccess(
+          data.message ||
+            `Bundle ${data.bundle?.bundle_ref || ""} confirmed! 3 session credits added to your vault under 80% Escrow Guarantee.`
+        );
+        setTimeout(() => {
+          setIsModalOpen(false);
+          router.push("/dashboard/bookings?bundle=confirmed");
+        }, 2200);
+      }
+    } catch (err: unknown) {
+      setPurchaseError(err instanceof Error ? err.message : "Network error during checkout.");
+    } finally {
+      setIsPurchasing(false);
+    }
+  };
 
   const searchInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -316,12 +368,15 @@ export default function ServicesCatalogPage() {
     const isAlreadySelected = selectedServices.some((s) => s.code === svc.code);
     if (isAlreadySelected) {
       setSelectedServices(selectedServices.filter((s) => s.code !== svc.code));
+      setBundleNotice(null);
     } else {
       if (selectedServices.length >= 3) {
-        alert("Custom Track limit reached: Please uncheck one service to choose another.");
+        setBundleNotice("Custom Track limit reached (3/3). Uncheck a service to pick another.");
+        setTimeout(() => setBundleNotice(null), 4000);
         return;
       }
       setSelectedServices([...selectedServices, svc]);
+      setBundleNotice(null);
     }
   };
 
@@ -339,6 +394,14 @@ export default function ServicesCatalogPage() {
 
   return (
     <div className="flex flex-col w-full bg-surface">
+      {/* Toast Notice */}
+      {bundleNotice && (
+        <div className="fixed top-24 right-6 z-50 bg-inverse-surface text-inverse-on-surface px-4 py-3 rounded-xl shadow-lg text-xs font-semibold flex items-center gap-2 animate-in fade-in slide-in-from-top-2">
+          <span className="material-symbols-outlined text-[18px] text-amber-300">info</span>
+          <span>{bundleNotice}</span>
+        </div>
+      )}
+
       {/* Top Hero & Assurance Section */}
       <section className="w-full bg-surface-container-low/70 py-10 sm:py-12 lg:py-16 relative overflow-hidden border-b border-outline-variant/30">
         <div className="absolute -top-32 right-1/4 w-96 h-96 rounded-full bg-primary/5 blur-3xl pointer-events-none" />
@@ -915,21 +978,57 @@ export default function ServicesCatalogPage() {
               </div>
             </div>
 
-            <div className="flex gap-3 pt-2">
-              <button
-                type="button"
-                onClick={() => setIsModalOpen(false)}
-                className="flex-1 py-2.5 px-4 rounded-xl border border-outline-variant text-on-surface text-xs font-semibold hover:bg-surface-container-low transition-colors cursor-pointer"
-              >
-                Modify Selection
-              </button>
-              <Link
-                href={`/dashboard/bookings?bundle=custom3&services=${selectedServices.map(s => s.code).join(",")}&price=${bundleFinalPrice}`}
-                className="flex-1 py-2.5 px-4 rounded-xl bg-primary text-on-primary text-xs font-bold text-center hover:bg-primary-container transition-colors shadow-md flex items-center justify-center gap-1.5"
-              >
-                <span>Proceed to Escrow Checkout</span>
-              </Link>
-            </div>
+            {purchaseSuccess ? (
+              <div className="p-5 bg-secondary/10 border border-secondary/20 rounded-xl text-center space-y-2">
+                <span className="material-symbols-outlined text-secondary text-3xl">verified</span>
+                <h4 className="text-sm font-bold text-on-surface">Escrow Payment Confirmed!</h4>
+                <p className="text-xs text-on-surface-variant">{purchaseSuccess}</p>
+                <p className="text-[11px] text-outline">Redirecting to your candidate vault...</p>
+              </div>
+            ) : (
+              <>
+                {purchaseError && (
+                  <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs font-medium flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[16px]">error</span>
+                    <span>{purchaseError}</span>
+                  </div>
+                )}
+
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="button"
+                    disabled={isPurchasing}
+                    onClick={() => setIsModalOpen(false)}
+                    className="flex-1 py-2.5 px-4 rounded-xl border border-outline-variant text-on-surface text-xs font-semibold hover:bg-surface-container-low transition-colors cursor-pointer disabled:opacity-50"
+                  >
+                    Modify Selection
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isPurchasing}
+                    onClick={handleProceedCheckout}
+                    className="flex-1 py-2.5 px-4 rounded-xl bg-primary text-on-primary text-xs font-bold text-center hover:bg-primary-container transition-colors shadow-md flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  >
+                    {isPurchasing ? (
+                      <>
+                        <span className="material-symbols-outlined text-[16px] animate-spin">progress_activity</span>
+                        <span>Locking in Escrow...</span>
+                      </>
+                    ) : !user ? (
+                      <>
+                        <span>Sign In to Pay ₹{bundleFinalPrice}</span>
+                        <span className="material-symbols-outlined text-[16px]">login</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Pay ₹{bundleFinalPrice} via Escrow</span>
+                        <span className="material-symbols-outlined text-[16px]">lock</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

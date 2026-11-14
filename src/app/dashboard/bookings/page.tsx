@@ -60,6 +60,34 @@ interface RemoteBookingRow {
   } | null;
 }
 
+interface BundleItemRow {
+  id: string;
+  bundle_ref: string;
+  total_services: number;
+  redeemed_services: number;
+  status: string;
+  paid_amount_paise: number;
+  created_at: string;
+  bundle_items: Array<{
+    id: string;
+    service_code: string;
+    is_redeemed: boolean;
+  }>;
+}
+
+const SERVICE_CODE_MAP: Record<string, string> = {
+  S01: "Resume Line-by-Line Teardown",
+  S02: "ATS Keyword & Format Audit",
+  S03: "LinkedIn Profile Optimization",
+  S04: "Portfolio & GitHub Teardown",
+  S05: "Behavioral Mock (STAR Method)",
+  S06: "System Design & DSA Technical Mock",
+  S07: "Hiring Manager Bar-Raiser Mock",
+  S08: "Offer & Salary Negotiation Advisory",
+  S09: "Career Pivot & Domain Transition Plan",
+  S10: "Promotion & Performance Review Strategy",
+};
+
 export default function CandidateBookingsPage() {
   const { user } = useAuth();
   const supabase = React.useMemo(() => createClient(), []);
@@ -71,6 +99,15 @@ export default function CandidateBookingsPage() {
   const [cancelingBooking, setCancelingBooking] = React.useState<BookingItem | null>(null);
   const [cancelSuccessMsg, setCancelSuccessMsg] = React.useState("");
   const [syncFeedback, setSyncFeedback] = React.useState("");
+
+  const [userBundles, setUserBundles] = React.useState<BundleItemRow[]>([]);
+  const [bundleSuccessAlert, setBundleSuccessAlert] = React.useState(false);
+
+  React.useEffect(() => {
+    if (typeof window !== "undefined" && window.location.search.includes("bundle=confirmed")) {
+      setBundleSuccessAlert(true);
+    }
+  }, []);
 
   // Load real bookings from Supabase
   React.useEffect(() => {
@@ -169,6 +206,30 @@ export default function CandidateBookingsPage() {
         } else {
           // If no remote rows exist yet, set to empty array for real candidate
           if (isMounted) setBookings([]);
+        }
+
+        // Also fetch active user bundles
+        const { data: bndData } = await supabase
+          .from("service_bundles")
+          .select(`
+            id,
+            bundle_ref,
+            total_services,
+            redeemed_services,
+            status,
+            paid_amount_paise,
+            created_at,
+            bundle_items (
+              id,
+              service_code,
+              is_redeemed
+            )
+          `)
+          .eq("student_id", user.id)
+          .order("created_at", { ascending: false });
+
+        if (bndData && isMounted) {
+          setUserBundles(bndData as unknown as BundleItemRow[]);
         }
       } catch (err) {
         console.warn("Bookings fetch exception:", err);
@@ -343,6 +404,29 @@ export default function CandidateBookingsPage() {
         </div>
 
         {/* Feedback Alerts */}
+        {bundleSuccessAlert && (
+          <div className="p-4 rounded-xl bg-primary/10 border border-primary/30 text-on-surface flex items-start justify-between gap-3 animate-in fade-in">
+            <div className="flex items-start gap-3">
+              <span className="material-symbols-outlined text-primary text-2xl mt-0.5">verified</span>
+              <div>
+                <h3 className="text-xs font-bold text-primary uppercase tracking-wide">
+                  Career Track Bundle Locked in Escrow
+                </h3>
+                <p className="text-xs text-on-surface-variant mt-0.5">
+                  Your 3-service bundle payment was received and securely locked in Escrow. Your 3 session credits have been added to your vault below. Schedule them anytime!
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setBundleSuccessAlert(false)}
+              className="text-on-surface-variant hover:text-on-surface p-1 rounded-lg"
+            >
+              <span className="material-symbols-outlined text-[18px]">close</span>
+            </button>
+          </div>
+        )}
+
         {syncFeedback && (
           <div className="p-3.5 rounded-xl bg-primary/10 border border-primary/20 text-primary text-xs font-semibold flex items-center gap-2">
             <span className="material-symbols-outlined text-[18px]">sync</span>
@@ -449,6 +533,115 @@ export default function CandidateBookingsPage() {
             </div>
           </div>
         </div>
+
+        {/* Active 3-Service Career Track Bundles Vault */}
+        {userBundles.length > 0 && (
+          <div className="bg-surface-container-lowest rounded-2xl p-5 sm:p-6 border border-primary/25 shadow-xs flex flex-col gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-outline-variant/20 pb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                  <span className="material-symbols-outlined text-[22px]">inventory_2</span>
+                </div>
+                <div>
+                  <h2 className="text-sm sm:text-base font-bold text-on-surface flex items-center gap-2">
+                    <span>Active 3-Service Career Track Bundles</span>
+                    <span className="px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed text-[10px] font-bold uppercase tracking-wider">
+                      Escrow Vault
+                    </span>
+                  </h2>
+                  <p className="text-xs text-on-surface-variant">
+                    Pre-funded session credits locked in Razorpay Nodal Escrow. Pick any mentor when you are ready to redeem.
+                  </p>
+                </div>
+              </div>
+              <Link
+                href="/services"
+                className="self-start sm:self-auto px-3.5 py-1.5 rounded-xl border border-outline-variant text-xs font-semibold text-on-surface hover:bg-surface-container transition-colors flex items-center gap-1.5 shrink-0"
+              >
+                <span className="material-symbols-outlined text-[16px] text-primary">add_circle</span>
+                <span>Custom 3-Pack</span>
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {userBundles.map((bnd) => {
+                const remaining = bnd.total_services - bnd.redeemed_services;
+                return (
+                  <div
+                    key={bnd.id}
+                    className="p-4 rounded-xl bg-surface-container-low/60 border border-outline-variant/30 flex flex-col justify-between gap-3"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between text-xs mb-2">
+                        <span className="font-mono font-bold text-primary">{bnd.bundle_ref}</span>
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                            remaining > 0
+                              ? "bg-secondary-fixed text-on-secondary-fixed"
+                              : "bg-surface-container-high text-on-surface-variant"
+                          }`}
+                        >
+                          {remaining > 0 ? `${remaining} / ${bnd.total_services} Credits Left` : "Fully Redeemed"}
+                        </span>
+                      </div>
+                      <p className="text-xs text-on-surface-variant">
+                        Paid: <strong className="text-on-surface">₹{(bnd.paid_amount_paise / 100).toLocaleString("en-IN")}</strong>{" "}
+                        <span className="text-[10px] text-secondary font-semibold">(5% Bundle Discount applied)</span>
+                      </p>
+                      <div className="mt-3 flex flex-col gap-1.5">
+                        <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">
+                          Included Sessions:
+                        </span>
+                        {bnd.bundle_items?.map((item) => {
+                          const serviceName = SERVICE_CODE_MAP[item.service_code] || item.service_code;
+                          return (
+                            <div
+                              key={item.id}
+                              className="flex items-center justify-between p-2 rounded-lg bg-surface-container-lowest border border-outline-variant/20 text-xs"
+                            >
+                              <div className="flex items-center gap-1.5 truncate pr-2">
+                                <span className="font-mono font-bold text-primary text-[11px]">
+                                  [{item.service_code}]
+                                </span>
+                                <span className="truncate text-on-surface font-medium">{serviceName}</span>
+                              </div>
+                              {item.is_redeemed ? (
+                                <span className="px-2 py-0.5 rounded-full bg-surface-container text-on-surface-variant text-[10px] font-semibold whitespace-nowrap">
+                                  Redeemed
+                                </span>
+                              ) : (
+                                <Link
+                                  href={`/services?redeem=${item.service_code}&bundle=${bnd.bundle_ref}`}
+                                  className="px-2.5 py-1 rounded-lg bg-primary text-on-primary text-[11px] font-bold hover:bg-primary-container transition-colors whitespace-nowrap flex items-center gap-1 shrink-0"
+                                >
+                                  <span>Schedule</span>
+                                  <span className="material-symbols-outlined text-[13px]">arrow_forward</span>
+                                </Link>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                    <div className="text-[10px] text-outline pt-2 border-t border-outline-variant/20 flex items-center justify-between">
+                      <span className="flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[12px] text-secondary">verified_user</span>
+                        <span>80% Escrow Protection</span>
+                      </span>
+                      <span>
+                        {new Date(bnd.created_at).toLocaleDateString("en-IN", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        })}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* 2. Filter Bar & Navigation Tabs */}
         <div className="bg-surface-container-lowest rounded-2xl p-2 sm:p-2.5 border border-outline-variant/30 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-3">
