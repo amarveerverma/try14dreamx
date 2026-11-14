@@ -9,7 +9,7 @@ export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = React.useState(false);
   const pathname = usePathname();
-  const { user, role, logout } = useAuth();
+  const { user, role, isLoading, logout } = useAuth();
   const dropdownRef = React.useRef<HTMLDivElement>(null);
 
   // Close dropdown on click outside
@@ -22,6 +22,21 @@ export function Header() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const isAuthPage =
+    pathname === "/login" ||
+    pathname === "/signup" ||
+    pathname === "/verify-email" ||
+    pathname === "/forgot-password" ||
+    pathname === "/reset-password";
+  const isAdminPage = pathname?.startsWith("/admin");
+  const isOnboardingPage =
+    pathname === "/dashboard/onboarding" || pathname === "/mentor/onboarding";
+
+  // Hide the global consumer header on dedicated auth, admin, and full-screen onboarding flows
+  if (isAuthPage || isAdminPage || isOnboardingPage) {
+    return null;
+  }
 
   const navLinks = [
     { name: "How It Works", href: "/how-it-works" },
@@ -82,7 +97,9 @@ export function Header() {
 
           {/* Right Action Controls */}
           <div className="flex items-center gap-2.5 sm:gap-4 shrink-0">
-            {user ? (
+            {isLoading ? (
+              <div className="h-8 w-24 bg-surface-container rounded-lg animate-pulse" />
+            ) : user ? (
               <div className="relative" ref={dropdownRef}>
                 <div className="flex items-center gap-2">
                   <Link
@@ -321,14 +338,16 @@ export function Header() {
             </div>
 
             <div className="pt-6 border-t border-surface-container space-y-3">
-              {user ? (
+              {isLoading ? (
+                <div className="h-10 w-full bg-surface-container rounded-lg animate-pulse" />
+              ) : user ? (
                 <>
                   <Link
                     href={dashboardRoute}
                     onClick={() => setMobileMenuOpen(false)}
                     className="w-full block py-2.5 text-center text-xs font-bold text-on-primary bg-primary hover:bg-primary-container rounded-lg transition-colors shadow-xs"
                   >
-                    Open Student Portal →
+                    Open {role === "mentor" ? "Mentor Console" : role === "admin" ? "Admin Workspace" : "Student Portal"} →
                   </Link>
                   <button
                     type="button"
@@ -363,6 +382,9 @@ export function Header() {
           </div>
         </div>
       )}
+
+      {/* Spacer to prevent content from slipping under fixed header */}
+      <div className="h-16 sm:h-20 shrink-0" aria-hidden="true" />
     </>
   );
 }

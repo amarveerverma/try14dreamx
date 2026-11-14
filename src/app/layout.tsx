@@ -51,7 +51,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-surface text-on-surface font-sans overflow-x-hidden">
         <AuthProvider>
           <Header />
-          <main className="flex-1 w-full pt-20 flex flex-col">
+          <main className="flex-1 w-full flex flex-col">
             {children}
           </main>
           <Footer />

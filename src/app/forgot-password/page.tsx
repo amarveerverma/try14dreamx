@@ -10,13 +10,19 @@ import {
   CheckCircle2,
   Clock,
   RotateCcw,
+  AlertCircle,
 } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = React.useState("");
   const [submitted, setSubmitted] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
   const [countdown, setCountdown] = React.useState(59);
+  const [error, setError] = React.useState<string | null>(null);
+  const [resendStatus, setResendStatus] = React.useState<string | null>(null);
+
+  const supabase = React.useMemo(() => createClient(), []);
 
   React.useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -26,21 +32,62 @@ export default function ForgotPasswordPage() {
     return () => clearInterval(timer);
   }, [submitted, countdown]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
+    setError(null);
+    setResendStatus(null);
     setIsLoading(true);
 
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      const origin =
+        typeof window !== "undefined" ? window.location.origin : "https://try14dreamx.vercel.app";
+
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(
+        email.trim().toLowerCase(),
+        {
+          redirectTo: `${origin}/reset-password`,
+        }
+      );
+
+      if (resetError) {
+        setError(resetError.message || "Failed to dispatch recovery email. Please check the address.");
+        setIsLoading(false);
+        return;
+      }
+
       setSubmitted(true);
       setCountdown(59);
-    }, 600);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Network error. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleResend = () => {
+  const handleResend = async () => {
+    if (countdown > 0) return;
+    setResendStatus("Sending fresh recovery link...");
     setCountdown(59);
-    alert(`Encrypted recovery link re-dispatched to ${email}`);
+    try {
+      const origin =
+        typeof window !== "undefined" ? window.location.origin : "https://try14dreamx.vercel.app";
+
+      const { error: resendErr } = await supabase.auth.resetPasswordForEmail(
+        email.trim().toLowerCase(),
+        {
+          redirectTo: `${origin}/reset-password`,
+        }
+      );
+
+      if (resendErr) {
+        setResendStatus(`Error: ${resendErr.message}`);
+      } else {
+        setResendStatus("Fresh recovery link sent. Please check your inbox.");
+      }
+    } catch {
+      setResendStatus("Failed to resend. Please check connection.");
+    }
   };
 
   return (
@@ -92,9 +139,16 @@ export default function ForgotPasswordPage() {
                   Reset Your Password
                 </h1>
                 <p className="text-xs text-[#474554] max-w-xs mx-auto leading-relaxed">
-                  Enter your registered DreamX email address. We will dispatch an encrypted recovery token valid for 15 minutes.
+                  Enter your registered DreamX email address. We will dispatch an encrypted recovery token to verify your identity.
                 </p>
               </div>
+
+              {error && (
+                <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700 flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{error}</span>
+                </div>
+              )}
 
               {/* Form */}
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -115,16 +169,16 @@ export default function ForgotPasswordPage() {
 
                 <div className="p-3 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-500 leading-normal">
                   <p>
-                    <strong>Security Rule:</strong> Password reset tokens are single-use and expire in 15 minutes. All active login sessions on other devices will be revoked upon password change.
+                    <strong>Security Rule:</strong> Password reset tokens are single-use and expire in 15 minutes. All active sessions on other devices will be revoked upon password change.
                   </p>
                 </div>
 
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full py-3 px-4 rounded-xl bg-[#3828b5] hover:bg-[#2e2195] text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+                  className="w-full py-3.5 px-4 rounded-xl bg-[#3828b5] hover:bg-[#2e2195] text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
                 >
-                  <span>{isLoading ? "Dispatching Token..." : "Send Encrypted Recovery Link →"}</span>
+                  <span>{isLoading ? "Dispatching Recovery Link..." : "Send Password Reset Link →"}</span>
                 </button>
               </form>
 
@@ -150,7 +204,7 @@ export default function ForgotPasswordPage() {
                   Recovery Link Dispatched!
                 </h2>
                 <p className="text-xs text-[#474554] max-w-xs mx-auto leading-relaxed">
-                  We have sent a secure password reset link to:
+                  We have dispatched a secure password reset link to:
                 </p>
                 <p className="text-xs font-mono font-bold text-[#3828b5] bg-indigo-50 py-1 px-3 rounded-full inline-block mt-1">
                   {email}
@@ -163,27 +217,34 @@ export default function ForgotPasswordPage() {
                   <span>Token expires in 15 minutes</span>
                 </div>
                 <p className="text-[11px] text-gray-500">
-                  Click the link in your email to choose a new password. Check your spam folder if it doesn&apos;t arrive within 2 minutes.
+                  Click the link inside the email to choose a new password. Check your spam / promotions folder if it doesn&apos;t arrive shortly.
                 </p>
               </div>
 
-              <div className="space-y-2 pt-2">
-                <Link
-                  href={`/reset-password?email=${encodeURIComponent(email)}`}
-                  className="w-full py-2.5 px-4 rounded-xl bg-[#3828b5] hover:bg-[#2e2195] text-white font-bold text-xs shadow-xs transition-all flex items-center justify-center gap-1.5"
-                >
-                  <span>Simulate Clicking Email Link →</span>
-                </Link>
+              {resendStatus && (
+                <div className="p-2.5 rounded-lg bg-blue-50 border border-blue-200 text-xs text-blue-800 font-medium">
+                  {resendStatus}
+                </div>
+              )}
 
+              <div className="space-y-2 pt-2">
                 <button
                   type="button"
                   disabled={countdown > 0}
                   onClick={handleResend}
-                  className="w-full py-2 text-xs font-semibold text-gray-600 hover:text-[#1c1b1b] disabled:opacity-40 flex items-center justify-center gap-1.5"
+                  className="w-full py-2 text-xs font-semibold text-gray-600 hover:text-[#1c1b1b] disabled:opacity-40 flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
                   <span>{countdown > 0 ? `Resend email in ${countdown}s` : "Resend recovery email now"}</span>
                 </button>
+
+                <Link
+                  href="/login"
+                  className="w-full py-2.5 px-4 rounded-xl border border-[#e7e7eb] hover:bg-gray-50 text-[#1c1b1b] font-bold text-xs transition-all flex items-center justify-center gap-1.5"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  <span>Return to Sign In</span>
+                </Link>
               </div>
             </div>
           )}

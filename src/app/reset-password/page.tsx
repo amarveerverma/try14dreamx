@@ -12,10 +12,13 @@ import {
   AlertCircle,
   Check,
 } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 
 function ResetPasswordForm() {
   const searchParams = useSearchParams();
-  const initialEmail = searchParams.get("email") || "candidate@dreamx.com";
+  const initialEmail = searchParams.get("email") || "your registered account";
+
+  const supabase = React.useMemo(() => createClient(), []);
 
   const [password, setPassword] = React.useState("");
   const [confirmPassword, setConfirmPassword] = React.useState("");
@@ -33,7 +36,7 @@ function ResetPasswordForm() {
   const isMatch = password.length > 0 && password === confirmPassword;
   const isAllValid = hasMinLength && hasNumber && hasUpper && hasSymbol && isMatch;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
@@ -48,10 +51,26 @@ function ResetPasswordForm() {
 
     setIsLoading(true);
 
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      const { error: updateError } = await supabase.auth.updateUser({
+        password,
+      });
+
+      if (updateError) {
+        setError(
+          updateError.message ||
+            "Failed to update password. Your reset link may have expired or is invalid."
+        );
+        setIsLoading(false);
+        return;
+      }
+
       setSubmitted(true);
-    }, 700);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Network error resetting password.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -76,7 +95,7 @@ function ResetPasswordForm() {
         <div className="flex flex-wrap items-center gap-3 text-[11px] text-gray-600">
           <span className="flex items-center gap-1 text-[#16834a] font-semibold">
             <ShieldCheck className="w-3.5 h-3.5" />
-            Token Validated (15m window)
+            Authenticated Security Window
           </span>
           <span className="text-gray-300">•</span>
           <span className="text-gray-600">Salted Argon2id Key Derivation</span>
@@ -104,7 +123,7 @@ function ResetPasswordForm() {
                   Set New Password
                 </h1>
                 <p className="text-xs text-[#474554] max-w-xs mx-auto leading-relaxed">
-                  Create a strong, secure password for your DreamX account. Your session tokens on other devices will be automatically revoked.
+                  Create a strong, secure password for your DreamX account. Your session tokens on other devices will be automatically updated.
                 </p>
               </div>
 
@@ -222,7 +241,7 @@ function ResetPasswordForm() {
                   Password Updated Successfully!
                 </h2>
                 <p className="text-xs text-[#474554] max-w-xs mx-auto leading-relaxed">
-                  Your credentials have been re-encrypted with Argon2id. All previous session tokens have been invalidated.
+                  Your credentials have been securely updated in the database. You can now sign in with your new password.
                 </p>
               </div>
 

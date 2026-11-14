@@ -26,6 +26,7 @@ function VerifyEmailContent() {
   const [timer, setTimer] = React.useState(48);
   const [isVerifying, setIsVerifying] = React.useState(false);
   const [verified, setVerified] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
   const [resendStatus, setResendStatus] = React.useState<string | null>(null);
 
   React.useEffect(() => {
@@ -57,6 +58,7 @@ function VerifyEmailContent() {
   }, [timer]);
 
   const handleOtpChange = (index: number, val: string) => {
+    if (error) setError(null);
     if (val.length <= 1) {
       const nextOtp = [...otp];
       nextOtp[index] = val;
@@ -79,34 +81,38 @@ function VerifyEmailContent() {
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsVerifying(true);
+    setError(null);
 
     const token = otp.join("").trim();
 
     try {
       if (token.length === 6) {
-        const { data, error } = await supabase.auth.verifyOtp({
+        const { data, error: otpError } = await supabase.auth.verifyOtp({
           email,
           token,
           type: "signup",
         });
 
-        if (!error && data.session) {
+        if (!otpError && data.session) {
           setVerified(true);
+          setIsVerifying(false);
+          return;
+        } else if (otpError) {
+          setError(otpError.message || "Invalid or expired 6-digit verification code. Please request a fresh code.");
           setIsVerifying(false);
           return;
         }
       }
 
-      // If user clicked or token wasn't numeric OTP, verify session
+      // If user clicked email link or token wasn't typed, check if active session exists
       const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
+      if (session?.user && session.user.email?.toLowerCase() === email.toLowerCase()) {
         setVerified(true);
       } else {
-        // Graceful confirmation
-        setVerified(true);
+        setError("Please enter the complete 6-digit verification code sent to your email, or click the link in your email.");
       }
-    } catch {
-      setVerified(true);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Verification failed. Please check your connection and try again.");
     } finally {
       setIsVerifying(false);
     }
@@ -239,6 +245,13 @@ function VerifyEmailContent() {
                     Enter the 6-digit verification code sent to your registered email
                   </p>
                 </div>
+
+                {error && (
+                  <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs font-semibold flex items-start gap-2.5">
+                    <span className="material-symbols-outlined text-[18px] text-red-600 shrink-0">error</span>
+                    <span className="leading-snug">{error}</span>
+                  </div>
+                )}
 
                 {/* Resend Intelligence Strip */}
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-2 p-3 rounded-xl bg-[#f6f3f2] border border-[#e7e7eb] text-xs">

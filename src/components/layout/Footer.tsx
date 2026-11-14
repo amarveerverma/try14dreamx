@@ -1,7 +1,28 @@
+"use client";
+
 import * as React from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export function Footer() {
+  const pathname = usePathname();
+
+  const isAuthPage =
+    pathname === "/login" ||
+    pathname === "/signup" ||
+    pathname === "/verify-email" ||
+    pathname === "/forgot-password" ||
+    pathname === "/reset-password";
+  const isAdminPage = pathname?.startsWith("/admin");
+  const isOnboardingPage =
+    pathname === "/dashboard/onboarding" || pathname === "/mentor/onboarding";
+  const isDashboardPage = pathname?.startsWith("/dashboard");
+
+  // Suppress full marketing footer on dedicated workspaces, auth pages, and student portal
+  if (isAuthPage || isAdminPage || isOnboardingPage || isDashboardPage) {
+    return null;
+  }
+
   return (
     <footer className="w-full bg-surface-container-low shadow-[0_-1px_8px_rgba(0,0,0,0.02)] border-t border-surface-container">
       <div className="max-w-7xl mx-auto px-6 lg:px-12 pt-16 pb-12">

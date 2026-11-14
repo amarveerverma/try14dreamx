@@ -21,7 +21,7 @@ import {
 
 export default function SignUpPage() {
   const router = useRouter();
-  const { signUpWithEmail, signInWithGoogle } = useAuth();
+  const { user, isLoading: authLoading, signUpWithEmail, signInWithGoogle } = useAuth();
   const [role, setRole] = React.useState<"student" | "mentor">("student");
   const [name, setName] = React.useState("");
   const [email, setEmail] = React.useState("");
@@ -31,6 +31,19 @@ export default function SignUpPage() {
   const [acceptedTerms, setAcceptedTerms] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+
+  // Auto-redirect if user already has an active session
+  React.useEffect(() => {
+    if (!authLoading && user) {
+      if (user.role === "admin") {
+        router.replace("/admin");
+      } else if (user.role === "mentor") {
+        router.replace(user.onboarding_completed ? "/mentor" : "/mentor/onboarding");
+      } else {
+        router.replace(user.onboarding_completed ? "/dashboard" : "/dashboard/onboarding");
+      }
+    }
+  }, [user, authLoading, router]);
 
   // Live password validation
   const hasMinLength = password.length >= 8;

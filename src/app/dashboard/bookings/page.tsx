@@ -401,7 +401,7 @@ export default function CandidateBookingsPage() {
           <div className="flex flex-wrap items-center gap-2.5 self-start lg:self-end">
             <button
               type="button"
-              onClick={handleSyncIcal}
+              onClick={() => handleSyncIcal()}
               className="px-3.5 py-2.5 rounded-xl bg-surface-container-lowest text-on-surface font-semibold text-xs border border-outline-variant/30 shadow-xs hover:bg-surface-container transition-all flex items-center gap-2"
             >
               <span className="material-symbols-outlined text-[18px] text-primary">calendar_add_on</span>

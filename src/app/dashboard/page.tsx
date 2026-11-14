@@ -3,9 +3,146 @@
 import * as React from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
+import { createClient } from "@/lib/supabase/client";
+
+interface ActiveBooking {
+  id: string;
+  service_code: string;
+  status: string;
+  session_start: string;
+  session_end: string;
+  meeting_url?: string | null;
+  amount: number;
+  mentor_name?: string;
+  mentor_headline?: string;
+  mentor_avatar?: string;
+}
+
+const SERVICE_NAMES: Record<string, string> = {
+  S01: "S01 Resume Review & ATS Audit",
+  S02: "S02 LinkedIn Optimization Drill",
+  S03: "S03 Portfolio & Code Review",
+  S04: "S04 Technical Mock Interview",
+  S05: "S05 Behavioral STAR Drill",
+  S06: "S06 Distributed Systems & Concurrency",
+  S07: "S07 System Design Architecture Drill",
+  S08: "S08 Offer & Salary Negotiation",
+  S09: "S09 Career Transition Strategy",
+  S10: "S10 Algorithmic Coding Sprint",
+};
+
+function formatSessionDate(dateStr?: string | null) {
+  if (!dateStr) return "Scheduled (Time TBD)";
+  try {
+    const d = new Date(dateStr);
+    return (
+      d.toLocaleDateString("en-IN", {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+        hour: "2-digit",
+        minute: "2-digit",
+        timeZone: "Asia/Kolkata",
+      }) + " IST"
+    );
+  } catch {
+    return dateStr;
+  }
+}
 
 export default function StudentDashboardPage() {
   const { user, membership } = useAuth();
+  const supabase = React.useMemo(() => createClient(), []);
+
+  const [upcomingBooking, setUpcomingBooking] = React.useState<ActiveBooking | null>(null);
+  const [completedDeliverables, setCompletedDeliverables] = React.useState<any[]>([]);
+  const [baselineScore, setBaselineScore] = React.useState<number>(68);
+  const [isCalibrated, setIsCalibrated] = React.useState<boolean>(false);
+  const [isLoadingData, setIsLoadingData] = React.useState<boolean>(true);
+
+  React.useEffect(() => {
+    if (!user?.id) return;
+
+    // Load calibrated baseline score from local storage or profile
+    const storedScore = localStorage.getItem(`dreamx_baseline_score_${user.id}`);
+    if (storedScore) {
+      setBaselineScore(Number(storedScore));
+      setIsCalibrated(true);
+    } else if (user.onboarding_completed) {
+      setIsCalibrated(true);
+      setBaselineScore(user.segment === "early_career" ? 68 : user.segment === "fresh_graduate" ? 54 : 48);
+    }
+
+    async function loadDashboardData() {
+      try {
+        setIsLoadingData(true);
+        // Fetch next confirmed/held booking for this candidate
+        const { data: bData } = await supabase
+          .from("bookings")
+          .select(`
+            id,
+            service_code,
+            status,
+            session_start,
+            session_end,
+            meeting_url,
+            amount_paise,
+            mentor_id,
+            mentor:profiles!mentor_id(full_name, avatar_url)
+          `)
+          .eq("student_id", user?.id || "")
+          .in("status", ["confirmed", "held", "in_progress"])
+          .order("session_start", { ascending: true })
+          .limit(1)
+          .maybeSingle();
+
+        if (bData) {
+          const mentorProfile = bData.mentor as { full_name?: string; avatar_url?: string } | null;
+          setUpcomingBooking({
+            id: bData.id,
+            service_code: bData.service_code,
+            status: bData.status,
+            session_start: bData.session_start,
+            session_end: bData.session_end,
+            meeting_url: bData.meeting_url,
+            amount: bData.amount_paise ? Math.round(bData.amount_paise / 100) : 999,
+            mentor_name: mentorProfile?.full_name || "Verified Mentor",
+            mentor_headline: "Staff Software Engineer • Tier-1 Tech",
+          });
+        } else {
+          setUpcomingBooking(null);
+        }
+
+        // Fetch completed bookings for deliverables
+        const { data: compData } = await supabase
+          .from("bookings")
+          .select(`
+            id,
+            service_code,
+            status,
+            session_start,
+            mentor_id,
+            mentor:profiles!mentor_id(full_name)
+          `)
+          .eq("student_id", user?.id || "")
+          .eq("status", "completed")
+          .order("session_start", { ascending: false })
+          .limit(5);
+
+        if (compData && compData.length > 0) {
+          setCompletedDeliverables(compData);
+        } else {
+          setCompletedDeliverables([]);
+        }
+      } catch (err) {
+        console.warn("Could not load candidate dashboard data:", err);
+      } finally {
+        setIsLoadingData(false);
+      }
+    }
+
+    loadDashboardData();
+  }, [user, supabase]);
 
   const candidateName = user?.name ? user.name.split(" ")[0] : "Candidate";
   const candidateId = user?.id ? user.id.slice(0, 8).toUpperCase() : "DX-NEW";
@@ -113,45 +250,54 @@ export default function StudentDashboardPage() {
               </span>
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-secondary-container/40 text-on-secondary-container text-xs font-bold">
                 <span className="material-symbols-outlined text-[14px]">trending_up</span>
-                <span>+14 pts vs baseline</span>
+                <span>+{Math.max(0, baselineScore - 50)} pts vs baseline</span>
               </span>
             </div>
 
             <div className="flex items-baseline gap-2 mt-1">
-              <span className="text-4xl font-extrabold text-on-surface font-heading">68</span>
+              <span className="text-4xl font-extrabold text-on-surface font-heading">{baselineScore}</span>
               <span className="text-lg text-on-surface-variant font-semibold">/ 100</span>
               <span className="ml-auto px-2.5 py-1 rounded-lg bg-surface-container text-on-surface text-xs font-bold">
-                Developing Foundation
+                {baselineScore >= 75 ? "Target Ready" : baselineScore >= 50 ? "Developing Foundation" : "Calibration Phase"}
               </span>
             </div>
 
             {/* Micro Progress Bar */}
             <div className="w-full bg-surface-container rounded-full h-2 mt-1 overflow-hidden flex">
-              <div className="bg-primary h-2 rounded-full transition-all duration-500" style={{ width: "68%" }} />
+              <div
+                className="bg-primary h-2 rounded-full transition-all duration-500"
+                style={{ width: `${Math.min(baselineScore, 100)}%` }}
+              />
             </div>
 
             <div className="grid grid-cols-2 gap-2 mt-2 p-3 bg-surface-container-low rounded-xl text-on-surface-variant text-xs border border-outline-variant/20">
               <div>
-                <span className="text-[10px] font-bold text-outline uppercase tracking-wider block">Active Vector</span>
-                <span className="text-xs font-bold text-on-surface mt-0.5 block">6 of 8 Assessed</span>
+                <span className="text-[10px] font-bold text-outline uppercase tracking-wider block">Active Vectors</span>
+                <span className="text-xs font-bold text-on-surface mt-0.5 block">
+                  {isCalibrated ? "8 of 8 Calibrated" : "Calibration Needed"}
+                </span>
               </div>
               <div>
                 <span className="text-[10px] font-bold text-outline uppercase tracking-wider block">Audit Quality</span>
-                <span className="text-xs font-bold text-secondary mt-0.5 block">75% Verified</span>
+                <span className="text-xs font-bold text-secondary mt-0.5 block">
+                  {isCalibrated ? "100% Verified" : "Pending Diagnostic"}
+                </span>
               </div>
             </div>
 
             <p className="text-xs text-on-surface-variant mt-1 leading-relaxed">
-              Last impact: <span className="text-on-surface font-bold">+8 pts</span> verified via audited session deliverables from S06 Architecture Drill. Portfolio weight redistributed proportionally (PRD §8.3).
+              {isCalibrated
+                ? "Your 8-dimension readiness matrix is locked and active. All mock drills and written deliverables dynamically update your vector baseline."
+                : "Calibrate your baseline diagnostic to unlock tailored mentor recommendations and vector deltas."}
             </p>
           </div>
 
           <div className="pt-4 mt-2 border-t border-surface-container">
             <Link
-              href="#vector-matrix"
+              href="/dashboard/readiness"
               className="inline-flex items-center gap-1.5 text-primary hover:text-primary-container text-xs font-bold cursor-pointer"
             >
-              <span>View Detailed Rubric History</span>
+              <span>View 8-Dimension Rubric Breakdown</span>
               <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
             </Link>
           </div>
@@ -211,72 +357,129 @@ export default function StudentDashboardPage() {
 
         {/* Card 3: Next Confirmed Session & Escrow Protection */}
         <div className="lg:col-span-4 flex flex-col justify-between bg-surface-container-lowest p-6 rounded-2xl shadow-xs border border-outline-variant/30">
-          <div className="flex flex-col gap-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs uppercase tracking-wider text-on-surface-variant font-bold font-mono">
-                Next Confirmed Session
-              </span>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-secondary-container/50 text-on-secondary-container text-[11px] font-bold">
-                <span className="w-1.5 h-1.5 rounded-full bg-secondary" />
-                <span>Confirmed</span>
-              </span>
+          {isLoadingData ? (
+            <div className="flex flex-col justify-between h-48 animate-pulse p-2 space-y-3">
+              <div className="h-4 bg-surface-container rounded w-1/3" />
+              <div className="h-6 bg-surface-container rounded w-3/4" />
+              <div className="h-16 bg-surface-container-low rounded-xl w-full" />
+              <div className="h-9 bg-surface-container rounded-xl w-full" />
             </div>
-
-            <div className="mt-1">
-              <span className="text-[11px] font-bold text-primary font-mono uppercase tracking-wider">
-                Code S06 • 60 Min Live
-              </span>
-              <h3 className="text-base sm:text-lg font-bold text-on-surface font-heading mt-0.5 leading-snug">
-                Distributed Architecture &amp; System Drill
-              </h3>
-            </div>
-
-            {/* Mentor Metadata */}
-            <div className="flex items-center gap-3 p-3 bg-surface-container-low rounded-xl border border-outline-variant/20">
-              <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs shrink-0">
-                RK
-              </div>
-              <div className="flex flex-col min-w-0">
-                <div className="flex items-center gap-1">
-                  <span className="text-xs font-bold text-on-surface truncate">Rajesh Kannan</span>
-                  <span className="material-symbols-outlined text-primary text-[14px]" style={{ fontVariationSettings: "'FILL' 1" }} title="Tier-1 Verified Mentor">
-                    verified
-                  </span>
-                </div>
-                <span className="text-[11px] text-on-surface-variant truncate">
-                  Staff SWE • Tier-1 Product Tech
+          ) : upcomingBooking ? (
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs uppercase tracking-wider text-on-surface-variant font-bold font-mono">
+                  Next Confirmed Session
+                </span>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-secondary-container/50 text-on-secondary-container text-[11px] font-bold">
+                  <span className="w-1.5 h-1.5 rounded-full bg-secondary" />
+                  <span>{upcomingBooking.status.toUpperCase()}</span>
                 </span>
               </div>
-            </div>
 
-            <div className="flex flex-col gap-1 text-xs">
-              <div className="flex items-center gap-2 text-on-surface font-medium">
-                <span className="material-symbols-outlined text-[16px] text-primary">schedule</span>
-                <span>Tomorrow, 25 Oct • 07:30 PM - 08:30 PM IST</span>
+              <div className="mt-1">
+                <span className="text-[11px] font-bold text-primary font-mono uppercase tracking-wider">
+                  Code {upcomingBooking.service_code} • Live Drill
+                </span>
+                <h3 className="text-base sm:text-lg font-bold text-on-surface font-heading mt-0.5 leading-snug">
+                  {SERVICE_NAMES[upcomingBooking.service_code] || `Service ${upcomingBooking.service_code}`}
+                </h3>
               </div>
-              <div className="flex items-center gap-2 text-[11px] text-outline">
-                <span className="material-symbols-outlined text-[16px] text-secondary">shield</span>
-                <span>₹999 locked in Razorpay Nodal Escrow (Safe release T+48h)</span>
-              </div>
-            </div>
-          </div>
 
-          <div className="pt-4 mt-2 border-t border-surface-container space-y-2">
-            <button
-              type="button"
-              disabled
-              className="w-full inline-flex items-center justify-center gap-2 px-3 py-2.5 bg-surface-container text-on-surface-variant rounded-xl text-xs font-bold cursor-not-allowed border border-outline-variant/30"
-            >
-              <span className="material-symbols-outlined text-[16px]">video_call</span>
-              <span>Join Google Meet (Unlocks at 07:15 PM)</span>
-            </button>
-            <div className="flex items-center justify-between text-[11px] text-on-surface-variant px-1">
-              <Link href="/dashboard/bookings" className="text-primary hover:underline font-semibold">
-                Reschedule / Cancel
-              </Link>
-              <span>100% refund eligible until 06:30 PM</span>
+              {/* Mentor Metadata */}
+              <div className="flex items-center gap-3 p-3 bg-surface-container-low rounded-xl border border-outline-variant/20">
+                <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs shrink-0">
+                  {upcomingBooking.mentor_name ? upcomingBooking.mentor_name.slice(0, 2).toUpperCase() : "M"}
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <div className="flex items-center gap-1">
+                    <span className="text-xs font-bold text-on-surface truncate">
+                      {upcomingBooking.mentor_name}
+                    </span>
+                    <span
+                      className="material-symbols-outlined text-primary text-[14px]"
+                      style={{ fontVariationSettings: "'FILL' 1" }}
+                      title="Tier-1 Verified Mentor"
+                    >
+                      verified
+                    </span>
+                  </div>
+                  <span className="text-[11px] text-on-surface-variant truncate">
+                    {upcomingBooking.mentor_headline}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1 text-xs">
+                <div className="flex items-center gap-2 text-on-surface font-medium">
+                  <span className="material-symbols-outlined text-[16px] text-primary">schedule</span>
+                  <span>{formatSessionDate(upcomingBooking.session_start)}</span>
+                </div>
+                <div className="flex items-center gap-2 text-[11px] text-outline">
+                  <span className="material-symbols-outlined text-[16px] text-secondary">shield</span>
+                  <span>₹{upcomingBooking.amount} held in Escrow Guarantee</span>
+                </div>
+              </div>
+
+              <div className="pt-4 mt-2 border-t border-surface-container space-y-2">
+                <a
+                  href={upcomingBooking.meeting_url || "/dashboard/bookings"}
+                  target={upcomingBooking.meeting_url ? "_blank" : "_self"}
+                  rel="noreferrer"
+                  className="w-full inline-flex items-center justify-center gap-2 px-3 py-2.5 bg-primary text-on-primary hover:bg-primary-container hover:text-on-primary-container rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[16px]">video_call</span>
+                  <span>Join Google Meet</span>
+                </a>
+                <div className="flex items-center justify-between text-[11px] text-on-surface-variant px-1">
+                  <Link href="/dashboard/bookings" className="text-primary hover:underline font-semibold">
+                    Manage / Reschedule
+                  </Link>
+                  <span>100% refund eligible ≥1h before slot</span>
+                </div>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="flex flex-col justify-between h-full gap-4">
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs uppercase tracking-wider text-on-surface-variant font-bold font-mono">
+                    Next Confirmed Session
+                  </span>
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container text-on-surface-variant text-[11px] font-bold">
+                    Ready to Book
+                  </span>
+                </div>
+
+                <div className="mt-1">
+                  <span className="text-[11px] font-bold text-secondary font-mono uppercase tracking-wider">
+                    Tier-1 Mentorship Drill
+                  </span>
+                  <h3 className="text-base sm:text-lg font-bold text-on-surface font-heading mt-0.5 leading-snug">
+                    Schedule Your First Session
+                  </h3>
+                </div>
+
+                <div className="p-3 bg-surface-container-low rounded-xl border border-outline-variant/20 text-xs text-on-surface-variant leading-relaxed">
+                  Book a targeted 1:1 session or build a 3-service bundle to accelerate your placement with verified tech mentors.
+                </div>
+
+                <div className="flex items-center gap-2 text-[11px] text-outline">
+                  <span className="material-symbols-outlined text-[16px] text-secondary">shield</span>
+                  <span>100% Refund Escrow Protection if SLA is not met</span>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-surface-container">
+                <Link
+                  href="/services"
+                  className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-primary text-on-primary hover:bg-primary-container hover:text-on-primary-container rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer"
+                >
+                  <span>Browse Services &amp; Mentors</span>
+                  <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                </Link>
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
@@ -600,108 +803,69 @@ export default function StudentDashboardPage() {
         </div>
 
         {/* Deliverables Table / Cards */}
-        <div className="flex flex-col gap-2 overflow-x-auto">
-          <div className="min-w-[680px] flex flex-col divide-y divide-surface-container">
-            {/* Item 1: S01 Resume Review */}
-            <div className="py-3 px-2 flex items-center justify-between gap-4 hover:bg-surface-container-low/40 rounded-xl transition-colors">
-              <div className="flex items-center gap-3 w-1/3">
-                <div className="w-8 h-8 rounded-lg bg-secondary-container/40 text-secondary flex items-center justify-center shrink-0">
-                  <span className="material-symbols-outlined text-[18px]">description</span>
-                </div>
-                <div className="flex flex-col truncate">
-                  <span className="text-xs font-bold text-on-surface truncate">S01 Resume Review &amp; ATS Audit</span>
-                  <span className="text-[11px] text-on-surface-variant">Mentor: Priya Nair (Ex-Amazon Bar Raiser)</span>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-secondary-container/40 text-on-secondary-container text-xs font-bold">
-                  <span className="material-symbols-outlined text-[13px]">check</span>
-                  <span>Delivered (34h)</span>
-                </span>
-                <span className="text-xs text-outline font-semibold">SLA Met</span>
-              </div>
-              <div className="flex flex-col text-right">
-                <span className="text-xs font-bold text-on-surface font-mono">8.4 / 10</span>
-                <span className="text-[11px] text-on-surface-variant">ATS Compatibility Score</span>
-              </div>
-              <div className="flex items-center gap-2 justify-end">
-                <Link
-                  href="/dashboard/reports"
-                  className="inline-flex items-center gap-1 px-3 py-1.5 bg-surface-container text-on-surface hover:bg-surface-container-high rounded-lg text-xs font-semibold transition-colors"
+        {completedDeliverables.length > 0 ? (
+          <div className="flex flex-col gap-3">
+            {completedDeliverables.map((del) => {
+              const mentorProfile = del.mentor as { full_name?: string } | null;
+              return (
+                <div
+                  key={del.id}
+                  className="py-3 px-4 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-surface-container-low/40 rounded-xl transition-colors border border-outline-variant/20"
                 >
-                  <span className="material-symbols-outlined text-[15px]">download</span>
-                  <span>Signed PDF</span>
-                </Link>
-                <Link
-                  href="/dashboard/reports"
-                  className="inline-flex items-center gap-1 px-3 py-1.5 bg-surface-container-low text-on-surface-variant hover:text-on-surface rounded-lg text-xs font-semibold"
-                >
-                  <span className="material-symbols-outlined text-[15px]">data_object</span>
-                  <span>JSON</span>
-                </Link>
-              </div>
-            </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-secondary-container/40 text-secondary flex items-center justify-center shrink-0">
+                      <span className="material-symbols-outlined text-[18px]">description</span>
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-xs font-bold text-on-surface truncate">
+                        {SERVICE_NAMES[del.service_code] || `Service ${del.service_code}`}
+                      </span>
+                      <span className="text-[11px] text-on-surface-variant truncate">
+                        Mentor: {mentorProfile?.full_name || "Verified Mentor"}
+                      </span>
+                    </div>
+                  </div>
 
-            {/* Item 2: S05 Behavioral Mock */}
-            <div className="py-3 px-2 flex items-center justify-between gap-4 hover:bg-surface-container-low/40 rounded-xl transition-colors">
-              <div className="flex items-center gap-3 w-1/3">
-                <div className="w-8 h-8 rounded-lg bg-secondary-container/40 text-secondary flex items-center justify-center shrink-0">
-                  <span className="material-symbols-outlined text-[18px]">psychology</span>
-                </div>
-                <div className="flex flex-col truncate">
-                  <span className="text-xs font-bold text-on-surface truncate">S05 Behavioral STAR Drill Report</span>
-                  <span className="text-[11px] text-on-surface-variant">Mentor: Siddharth Iyer (Director Eng, Gojek)</span>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-secondary-container/40 text-on-secondary-container text-xs font-bold">
-                  <span className="material-symbols-outlined text-[13px]">check</span>
-                  <span>Delivered (41h)</span>
-                </span>
-                <span className="text-xs text-outline font-semibold">SLA Met</span>
-              </div>
-              <div className="flex flex-col text-right">
-                <span className="text-xs font-bold text-on-surface font-mono">7.8 / 10</span>
-                <span className="text-[11px] text-on-surface-variant">STAR Rubric Index</span>
-              </div>
-              <div className="flex items-center gap-2 justify-end">
-                <Link
-                  href="/dashboard/reports"
-                  className="inline-flex items-center gap-1 px-3 py-1.5 bg-primary text-on-primary hover:bg-primary-container hover:text-on-primary-container rounded-lg text-xs font-bold transition-all shadow-xs"
-                >
-                  <span className="material-symbols-outlined text-[15px]">visibility</span>
-                  <span>View Web Report</span>
-                </Link>
-              </div>
-            </div>
+                  <div className="flex flex-wrap items-center gap-3 justify-between md:justify-end">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-secondary-container/40 text-on-secondary-container text-xs font-bold">
+                      <span className="material-symbols-outlined text-[13px]">check</span>
+                      <span>Delivered • SLA Met</span>
+                    </span>
 
-            {/* Item 3: S06 Upcoming */}
-            <div className="py-3 px-2 flex items-center justify-between gap-4 bg-surface-container-low/20 rounded-xl">
-              <div className="flex items-center gap-3 w-1/3">
-                <div className="w-8 h-8 rounded-lg bg-surface-container text-outline flex items-center justify-center shrink-0">
-                  <span className="material-symbols-outlined text-[18px]">hourglass_top</span>
+                    <Link
+                      href="/dashboard/reports"
+                      className="inline-flex items-center gap-1 px-3 py-1.5 bg-primary text-on-primary hover:bg-primary-container hover:text-on-primary-container rounded-lg text-xs font-bold transition-all shadow-xs"
+                    >
+                      <span className="material-symbols-outlined text-[15px]">visibility</span>
+                      <span>View Rubric Report</span>
+                    </Link>
+                  </div>
                 </div>
-                <div className="flex flex-col truncate">
-                  <span className="text-xs font-bold text-on-surface truncate">S06 System Design &amp; Concurrency Report</span>
-                  <span className="text-[11px] text-on-surface-variant">Mentor: Rajesh Kannan</span>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-surface-container text-on-surface-variant text-xs">
-                  <span className="w-1.5 h-1.5 rounded-full bg-outline" />
-                  <span>Pending Live Session</span>
-                </span>
-              </div>
-              <div className="flex flex-col text-right">
-                <span className="text-xs font-bold text-outline font-mono">—</span>
-                <span className="text-[11px] text-outline font-mono">Window: T+48:00 max</span>
-              </div>
-              <div className="flex items-center gap-2 justify-end">
-                <span className="text-xs text-outline font-semibold">Escrow Protection Queued</span>
-              </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="p-8 rounded-2xl bg-surface-container-low/40 border border-outline-variant/30 text-center space-y-3">
+            <div className="w-12 h-12 rounded-2xl bg-secondary-container/40 text-secondary flex items-center justify-center mx-auto">
+              <span className="material-symbols-outlined text-[24px]">verified_user</span>
+            </div>
+            <div className="space-y-1">
+              <h3 className="font-bold text-sm text-on-surface">No Audited Deliverables Yet</h3>
+              <p className="text-xs text-on-surface-variant max-w-md mx-auto leading-relaxed">
+                Once you complete your first 1:1 mentorship drill, your mentor&apos;s cryptographically signed rubric scorecard, action plan PDF, and SHA-256 tamper-proof ledger record will be published here within 48 hours.
+              </p>
+            </div>
+            <div className="pt-1">
+              <Link
+                href="/services"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-on-primary text-xs font-bold hover:bg-primary-container hover:text-on-primary-container transition-all shadow-xs"
+              >
+                <span>Browse Eligible Services</span>
+                <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+              </Link>
             </div>
           </div>
-        </div>
+        )}
       </section>
 
       {/* 6. Custom 3-Service Bundle Savings Banner (PRD §7.3 & §7.4) */}

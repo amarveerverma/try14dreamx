@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 
 export default function StudentDashboardLayout({
@@ -11,12 +11,37 @@ export default function StudentDashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const { user, membership, logout } = useAuth();
+  const router = useRouter();
+  const { user, isLoading, membership, logout } = useAuth();
   const [mobileDrawerOpen, setMobileDrawerOpen] = React.useState(false);
+
+  // Auth and onboarding gate
+  React.useEffect(() => {
+    if (!isLoading) {
+      if (!user) {
+        router.replace(`/login?redirect=${encodeURIComponent(pathname)}`);
+      } else if (!user.onboarding_completed && pathname !== "/dashboard/onboarding") {
+        router.replace("/dashboard/onboarding");
+      }
+    }
+  }, [user, isLoading, pathname, router]);
 
   // If inside the onboarding wizard, render standalone full-screen
   if (pathname === "/dashboard/onboarding") {
     return <>{children}</>;
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh] w-full">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin" />
+          <span className="text-xs font-semibold text-on-surface-variant font-mono">
+            Loading candidate workspace...
+          </span>
+        </div>
+      </div>
+    );
   }
 
   const navItems = [

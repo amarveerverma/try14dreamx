@@ -19,7 +19,7 @@ import {
 
 export default function LoginPage() {
   const router = useRouter();
-  const { signInWithEmail, signInWithGoogle, login } = useAuth();
+  const { user, isLoading: authLoading, signInWithEmail, signInWithGoogle } = useAuth();
   const [role, setRole] = React.useState<"seeker" | "mentor" | "admin">("seeker");
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
@@ -27,6 +27,26 @@ export default function LoginPage() {
   const [rememberDevice, setRememberDevice] = React.useState(true);
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+
+  // Auto-redirect if user already has an active session
+  React.useEffect(() => {
+    if (!authLoading && user) {
+      const redirectParam = typeof window !== "undefined"
+        ? new URLSearchParams(window.location.search).get("redirect")
+        : null;
+      if (redirectParam && redirectParam.startsWith("/") && redirectParam !== "/login") {
+        router.replace(redirectParam);
+        return;
+      }
+      if (user.role === "admin") {
+        router.replace("/admin");
+      } else if (user.role === "mentor") {
+        router.replace(user.onboarding_completed ? "/mentor" : "/mentor/onboarding");
+      } else {
+        router.replace(user.onboarding_completed ? "/dashboard" : "/dashboard/onboarding");
+      }
+    }
+  }, [user, authLoading, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -263,29 +283,9 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3 px-4 rounded-xl bg-[#3828b5] hover:bg-[#2e2195] text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+              className="w-full py-3.5 px-4 rounded-xl bg-[#3828b5] hover:bg-[#2e2195] text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
             >
-              <span>{isLoading ? "Authenticating Session..." : `Sign In as ${role === "mentor" ? "Mentor" : role === "admin" ? "Staff Admin" : "Candidate"} →`}</span>
-            </button>
-
-            {/* Quick 1-Click Candidate Test Sign-in */}
-            <button
-              type="button"
-              onClick={() => {
-                login("student", "test.student.pro@dreamx.in", "Verified Candidate");
-                const redirectParam = typeof window !== "undefined"
-                  ? new URLSearchParams(window.location.search).get("redirect")
-                  : null;
-                if (redirectParam && redirectParam.startsWith("/")) {
-                  router.push(redirectParam);
-                } else {
-                  router.push("/dashboard");
-                }
-              }}
-              className="w-full py-2.5 px-3 rounded-xl bg-[#3828b5]/10 hover:bg-[#3828b5]/20 text-[#3828b5] font-bold text-xs border border-[#3828b5]/20 transition-all flex items-center justify-center gap-1.5 cursor-pointer mt-2"
-            >
-              <span className="material-symbols-outlined text-[16px]">verified_user</span>
-              <span>1-Click Candidate Demo Login</span>
+              <span>{isLoading ? "Authenticating Session..." : "Sign In to Account →"}</span>
             </button>
           </form>
 
