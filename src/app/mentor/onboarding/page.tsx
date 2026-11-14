@@ -137,15 +137,20 @@ export default function MentorOnboardingPage() {
     "S06",
   ]);
 
-  // Step 3: Identity & Credential Audit
+  // Step 3: Identity & Credential Audit (Option A: Verified Badges Model)
   const [workEmail, setWorkEmail] = React.useState("");
   const [workEmailOtp, setWorkEmailOtp] = React.useState("");
   const [emailOtpVerified, setEmailOtpVerified] = React.useState(false);
+  const [verifiedCompany, setVerifiedCompany] = React.useState("");
+  const [sendingOtp, setSendingOtp] = React.useState(false);
+  const [verifyingOtp, setVerifyingOtp] = React.useState(false);
+  const [otpMessage, setOtpMessage] = React.useState<{ text: string; type: "success" | "error" } | null>(null);
   const [uploadedBadge, setUploadedBadge] = React.useState<string | null>(null);
   const [showSampleGuide, setShowSampleGuide] = React.useState(false);
   const [idType, setIdType] = React.useState("pan");
   const [idNumber, setIdNumber] = React.useState("");
   const [showId, setShowId] = React.useState(false);
+  const [customSessionFee, setCustomSessionFee] = React.useState<number>(999);
 
   // Step 4: Availability & Settlement Rails
   const [weeklyHours, setWeeklyHours] = React.useState("5");
@@ -199,6 +204,81 @@ export default function MentorOnboardingPage() {
     return Math.round((avgPaise / 100) * monthlySessions);
   };
 
+  // Work Email OTP Verification (Option A: Verified Badges Model)
+  const handleSendWorkEmailOtp = async () => {
+    if (!workEmail.trim() || !workEmail.includes("@")) {
+      setOtpMessage({ text: "Please enter a valid corporate work email address (e.g. name@google.com).", type: "error" });
+      return;
+    }
+    setSendingOtp(true);
+    setOtpMessage(null);
+    try {
+      const res = await fetch("/api/mentor/verify-work-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "send", email: workEmail.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setOtpMessage({ text: data.error || "Failed to send verification code.", type: "error" });
+      } else {
+        setOtpMessage({
+          text: data.message || `Verification code sent to ${workEmail}!`,
+          type: "success",
+        });
+        if (data.company && !currentEmployer) {
+          setCurrentEmployer(data.company);
+        }
+        if (data.previewCode) {
+          setWorkEmailOtp(data.previewCode);
+        }
+      }
+    } catch {
+      setOtpMessage({ text: "Network error sending code. Please try again.", type: "error" });
+    } finally {
+      setSendingOtp(false);
+    }
+  };
+
+  const handleVerifyWorkEmailOtp = async () => {
+    if (!workEmailOtp.trim()) {
+      setOtpMessage({ text: "Please enter the 6-digit code received in your work email.", type: "error" });
+      return;
+    }
+    setVerifyingOtp(true);
+    setOtpMessage(null);
+    try {
+      const res = await fetch("/api/mentor/verify-work-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "verify",
+          email: workEmail.trim(),
+          otp: workEmailOtp.trim(),
+          userId: user?.id,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setOtpMessage({ text: data.error || "Verification failed.", type: "error" });
+      } else {
+        setEmailOtpVerified(true);
+        setVerifiedCompany(data.company || "Recognized Tech Employer");
+        if (!currentEmployer) {
+          setCurrentEmployer(data.company);
+        }
+        setOtpMessage({
+          text: `Success! You are now verified as an active employee at ${data.company || "your employer"}.`,
+          type: "success",
+        });
+      }
+    } catch {
+      setOtpMessage({ text: "Network error verifying code.", type: "error" });
+    } finally {
+      setVerifyingOtp(false);
+    }
+  };
+
   const handleStepValidation = (step: number): boolean => {
     setSubmitError(null);
     if (step === 1) {
@@ -220,16 +300,8 @@ export default function MentorOnboardingPage() {
         return false;
       }
     } else if (step === 3) {
-      if (!workEmail.trim()) {
-        setSubmitError("Corporate work email is required for employer domain provenance.");
-        return false;
-      }
-      if (!emailOtpVerified) {
-        setSubmitError("Please complete the corporate email OTP verification.");
-        return false;
-      }
-      if (!idNumber.trim()) {
-        setSubmitError("Please enter your identity document number.");
+      if (!emailOtpVerified && !uploadedBadge && !workEmail.trim()) {
+        setSubmitError("Please verify your corporate work email with the 6-digit OTP or upload an employer badge.");
         return false;
       }
     } else if (step === 4) {
@@ -341,17 +413,21 @@ export default function MentorOnboardingPage() {
           .from("mentor_service_approvals")
           .upsert(approvalsPayload, { onConflict: "mentor_id,service_code" });
 
-        // Upsert payout and profile preferences to public.mentor_profiles
+        // Upsert payout and profile preferences to public.mentor_profiles (Option A: Verified Badges)
         await supabase.from("mentor_profiles").upsert(
           {
             id: resolvedUserId,
-            current_employer: currentEmployer,
+            current_employer: verifiedCompany || currentEmployer,
             job_title: jobTitle,
             years_of_experience: Number(yearsOfExperience),
-            verification_status: "pending",
-            approved_services: [],
+            verification_status: emailOtpVerified ? "approved" : "pending",
+            approved_services: selectedServices,
             bio: bio || null,
             linkedin_url: linkedinUrl || null,
+            work_email: workEmail || null,
+            work_email_verified: emailOtpVerified,
+            verified_company: verifiedCompany || currentEmployer,
+            hourly_rate_inr: customSessionFee,
             upi_id: payoutMethod === "upi" ? upiId : null,
             bank_account_number: payoutMethod === "bank" ? accountNumber : null,
             bank_ifsc: payoutMethod === "bank" ? ifscCode : null,
@@ -1026,58 +1102,118 @@ export default function MentorOnboardingPage() {
                     </p>
                   </div>
 
-                  {/* Card 1: Corporate Email */}
+                  {/* Card 1: Corporate Email (Option A: Instant Verified Badge) */}
                   <div className="bg-white border border-[#e7e7eb] rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
                     <div className="flex items-center justify-between pb-3 border-b border-[#e7e7eb]">
                       <div className="flex items-center gap-2">
-                        <span className="material-symbols-outlined text-[#5145cd] text-[20px]">domain</span>
-                        <span className="text-sm font-bold text-[#1c1b1b]">
-                          Corporate Work Email (Domain Provenance)
-                        </span>
+                        <span className="material-symbols-outlined text-[#5145cd] text-[20px]">verified</span>
+                        <div>
+                          <span className="text-sm font-bold text-[#1c1b1b] block">
+                            Corporate Work Email Verification
+                          </span>
+                          <span className="text-[11px] text-[#777585]">
+                            Instant verification • 100% Free • Unlocks your official company badge
+                          </span>
+                        </div>
                       </div>
                       {emailOtpVerified && (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#eaf5ef] text-[#006d3a]">
-                          <span className="material-symbols-outlined text-[13px]">check</span>
-                          Domain OTP Verified
+                        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-[#eaf5ef] text-[#006d3a] border border-[#94f7b2]">
+                          <span className="material-symbols-outlined text-[13px]">check_circle</span>
+                          Verified {verifiedCompany || currentEmployer || "Employer"}
                         </span>
                       )}
                     </div>
 
-                    <div className="space-y-2">
-                      <label htmlFor="work-email" className="block text-xs font-bold text-[#1c1b1b]">
-                        Work Email Address
-                      </label>
-                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                        <input
-                          id="work-email"
-                          type="email"
-                          value={workEmail}
-                          onChange={(e) => setWorkEmail(e.target.value)}
-                          placeholder="name@google.com or name@amazon.com"
-                          className="flex-1 px-3.5 py-2.5 rounded-xl border border-[#e7e7eb] bg-[#f6f3f2] text-xs font-medium text-[#1c1b1b] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5145cd]"
-                        />
-                        <div className="flex items-center gap-1.5 shrink-0">
+                    {emailOtpVerified ? (
+                      <div className="p-4 rounded-xl bg-[#eaf5ef] border border-[#94f7b2] flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-[#006d3a] text-white flex items-center justify-center font-bold text-lg shadow-sm">
+                            ✓
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-bold text-[#006d3a]">
+                                Verified {verifiedCompany || currentEmployer} Mentor Badge Active
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-[#006d3a]/80 mt-0.5">
+                              Corporate domain <span className="font-mono font-bold">{workEmail}</span> confirmed. Candidates will see your verified company badge on your profile.
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEmailOtpVerified(false);
+                            setWorkEmailOtp("");
+                            setOtpMessage(null);
+                          }}
+                          className="text-xs font-bold text-[#5145cd] hover:underline"
+                        >
+                          Change Email
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <label htmlFor="work-email" className="block text-xs font-bold text-[#1c1b1b]">
+                          Enter Your Work Email
+                        </label>
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                          <input
+                            id="work-email"
+                            type="email"
+                            value={workEmail}
+                            onChange={(e) => setWorkEmail(e.target.value)}
+                            placeholder="e.g. rahul@google.com or priya@swiggy.in"
+                            className="flex-1 px-3.5 py-2.5 rounded-xl border border-[#e7e7eb] bg-[#f6f3f2] text-xs font-medium text-[#1c1b1b] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5145cd]"
+                          />
+                          <button
+                            type="button"
+                            onClick={handleSendWorkEmailOtp}
+                            disabled={sendingOtp || !workEmail.includes("@")}
+                            className="px-4 py-2.5 rounded-xl bg-[#5145cd] hover:bg-[#4336b8] text-white text-xs font-bold shrink-0 disabled:opacity-50 transition-all flex items-center gap-1.5 justify-center"
+                          >
+                            {sendingOtp ? "Sending Code..." : "Send Verification Code"}
+                          </button>
+                        </div>
+
+                        {/* OTP Verification Box */}
+                        <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                           <input
                             type="text"
                             maxLength={6}
                             value={workEmailOtp}
                             onChange={(e) => setWorkEmailOtp(e.target.value)}
-                            placeholder="6-digit OTP"
-                            className="w-24 px-2.5 py-2.5 rounded-xl border border-[#e7e7eb] bg-[#f6f3f2] text-xs font-mono text-center text-[#1c1b1b] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5145cd]"
+                            placeholder="Enter 6-digit code"
+                            className="w-full sm:w-44 px-3 py-2.5 rounded-xl border border-[#e7e7eb] bg-[#f6f3f2] text-xs font-mono text-center text-[#1c1b1b] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5145cd]"
                           />
                           <button
                             type="button"
-                            onClick={() => setEmailOtpVerified(true)}
-                            className="px-3.5 py-2.5 rounded-xl bg-white border border-[#e7e7eb] hover:bg-[#f6f3f2] text-xs font-bold text-[#1c1b1b] shrink-0"
+                            onClick={handleVerifyWorkEmailOtp}
+                            disabled={verifyingOtp || workEmailOtp.length < 6}
+                            className="px-4 py-2.5 rounded-xl bg-white border border-[#5145cd] text-[#5145cd] hover:bg-[#5145cd] hover:text-white text-xs font-bold shrink-0 disabled:opacity-50 transition-all"
                           >
-                            Verify OTP
+                            {verifyingOtp ? "Verifying..." : "Verify & Activate Badge"}
                           </button>
                         </div>
+
+                        {otpMessage && (
+                          <div
+                            className={`p-3 rounded-xl text-xs font-semibold ${
+                              otpMessage.type === "success"
+                                ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                                : "bg-red-50 text-red-800 border border-red-200"
+                            }`}
+                          >
+                            {otpMessage.text}
+                          </div>
+                        )}
+
+                        <p className="text-[11px] text-[#777585]">
+                          Works with all corporate tech emails (Google, Microsoft, Amazon, Flipkart, TCS, Razorpay, etc.). No personal Gmail/Yahoo addresses.
+                        </p>
                       </div>
-                      <p className="text-[11px] text-[#777585]">
-                        Must match recognized tech employers (Google, Microsoft, Amazon, Swiggy, Uber, etc.). DKIM &amp; DMARC domain probes verified.
-                      </p>
-                    </div>
+                    )}
                   </div>
 
                   {/* Card 2: Employer Credential Upload */}
@@ -1085,11 +1221,18 @@ export default function MentorOnboardingPage() {
                     <div className="flex items-center justify-between pb-3 border-b border-[#e7e7eb]">
                       <div className="flex items-center gap-2">
                         <span className="material-symbols-outlined text-[#5145cd] text-[20px]">badge</span>
-                        <span className="text-sm font-bold text-[#1c1b1b]">
-                          Employer Proof of Current / Recent Senior Role
-                        </span>
+                        <div>
+                          <span className="text-sm font-bold text-[#1c1b1b] block">
+                            Alternate Proof: Employer ID Badge or Offer Letter
+                          </span>
+                          <span className="text-[11px] text-[#777585]">
+                            Optional if you already verified your corporate work email above
+                          </span>
+                        </div>
                       </div>
-                      <span className="text-[11px] font-mono text-[#777585]">Max 10 MB</span>
+                      <span className="text-[10px] font-bold text-gray-600 bg-gray-100 px-2.5 py-0.5 rounded-full">
+                        {emailOtpVerified ? "Optional" : "For Consultants / Contractors"}
+                      </span>
                     </div>
 
                     {uploadedBadge ? (
@@ -1228,12 +1371,17 @@ export default function MentorOnboardingPage() {
                     <div className="flex items-center justify-between pb-3 border-b border-[#e7e7eb]">
                       <div className="flex items-center gap-2">
                         <span className="material-symbols-outlined text-[#5145cd] text-[20px]">lock</span>
-                        <span className="text-sm font-bold text-[#1c1b1b]">
-                          Government Identity Document &amp; DPDP Masking
-                        </span>
+                        <div>
+                          <span className="text-sm font-bold text-[#1c1b1b] block">
+                            Tax Compliance / Government ID
+                          </span>
+                          <span className="text-[11px] text-[#777585]">
+                            Optional during signup • Can be completed before your first payout disbursal
+                          </span>
+                        </div>
                       </div>
-                      <span className="text-[10px] font-bold text-[#006d3a] bg-[#eaf5ef] px-2 py-0.5 rounded-full">
-                        Statutory KYC
+                      <span className="text-[10px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-100 px-2.5 py-0.5 rounded-full">
+                        Optional for Onboarding
                       </span>
                     </div>
 
@@ -1484,6 +1632,68 @@ export default function MentorOnboardingPage() {
                         </div>
                       </div>
                     )}
+                  </div>
+
+                  {/* Card 2.5: Mentor Session Pricing (Option A: Mentor Autonomy) */}
+                  <div className="bg-white border border-[#e7e7eb] rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
+                    <div className="text-sm font-bold text-[#1c1b1b] pb-2 border-b border-[#e7e7eb] flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="material-symbols-outlined text-[#5145cd] text-[20px]">currency_rupee</span>
+                        <div>
+                          <span className="block">Set Your Standard Session Rate</span>
+                          <span className="text-[11px] text-[#777585] font-normal">
+                            Choose your rate per 45-minute session • You receive 80% guaranteed payout
+                          </span>
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+                        80/20 Escrow Split
+                      </span>
+                    </div>
+
+                    <div className="space-y-3">
+                      <label className="block text-xs font-bold text-[#1c1b1b]">
+                        Select or Customize Your Session Fee (INR)
+                      </label>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        {[799, 999, 1499, 2499].map((fee) => (
+                          <button
+                            key={fee}
+                            type="button"
+                            onClick={() => setCustomSessionFee(fee)}
+                            className={`py-3 px-3 rounded-xl text-center border transition-all ${
+                              customSessionFee === fee
+                                ? "border-[#5145cd] bg-[#e3dfff]/60 text-[#130068] shadow-xs"
+                                : "border-[#e7e7eb] bg-[#f6f3f2] text-[#474554] hover:bg-white"
+                            }`}
+                          >
+                            <span className="text-sm font-extrabold block">₹{fee.toLocaleString("en-IN")}</span>
+                            <span className="text-[10px] text-gray-500 mt-0.5 block">
+                              You earn: ₹{Math.round(fee * 0.8).toLocaleString("en-IN")}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-3 pt-2">
+                        <span className="text-xs text-gray-600 font-medium">Or enter custom amount:</span>
+                        <div className="relative w-36">
+                          <span className="absolute left-3 top-2 text-xs text-gray-400 font-bold">₹</span>
+                          <input
+                            type="number"
+                            min={499}
+                            max={15000}
+                            step={100}
+                            value={customSessionFee}
+                            onChange={(e) => setCustomSessionFee(Math.max(499, Number(e.target.value)))}
+                            className="w-full pl-7 pr-3 py-2 rounded-xl border border-[#e7e7eb] bg-[#f6f3f2] text-xs font-bold text-[#1c1b1b] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5145cd]"
+                          />
+                        </div>
+                        <span className="text-[11px] text-emerald-700 font-semibold">
+                          Your take-home per session: ₹{Math.round(customSessionFee * 0.8).toLocaleString("en-IN")} (80%)
+                        </span>
+                      </div>
+                    </div>
                   </div>
 
                   {/* Card 3: Legal & Escrow Agreements */}

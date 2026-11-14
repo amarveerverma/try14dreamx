@@ -140,6 +140,10 @@ export interface Database {
           sla_compliance_rate: number;
           rating: number;
           reviews_count: number;
+          work_email?: string | null;
+          work_email_verified?: boolean;
+          verified_company?: string | null;
+          hourly_rate_inr?: number;
           created_at: string;
           updated_at: string;
         };
@@ -158,6 +162,10 @@ export interface Database {
           sla_compliance_rate?: number;
           rating?: number;
           reviews_count?: number;
+          work_email?: string | null;
+          work_email_verified?: boolean;
+          verified_company?: string | null;
+          hourly_rate_inr?: number;
           created_at?: string;
           updated_at?: string;
         };
@@ -176,6 +184,10 @@ export interface Database {
           sla_compliance_rate?: number;
           rating?: number;
           reviews_count?: number;
+          work_email?: string | null;
+          work_email_verified?: boolean;
+          verified_company?: string | null;
+          hourly_rate_inr?: number;
           updated_at?: string;
         };
         Relationships: [];

@@ -103,7 +103,16 @@ export default function MentorVerificationPage() {
           <div className="flex items-center gap-3">
             <button
               type="button"
-              onClick={() => alert("Downloading Accredited Mentor Badge (SVG/PNG)...")}
+              onClick={() => {
+                const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="280" height="80" viewBox="0 0 280 80" fill="none"><rect width="280" height="80" rx="16" fill="#0B0C13"/><rect x="1" y="1" width="278" height="78" rx="15" stroke="#4F46E5" stroke-opacity="0.3"/><circle cx="40" cy="40" r="20" fill="#4F46E5" fill-opacity="0.2"/><path d="M33 40L38 45L47 35" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><text fill="#FFFFFF" font-family="system-ui, sans-serif" font-size="13" font-weight="bold" x="72" y="36">DreamX Accredited</text><text fill="#9CA3AF" font-family="system-ui, sans-serif" font-size="11" x="72" y="52">Verified Tech Mentor</text></svg>`;
+                const blob = new Blob([svgContent], { type: "image/svg+xml" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = "dreamx-verified-mentor-badge.svg";
+                a.click();
+                URL.revokeObjectURL(url);
+              }}
               className="px-4 py-2.5 bg-white border border-[#e7e7eb] hover:bg-[#f6f3f2] text-[#1c1b1b] text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-2"
             >
               <span className="material-symbols-outlined text-[18px]">download</span>
