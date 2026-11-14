@@ -86,6 +86,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(profile);
         if (typeof window !== "undefined") {
           localStorage.setItem("dreamx_user", JSON.stringify(profile));
+          document.cookie = `dreamx_role=${profile.role}; path=/; max-age=604800; SameSite=Lax`;
+          document.cookie = `dreamx_auth=true; path=/; max-age=604800; SameSite=Lax`;
         }
 
         // Fetch verified membership from database (PRD §7.2, P10 Exit Criteria 2)
@@ -135,6 +137,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         role: "student",
       };
       setUser(fallbackProfile);
+      if (typeof window !== "undefined") {
+        localStorage.setItem("dreamx_user", JSON.stringify(fallbackProfile));
+        document.cookie = `dreamx_role=${fallbackProfile.role}; path=/; max-age=604800; SameSite=Lax`;
+        document.cookie = `dreamx_auth=true; path=/; max-age=604800; SameSite=Lax`;
+      }
     }
   }, [supabase]);
 
@@ -301,6 +308,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (typeof window !== "undefined") {
       localStorage.removeItem("dreamx_user");
       localStorage.removeItem("dreamx_membership");
+      document.cookie = "dreamx_role=; path=/; max-age=0; SameSite=Lax";
+      document.cookie = "dreamx_auth=; path=/; max-age=0; SameSite=Lax";
     }
   };
 

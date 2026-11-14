@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import type { ServiceCode } from "@/lib/supabase/types";
@@ -110,7 +111,8 @@ const DOMAIN_OPTIONS = [
 ];
 
 export default function MentorOnboardingPage() {
-  const { user, completeOnboarding } = useAuth();
+  const router = useRouter();
+  const { user, isLoading, completeOnboarding } = useAuth();
   const supabase = React.useMemo(() => createClient(), []);
 
   // Wizard Navigation State
@@ -121,11 +123,28 @@ export default function MentorOnboardingPage() {
   const [fullName, setFullName] = React.useState(() => user?.name || "");
   const [email, setEmail] = React.useState(() => user?.email || "");
   const [phone, setPhone] = React.useState(() => user?.phone || "");
-  const [password, setPassword] = React.useState("");
   const [currentEmployer, setCurrentEmployer] = React.useState("");
   const [jobTitle, setJobTitle] = React.useState("");
   const [yearsOfExperience, setYearsOfExperience] = React.useState<number>(5);
   const [linkedinUrl, setLinkedinUrl] = React.useState("");
+
+  // Sync state when authenticated user profile loads
+  React.useEffect(() => {
+    if (user) {
+      if (user.name && !fullName) setFullName(user.name);
+      if (user.email && !email) setEmail(user.email);
+      if (user.phone && !phone) setPhone(user.phone);
+    }
+  }, [user, fullName, email, phone]);
+
+  // If already an approved mentor, go directly to delivery console
+  React.useEffect(() => {
+    if (!isLoading && user) {
+      if (user.role === "mentor" && user.onboarding_completed) {
+        router.replace("/mentor");
+      }
+    }
+  }, [user, isLoading, router]);
   const [selectedDomains, setSelectedDomains] = React.useState<string[]>([
     "Distributed Systems & Architecture",
   ]);
@@ -342,25 +361,8 @@ export default function MentorOnboardingPage() {
         resolvedUserId = sessionData?.session?.user?.id;
       }
 
-      // If still no user session, attempt signup or generate guest applicant UUID
       if (!resolvedUserId) {
-        if (password) {
-          const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-              data: {
-                full_name: fullName,
-                role: "mentor",
-                phone,
-              },
-            },
-          });
-          if (signUpError && !signUpError.message.includes("already registered")) {
-            throw new Error(signUpError.message);
-          }
-          resolvedUserId = signUpData.user?.id;
-        }
+        throw new Error("Authentication session expired. Please sign in to submit your mentor application.");
       }
 
       // 2. Persist to Supabase if authenticated session exists
@@ -465,6 +467,81 @@ export default function MentorOnboardingPage() {
       setSaving(false);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#fcf9f8] flex flex-col items-center justify-center p-6 text-center">
+        <div className="w-10 h-10 border-3 border-[#5145cd] border-t-transparent rounded-full animate-spin mb-4" />
+        <p className="text-sm font-bold text-[#1c1b1b]">Loading Mentor Application Desk...</p>
+      </div>
+    );
+  }
+
+  // Authentication Required Gate: Visitors must sign up/in before applying
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-[#fcf9f8] flex flex-col justify-between p-4 sm:p-6 lg:p-8 text-[#1c1b1b]">
+        {/* Top Header Ribbon */}
+        <div className="max-w-4xl w-full mx-auto flex items-center justify-between pb-6 border-b border-[#e7e7eb] text-xs">
+          <Link href="/" className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center font-bold text-white shadow-sm">
+              DX
+            </div>
+            <div>
+              <span className="font-extrabold text-sm text-[#1c1b1b]">DreamX</span>
+              <span className="text-gray-500 ml-1.5 font-mono text-[11px]">Mentor Accreditation Desk</span>
+            </div>
+          </Link>
+          <Link href="/mentors" className="text-[#5145cd] hover:underline font-semibold text-xs">
+            ← Explore Mentors
+          </Link>
+        </div>
+
+        {/* Center Card */}
+        <div className="max-w-md w-full mx-auto my-auto bg-white border border-[#e7e7eb] p-8 rounded-3xl shadow-xl text-center space-y-6">
+          <div className="w-16 h-16 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center mx-auto text-[#5145cd]">
+            <span className="material-symbols-outlined text-[32px]">badge</span>
+          </div>
+
+          <div className="space-y-2">
+            <h1 className="text-2xl font-extrabold text-[#1c1b1b] tracking-tight font-heading">
+              Apply as a Verified Mentor
+            </h1>
+            <p className="text-xs text-[#474554] leading-relaxed">
+              Create your DreamX mentor account or sign in to verify your corporate work email, set your session prices, and guide top engineering candidates.
+            </p>
+          </div>
+
+          <div className="space-y-3 pt-2">
+            <Link
+              href="/signup?role=mentor&redirect=/mentor/onboarding"
+              className="w-full py-3.5 px-5 rounded-xl bg-[#5145cd] hover:bg-[#4336b8] text-white text-xs font-bold transition-all shadow-md flex items-center justify-center gap-2"
+            >
+              <span className="material-symbols-outlined text-[18px]">person_add</span>
+              <span>Create Mentor Account to Apply →</span>
+            </Link>
+
+            <Link
+              href="/login?role=mentor&redirect=/mentor/onboarding"
+              className="w-full py-3 px-5 rounded-xl bg-[#f6f3f2] hover:bg-[#ede9e8] text-[#1c1b1b] text-xs font-bold transition-all flex items-center justify-center gap-2"
+            >
+              <span>Already have an account? Sign In</span>
+            </Link>
+          </div>
+
+          <div className="pt-2 border-t border-gray-100 text-[11px] text-gray-500 flex items-center justify-center gap-1.5">
+            <span className="text-emerald-600 font-bold">✓</span>
+            <span>Instant Work Email OTP • 80% Payout • Direct Nodal Escrow</span>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="max-w-4xl w-full mx-auto text-center text-xs text-gray-400 pt-6">
+          DreamX Career Acceleration Protocol • Statutory RBAC Protected
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col w-full bg-[#fcf9f8] min-h-screen text-[#1c1b1b]">
@@ -843,22 +920,6 @@ export default function MentorOnboardingPage() {
                           className="w-full px-3.5 py-2.5 rounded-xl border border-[#e7e7eb] bg-[#f6f3f2] text-xs font-mono text-[#1c1b1b] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5145cd]"
                         />
                       </div>
-
-                      {!user && (
-                        <div className="space-y-1.5">
-                          <label htmlFor="mentor-password-input" className="block text-xs font-bold text-[#1c1b1b]">
-                            Account Password (Optional Setup)
-                          </label>
-                          <input
-                            id="mentor-password-input"
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            placeholder="Min. 8 characters"
-                            className="w-full px-3.5 py-2.5 rounded-xl border border-[#e7e7eb] bg-[#f6f3f2] text-xs font-medium text-[#1c1b1b] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5145cd]"
-                          />
-                        </div>
-                      )}
                     </div>
                   </div>
 

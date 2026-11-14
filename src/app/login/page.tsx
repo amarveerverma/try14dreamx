@@ -20,7 +20,14 @@ import {
 export default function LoginPage() {
   const router = useRouter();
   const { user, isLoading: authLoading, signInWithEmail, signInWithGoogle } = useAuth();
-  const [role, setRole] = React.useState<"seeker" | "mentor" | "admin">("seeker");
+  const [role, setRole] = React.useState<"seeker" | "mentor" | "admin">(() => {
+    if (typeof window !== "undefined") {
+      const p = new URLSearchParams(window.location.search).get("role");
+      if (p === "mentor") return "mentor";
+      if (p === "admin") return "admin";
+    }
+    return "seeker";
+  });
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [showPassword, setShowPassword] = React.useState(false);

@@ -22,7 +22,13 @@ import {
 export default function SignUpPage() {
   const router = useRouter();
   const { user, isLoading: authLoading, signUpWithEmail, signInWithGoogle } = useAuth();
-  const [role, setRole] = React.useState<"student" | "mentor">("student");
+  const [role, setRole] = React.useState<"student" | "mentor">(() => {
+    if (typeof window !== "undefined") {
+      const p = new URLSearchParams(window.location.search).get("role");
+      if (p === "mentor") return "mentor";
+    }
+    return "student";
+  });
   const [name, setName] = React.useState("");
   const [email, setEmail] = React.useState("");
   const [phone, setPhone] = React.useState("");
