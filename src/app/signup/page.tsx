@@ -61,7 +61,11 @@ export default function SignUpPage() {
 
     setIsLoading(true);
 
-    const res = await signUpWithEmail(email, password, name, role, phone);
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanName = name.trim();
+    const cleanPhone = phone.trim();
+
+    const res = await signUpWithEmail(cleanEmail, password, cleanName, role, cleanPhone);
     setIsLoading(false);
 
     if (!res.success) {
@@ -74,8 +78,8 @@ export default function SignUpPage() {
       ? new URLSearchParams(window.location.search).get("redirect")
       : null;
     const dest = redirectParam
-      ? `/verify-email?email=${encodeURIComponent(email)}&role=${role}&redirect=${encodeURIComponent(redirectParam)}`
-      : `/verify-email?email=${encodeURIComponent(email)}&role=${role}`;
+      ? `/verify-email?email=${encodeURIComponent(cleanEmail)}&role=${role}&redirect=${encodeURIComponent(redirectParam)}`
+      : `/verify-email?email=${encodeURIComponent(cleanEmail)}&role=${role}`;
     router.push(dest);
   };
 

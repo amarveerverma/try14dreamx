@@ -39,7 +39,8 @@ export default function LoginPage() {
       return;
     }
 
-    const res = await signInWithEmail(email, password);
+    const cleanEmail = email.trim().toLowerCase();
+    const res = await signInWithEmail(cleanEmail, password);
     setIsLoading(false);
 
     if (!res.success) {
