@@ -21,7 +21,8 @@ export default function AdminLoginPage() {
     if (!authLoading && user) {
       const isOwner =
         user.email?.toLowerCase().includes("amarveer") ||
-        user.email?.toLowerCase() === "vermaamarveer0@gmail.com";
+        user.email?.toLowerCase() === "vermaamarveer0@gmail.com" ||
+        user.email?.toLowerCase() === "admin@dreamx.in";
       if (user.role === "admin" || isOwner) {
         router.replace("/admin");
       }
@@ -50,7 +51,8 @@ export default function AdminLoginPage() {
 
     const isOwner =
       cleanEmail.includes("amarveer") ||
-      cleanEmail === "vermaamarveer0@gmail.com";
+      cleanEmail === "vermaamarveer0@gmail.com" ||
+      cleanEmail === "admin@dreamx.in";
 
     if (res.role === "admin" || isOwner) {
       router.replace("/admin");

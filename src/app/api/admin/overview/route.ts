@@ -48,7 +48,8 @@ export async function GET(req: NextRequest) {
 
     const isPlatformOwner =
       user.email?.toLowerCase().includes("amarveer") ||
-      user.email?.toLowerCase() === "vermaamarveer0@gmail.com";
+      user.email?.toLowerCase() === "vermaamarveer0@gmail.com" ||
+      user.email?.toLowerCase() === "admin@dreamx.in";
 
     const isAdmin = profile?.role === "admin" || isPlatformOwner;
 

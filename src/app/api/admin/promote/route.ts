@@ -37,7 +37,8 @@ export async function POST(req: NextRequest) {
 
     const isPlatformOwner =
       user.email?.toLowerCase().includes("amarveer") ||
-      user.email?.toLowerCase() === "vermaamarveer0@gmail.com";
+      user.email?.toLowerCase() === "vermaamarveer0@gmail.com" ||
+      user.email?.toLowerCase() === "admin@dreamx.in";
 
     // Verify calling user is admin or owner
     const { data: callerProfile } = await supabase
