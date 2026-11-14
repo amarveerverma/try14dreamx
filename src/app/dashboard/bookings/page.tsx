@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { createClient } from "@/lib/supabase/client";
-import { downloadIcsFile } from "@/lib/calendar";
+import { downloadIcsFile, getGoogleCalendarUrl } from "@/lib/calendar";
 
 type BookingFilterTab = "all" | "upcoming" | "in_progress" | "completed" | "cancelled";
 
@@ -25,8 +25,11 @@ interface BookingItem {
   escrowStatus: string;
   dateStr: string;
   timeStr: string;
+  rawStart?: string;
+  rawEnd?: string;
   unlockTime?: string;
   googleCalSynced: boolean;
+  googleCalendarUrl?: string;
   agendaItems: string[];
   deliverableAudit?: {
     turnaround: string;
@@ -192,8 +195,22 @@ export default function CandidateBookingsPage() {
                 hour: "2-digit",
                 minute: "2-digit",
               })} IST`,
+              rawStart: row.session_start,
+              rawEnd: row.session_end,
               unlockTime: "15m prior to call",
               googleCalSynced: true,
+              googleCalendarUrl: getGoogleCalendarUrl({
+                title: `DreamX 1:1: ${
+                  row.service_code === "S06"
+                    ? "Technical Mock Interview & Distributed Concurrency Drill"
+                    : `Service ${row.service_code}`
+                }`,
+                description: `Mentor: ${row.mentor?.full_name || "Verified Technical Mentor"}\nBooking Ref: ${row.booking_ref}\nMeeting: ${row.meeting_url || "https://meet.google.com"}\nProtected by DreamX 80% Escrow Guarantee.`,
+                location: row.meeting_url || "https://meet.google.com",
+                startTime: start,
+                endTime: end,
+                bookingRef: row.booking_ref,
+              }),
               agendaItems: [
                 row.pre_session_notes || "Core architectural teardown and STAR behavioural evaluation.",
               ],
@@ -317,15 +334,15 @@ export default function CandidateBookingsPage() {
     setTimeout(() => setCancelSuccessMsg(""), 6000);
   };
 
-  const handleSyncIcal = () => {
-    const active = bookings.find((b) => b.status === "upcoming" || b.status === "in_progress") || bookings[0];
+  const handleSyncIcal = (targetBooking?: BookingItem) => {
+    const active = targetBooking || bookings.find((b) => b.status === "upcoming" || b.status === "in_progress") || bookings[0];
     if (active) {
       downloadIcsFile({
         title: `DreamX 1:1: ${active.serviceName}`,
         description: `Mentor: ${active.mentorName}\nBooking Ref: ${active.ref}\nMeeting: ${active.meetingUrl || "Google Meet"}\nProtected by DreamX 80% Escrow Guarantee.`,
         location: active.meetingUrl || "Google Meet",
-        startTime: new Date(),
-        endTime: new Date(Date.now() + 60 * 60 * 1000),
+        startTime: active.rawStart || new Date(),
+        endTime: active.rawEnd || new Date(Date.now() + 60 * 60 * 1000),
         bookingRef: active.ref,
       });
       setSyncFeedback(`Generated & downloaded .ics calendar invite for ${active.ref}. Works with Google Calendar & Outlook.`);
@@ -935,14 +952,43 @@ export default function CandidateBookingsPage() {
                         </button>
                       </div>
 
-                      <button
-                        type="button"
-                        disabled
-                        className="px-3.5 py-2 rounded-xl bg-surface-container-high text-on-surface-variant cursor-not-allowed text-xs font-bold flex items-center gap-1.5"
-                      >
-                        <span className="material-symbols-outlined text-[15px]">lock</span>
-                        <span>Join Google Meet (Unlocks 15m prior)</span>
-                      </button>
+                      <div className="flex flex-wrap items-center gap-2">
+                        {/* Direct Google Calendar Web Link */}
+                        {booking.googleCalendarUrl && (
+                          <a
+                            href={booking.googleCalendarUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-3 py-2 rounded-xl border border-outline-variant/30 bg-surface-container hover:bg-surface-container-high text-on-surface text-xs font-semibold flex items-center gap-1.5 transition-colors"
+                            title="Open in Google Calendar"
+                          >
+                            <span className="material-symbols-outlined text-[16px] text-primary">calendar_add_on</span>
+                            <span className="hidden sm:inline">Add to Google Calendar</span>
+                          </a>
+                        )}
+
+                        {/* Direct Google Meet Link */}
+                        {booking.meetingUrl ? (
+                          <a
+                            href={booking.meetingUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-3.5 py-2 rounded-xl bg-primary text-on-primary hover:bg-primary-container text-xs font-bold flex items-center gap-1.5 shadow-xs transition-colors"
+                          >
+                            <span className="material-symbols-outlined text-[16px]">video_camera_front</span>
+                            <span>Join Google Meet</span>
+                          </a>
+                        ) : (
+                          <button
+                            type="button"
+                            disabled
+                            className="px-3.5 py-2 rounded-xl bg-surface-container-high text-on-surface-variant cursor-not-allowed text-xs font-bold flex items-center gap-1.5"
+                          >
+                            <span className="material-symbols-outlined text-[15px]">lock</span>
+                            <span>Join Google Meet (Unlocks 15m prior)</span>
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
