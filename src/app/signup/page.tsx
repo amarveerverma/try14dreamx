@@ -69,8 +69,14 @@ export default function SignUpPage() {
       return;
     }
 
-    // Route to email verification step
-    router.push(`/verify-email?email=${encodeURIComponent(email)}&role=${role}`);
+    // Route to email verification step (preserving redirect if candidate was booking)
+    const redirectParam = typeof window !== "undefined"
+      ? new URLSearchParams(window.location.search).get("redirect")
+      : null;
+    const dest = redirectParam
+      ? `/verify-email?email=${encodeURIComponent(email)}&role=${role}&redirect=${encodeURIComponent(redirectParam)}`
+      : `/verify-email?email=${encodeURIComponent(email)}&role=${role}`;
+    router.push(dest);
   };
 
   return (

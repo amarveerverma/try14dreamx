@@ -278,8 +278,26 @@ export default function ServicesCatalogPage() {
   const [purchaseError, setPurchaseError] = React.useState<string | null>(null);
 
   const handleProceedCheckout = async () => {
-    if (!user) {
-      router.push(`/login?redirect=/services`);
+    // 1. Detect active user from context or local storage
+    let activeUser = user;
+    if (!activeUser && typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem("dreamx_user");
+        if (stored) activeUser = JSON.parse(stored);
+      } catch {
+        // ignore
+      }
+    }
+
+    // 2. If not signed in, persist bundle selection and redirect to login
+    if (!activeUser) {
+      if (typeof window !== "undefined") {
+        localStorage.setItem(
+          "dreamx_pending_bundle",
+          JSON.stringify(selectedServices.map((s) => s.code))
+        );
+      }
+      router.push(`/login?redirect=${encodeURIComponent("/services?auto_open=bundle")}`);
       return;
     }
 
@@ -297,13 +315,27 @@ export default function ServicesCatalogPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           serviceCodes: selectedServices.map((s) => s.code),
+          studentId: activeUser.id,
         }),
       });
 
       const data = await res.json();
       if (!res.ok) {
+        if (res.status === 401) {
+          if (typeof window !== "undefined") {
+            localStorage.setItem(
+              "dreamx_pending_bundle",
+              JSON.stringify(selectedServices.map((s) => s.code))
+            );
+          }
+          router.push(`/login?redirect=${encodeURIComponent("/services?auto_open=bundle")}`);
+          return;
+        }
         setPurchaseError(data.error || "Failed to initiate escrow checkout.");
       } else {
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("dreamx_pending_bundle");
+        }
         setPurchaseSuccess(
           data.message ||
             `Bundle ${data.bundle?.bundle_ref || ""} confirmed! 3 session credits added to your vault under 80% Escrow Guarantee.`
@@ -311,7 +343,7 @@ export default function ServicesCatalogPage() {
         setTimeout(() => {
           setIsModalOpen(false);
           router.push("/dashboard/bookings?bundle=confirmed");
-        }, 2200);
+        }, 1800);
       }
     } catch (err: unknown) {
       setPurchaseError(err instanceof Error ? err.message : "Network error during checkout.");
@@ -321,6 +353,29 @@ export default function ServicesCatalogPage() {
   };
 
   const searchInputRef = React.useRef<HTMLInputElement>(null);
+
+  // Restore pending bundle selection after login redirect
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("dreamx_pending_bundle");
+        if (saved) {
+          const codes = JSON.parse(saved) as string[];
+          if (Array.isArray(codes) && codes.length > 0) {
+            const matched = SERVICES_DATA.filter((s) => codes.includes(s.code));
+            if (matched.length > 0) {
+              setSelectedServices(matched);
+              if (window.location.search.includes("auto_open=bundle") || matched.length === 3) {
+                setIsModalOpen(true);
+              }
+            }
+          }
+        }
+      } catch {
+        // ignore
+      }
+    }
+  }, []);
 
   // Keyboard shortcut Ctrl/Cmd + K
   React.useEffect(() => {
@@ -1014,14 +1069,9 @@ export default function ServicesCatalogPage() {
                         <span className="material-symbols-outlined text-[16px] animate-spin">progress_activity</span>
                         <span>Locking in Escrow...</span>
                       </>
-                    ) : !user ? (
-                      <>
-                        <span>Sign In to Pay ₹{bundleFinalPrice}</span>
-                        <span className="material-symbols-outlined text-[16px]">login</span>
-                      </>
                     ) : (
                       <>
-                        <span>Pay ₹{bundleFinalPrice} via Escrow</span>
+                        <span>Proceed to Escrow Payment (₹{bundleFinalPrice})</span>
                         <span className="material-symbols-outlined text-[16px]">lock</span>
                       </>
                     )}

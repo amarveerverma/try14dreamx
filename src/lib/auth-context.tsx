@@ -137,6 +137,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Initial Auth session detection
   React.useEffect(() => {
+    // Immediate local cache sync to eliminate hydration lag
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("dreamx_user");
+      if (stored) {
+        try {
+          setUser(JSON.parse(stored));
+        } catch {
+          // ignore
+        }
+      }
+    }
+
     async function initAuth() {
       try {
         const { data: { session } } = await supabase.auth.getSession();
@@ -252,8 +264,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const login = (role: UserRole, email = "candidate@dreamx.in", name = "Candidate") => {
+    const validUuid =
+      role === "admin"
+        ? "00000000-0000-0000-0000-000000000001"
+        : role === "mentor"
+        ? "c1111111-2222-3333-4444-555555555501"
+        : "a1111111-b222-c333-d444-e55555555501";
+
     const newUser: UserProfile = {
-      id: "dx-" + Math.floor(1000 + Math.random() * 9000),
+      id: validUuid,
       name,
       email,
       role,

@@ -3,15 +3,42 @@
 import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/auth-context";
 import { type Service } from "@/data/services";
 import { MENTORS } from "@/data/mentors";
 
 export function ServiceDetailClient({ service }: { service: Service }) {
+  const router = useRouter();
+  const { user } = useAuth();
   const [selectedMentor, setSelectedMentor] = React.useState<string>("smart-match");
   const [selectedDateIdx, setSelectedDateIdx] = React.useState(1); // Fri 25 Oct by default
   const [selectedSlot, setSelectedSlot] = React.useState("08:30 PM");
   const [secondsRemaining, setSecondsRemaining] = React.useState(14 * 60 + 32);
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = React.useState(false);
+  const [isAuthorizing, setIsAuthorizing] = React.useState(false);
+
+  const handleAuthorizeSingleBooking = () => {
+    let activeUser = user;
+    if (!activeUser && typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem("dreamx_user");
+        if (stored) activeUser = JSON.parse(stored);
+      } catch {
+        // ignore
+      }
+    }
+
+    if (!activeUser) {
+      router.push(`/login?redirect=${encodeURIComponent(`/services/${service.slug}`)}`);
+      return;
+    }
+
+    setIsAuthorizing(true);
+    router.push(
+      `/dashboard/bookings?service=${service.code}&mentor=${selectedMentor}&price=${service.price}&slot=${encodeURIComponent(selectedSlot)}&booking=confirmed`
+    );
+  };
 
   const approvedMentors = React.useMemo(() => {
     const matched = MENTORS.filter((m) =>
@@ -730,12 +757,15 @@ export function ServiceDetailClient({ service }: { service: Service }) {
               >
                 Cancel
               </button>
-              <Link
-                href={`/dashboard/bookings?service=${service.code}&mentor=${selectedMentor}&price=${service.price}&slot=${selectedSlot}`}
-                className="flex-1 py-2.5 px-4 rounded-xl bg-primary text-on-primary text-xs font-bold text-center hover:bg-primary-container shadow-md flex items-center justify-center gap-1.5"
+              <button
+                type="button"
+                disabled={isAuthorizing}
+                onClick={handleAuthorizeSingleBooking}
+                className="flex-1 py-2.5 px-4 rounded-xl bg-primary text-on-primary text-xs font-bold text-center hover:bg-primary-container shadow-md flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
               >
-                <span>Authorize Escrow (₹{service.price})</span>
-              </Link>
+                <span className="material-symbols-outlined text-[16px]">lock</span>
+                <span>{isAuthorizing ? "Securing Escrow..." : `Authorize Escrow (₹${service.price})`}</span>
+              </button>
             </div>
           </div>
         </div>

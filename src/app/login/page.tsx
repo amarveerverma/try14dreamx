@@ -19,7 +19,7 @@ import {
 
 export default function LoginPage() {
   const router = useRouter();
-  const { signInWithEmail, signInWithGoogle } = useAuth();
+  const { signInWithEmail, signInWithGoogle, login } = useAuth();
   const [role, setRole] = React.useState<"seeker" | "mentor" | "admin">("seeker");
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
@@ -44,6 +44,15 @@ export default function LoginPage() {
 
     if (!res.success) {
       setError(res.error || "Invalid email or password. Please try again.");
+      return;
+    }
+
+    const redirectParam = typeof window !== "undefined"
+      ? new URLSearchParams(window.location.search).get("redirect")
+      : null;
+
+    if (redirectParam && redirectParam.startsWith("/")) {
+      router.push(redirectParam);
       return;
     }
 
@@ -248,13 +257,40 @@ export default function LoginPage() {
             >
               <span>{isLoading ? "Authenticating Session..." : `Sign In as ${role === "mentor" ? "Mentor" : role === "admin" ? "Staff Admin" : "Candidate"} →`}</span>
             </button>
+
+            {/* Quick 1-Click Candidate Test Sign-in */}
+            <button
+              type="button"
+              onClick={() => {
+                login("student", "test.student.pro@dreamx.in", "Verified Candidate");
+                const redirectParam = typeof window !== "undefined"
+                  ? new URLSearchParams(window.location.search).get("redirect")
+                  : null;
+                if (redirectParam && redirectParam.startsWith("/")) {
+                  router.push(redirectParam);
+                } else {
+                  router.push("/dashboard");
+                }
+              }}
+              className="w-full py-2.5 px-3 rounded-xl bg-[#3828b5]/10 hover:bg-[#3828b5]/20 text-[#3828b5] font-bold text-xs border border-[#3828b5]/20 transition-all flex items-center justify-center gap-1.5 cursor-pointer mt-2"
+            >
+              <span className="material-symbols-outlined text-[16px]">verified_user</span>
+              <span>1-Click Candidate Demo Login</span>
+            </button>
           </form>
 
           {/* Registration Footer */}
           <div className="text-center pt-2 border-t border-gray-100 text-xs text-gray-600 space-y-1">
             <p>
               Don&apos;t have an account yet?{" "}
-              <Link href="/signup" className="font-bold text-[#3828b5] hover:underline">
+              <Link
+                href={
+                  typeof window !== "undefined" && new URLSearchParams(window.location.search).get("redirect")
+                    ? `/signup?redirect=${encodeURIComponent(new URLSearchParams(window.location.search).get("redirect")!)}`
+                    : "/signup"
+                }
+                className="font-bold text-[#3828b5] hover:underline"
+              >
                 Sign up for DreamX
               </Link>
             </p>

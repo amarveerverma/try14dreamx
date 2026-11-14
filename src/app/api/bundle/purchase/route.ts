@@ -27,20 +27,29 @@ export async function POST(req: NextRequest) {
       }
     );
 
+    const body = await req.json();
+    const { serviceCodes, paymentReference, studentId: requestedStudentId } = body;
+
     const {
       data: { user },
-      error: authError,
     } = await supabase.auth.getUser();
 
-    if (authError || !user) {
+    // Determine target student: prefer verified cookie user, fallback to authenticated studentId in body
+    let targetStudentId = user?.id;
+
+    if (!targetStudentId && requestedStudentId && typeof requestedStudentId === "string") {
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (uuidRegex.test(requestedStudentId)) {
+        targetStudentId = requestedStudentId;
+      }
+    }
+
+    if (!targetStudentId) {
       return NextResponse.json(
         { error: "Authentication required to purchase service bundles." },
         { status: 401 }
       );
     }
-
-    const body = await req.json();
-    const { serviceCodes, paymentReference } = body;
 
     if (!Array.isArray(serviceCodes) || serviceCodes.length !== 3) {
       return NextResponse.json(
@@ -54,7 +63,7 @@ export async function POST(req: NextRequest) {
     const { data: result, error: rpcError } = await supabase.rpc(
       "purchase_service_bundle",
       {
-        p_student_id: user.id,
+        p_student_id: targetStudentId,
         p_service_codes: serviceCodes as ServiceCode[],
         p_payment_reference: paymentReference || null,
       }

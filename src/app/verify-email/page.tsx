@@ -18,6 +18,7 @@ function VerifyEmailContent() {
   const searchParams = useSearchParams();
   const email = searchParams.get("email") || "user@dreamx.in";
   const role = searchParams.get("role") || "student";
+  const redirectUrl = searchParams.get("redirect");
 
   const [otp, setOtp] = React.useState(["", "", "", "", "", ""]);
   const [timer, setTimer] = React.useState(48);
@@ -264,10 +265,22 @@ function VerifyEmailContent() {
 
               <div className="pt-2">
                 <Link
-                  href={role === "mentor" ? "/mentor/onboarding" : "/dashboard/onboarding"}
+                  href={
+                    redirectUrl && redirectUrl.startsWith("/")
+                      ? redirectUrl
+                      : role === "mentor"
+                      ? "/mentor/onboarding"
+                      : "/dashboard/onboarding"
+                  }
                   className="w-full py-3.5 px-6 rounded-xl bg-[#3828b5] hover:bg-[#2e2195] text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2"
                 >
-                  <span>{role === "mentor" ? "Proceed to Mentor Onboarding →" : "Proceed to Candidate Onboarding →"}</span>
+                  <span>
+                    {redirectUrl
+                      ? "Continue to Payment / Booking →"
+                      : role === "mentor"
+                      ? "Proceed to Mentor Onboarding →"
+                      : "Proceed to Candidate Onboarding →"}
+                  </span>
                 </Link>
               </div>
             </div>
