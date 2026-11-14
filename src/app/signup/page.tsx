@@ -29,7 +29,6 @@ export default function SignUpPage() {
   const [password, setPassword] = React.useState("");
   const [showPassword, setShowPassword] = React.useState(false);
   const [acceptedTerms, setAcceptedTerms] = React.useState(false);
-  const [whatsAppOptIn, setWhatsAppOptIn] = React.useState(true);
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -325,18 +324,6 @@ export default function SignUpPage() {
                 <span>
                   I agree to the <Link href="/terms" className="text-[#3828b5] font-semibold hover:underline">Terms of Service</Link> and{" "}
                   <Link href="/privacy" className="text-[#3828b5] font-semibold hover:underline">Privacy Policy</Link>. I consent to encrypted data handling under the Indian DPDP Act 2023.
-                </span>
-              </label>
-
-              <label className="flex items-center gap-2.5 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={whatsAppOptIn}
-                  onChange={(e) => setWhatsAppOptIn(e.target.checked)}
-                  className="rounded border-[#e7e7eb] text-[#3828b5] focus:ring-[#3828b5]"
-                />
-                <span className="text-[11px] text-gray-500">
-                  Receive session scheduling reminders &amp; deliverable links on WhatsApp
                 </span>
               </label>
             </div>
