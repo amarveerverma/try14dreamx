@@ -68,6 +68,11 @@ export default function AdminWorkspaceLayout({
     return () => clearInterval(interval);
   }, []);
 
+  // Dedicated Admin Gateway renders standalone without authenticated shell
+  if (pathname === "/admin/login") {
+    return <>{children}</>;
+  }
+
   const handleClaimAdmin = async () => {
     if (!user) return;
     setIsPromotingSelf(true);
@@ -117,7 +122,7 @@ export default function AdminWorkspaceLayout({
           </div>
           <div className="pt-2">
             <Link
-              href="/login?redirect=/admin"
+              href="/admin/login"
               className="w-full inline-flex items-center justify-center gap-2 py-3 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all shadow-md"
             >
               <Lock className="w-4 h-4" />
