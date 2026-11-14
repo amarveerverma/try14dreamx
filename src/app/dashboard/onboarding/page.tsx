@@ -188,7 +188,11 @@ export default function OnboardingWizardPage() {
     setIsSaving(true);
     try {
       if (user?.id) {
-        // Record baseline readiness score and mark onboarding as complete
+        // Persist baseline score and ratings locally for real-time dashboard reflection
+        localStorage.setItem(`dreamx_baseline_score_${user.id}`, String(calculatedScore));
+        localStorage.setItem(`dreamx_baseline_ratings_${user.id}`, JSON.stringify(ratings));
+
+        // Record baseline readiness score and mark onboarding as complete in Supabase
         await supabase
           .from("profiles")
           .update({

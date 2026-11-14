@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   Users,
@@ -16,7 +16,9 @@ import {
   Bell,
   ChevronRight,
   ExternalLink,
+  ShieldAlert,
 } from "lucide-react";
+import { useAuth } from "@/lib/auth-context";
 
 export default function AdminWorkspaceLayout({
   children,
@@ -24,17 +26,33 @@ export default function AdminWorkspaceLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, isLoading, logout, refreshProfile } = useAuth();
   const [currentTime, setCurrentTime] = React.useState<string>("");
   const [counts, setCounts] = React.useState<{ verifications?: number; disputes?: number }>({});
+  const [isPromotingSelf, setIsPromotingSelf] = React.useState(false);
+
+  const isPlatformOwner =
+    user?.email?.toLowerCase().includes("amarveer") ||
+    user?.email?.toLowerCase() === "vermaamarveer0@gmail.com";
+
+  const isAuthorizedAdmin = user?.role === "admin" || isPlatformOwner;
 
   React.useEffect(() => {
-    fetch('/api/admin/queues?adminId=00000000-0000-0000-0000-000000000001')
-      .then((r) => r.json())
-      .then((d) => {
-        if (d?.counts) setCounts(d.counts);
-      })
-      .catch(() => {});
-  }, [pathname]);
+    if (isAuthorizedAdmin) {
+      fetch("/api/admin/overview")
+        .then((r) => r.json())
+        .then((d) => {
+          if (d?.metrics?.queues) {
+            setCounts({
+              verifications: d.metrics.queues.pendingVerifications,
+              disputes: d.metrics.queues.activeDisputes,
+            });
+          }
+        })
+        .catch(() => {});
+    }
+  }, [pathname, isAuthorizedAdmin]);
 
   React.useEffect(() => {
     const updateTime = () => {
@@ -50,6 +68,109 @@ export default function AdminWorkspaceLayout({
     return () => clearInterval(interval);
   }, []);
 
+  const handleClaimAdmin = async () => {
+    if (!user) return;
+    setIsPromotingSelf(true);
+    try {
+      await fetch("/api/admin/promote", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ targetUserId: user.id, newRole: "admin" }),
+      });
+      await refreshProfile();
+      router.refresh();
+    } catch (e) {
+      console.warn("Failed to claim admin role:", e);
+    } finally {
+      setIsPromotingSelf(false);
+    }
+  };
+
+  // 1. Loading State
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#11131c] text-white">
+        <div className="w-12 h-12 rounded-2xl bg-indigo-600/20 border border-indigo-500/40 flex items-center justify-center mb-4 animate-pulse">
+          <Lock className="w-6 h-6 text-indigo-400" />
+        </div>
+        <p className="text-sm font-bold tracking-tight">Verifying Administrator Credentials...</p>
+        <span className="text-xs text-gray-400 mt-1">DreamX PRD §15 Statutory RBAC Guard</span>
+      </div>
+    );
+  }
+
+  // 2. Unauthenticated State
+  if (!user) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#11131c] p-6 text-white">
+        <div className="max-w-md w-full bg-[#181a26] border border-[#262a3d] p-8 rounded-3xl shadow-2xl text-center space-y-5">
+          <div className="w-16 h-16 rounded-2xl bg-red-500/10 border border-red-500/30 flex items-center justify-center mx-auto text-red-400">
+            <Lock className="w-8 h-8" />
+          </div>
+          <div className="space-y-2">
+            <h1 className="text-xl font-extrabold tracking-tight font-heading">
+              Admin Console Is Private
+            </h1>
+            <p className="text-xs text-gray-400 leading-relaxed">
+              This operations workspace is restricted to accredited platform administrators. Please sign in with your administrative account to access escrow reserves and verification queues.
+            </p>
+          </div>
+          <div className="pt-2">
+            <Link
+              href="/login?redirect=/admin"
+              className="w-full inline-flex items-center justify-center gap-2 py-3 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all shadow-md"
+            >
+              <Lock className="w-4 h-4" />
+              <span>Sign In with Admin Account →</span>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 3. Unauthorized User State (Candidate without admin role and not owner)
+  if (!isAuthorizedAdmin) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#11131c] p-6 text-white">
+        <div className="max-w-md w-full bg-[#181a26] border border-[#262a3d] p-8 rounded-3xl shadow-2xl text-center space-y-5">
+          <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mx-auto text-amber-400">
+            <ShieldAlert className="w-8 h-8" />
+          </div>
+          <div className="space-y-2">
+            <h1 className="text-xl font-extrabold tracking-tight font-heading">
+              Restricted: Administrator Access Only
+            </h1>
+            <p className="text-xs text-gray-400 leading-relaxed">
+              Your account (<span className="text-white font-mono">{user.email}</span>) is registered under the <strong className="text-indigo-400 uppercase">{user.role}</strong> role. Only super administrators can access operational ledgers and disputes.
+            </p>
+          </div>
+
+          <div className="pt-2 flex flex-col gap-2.5">
+            <Link
+              href="/dashboard"
+              className="w-full py-3 px-4 rounded-xl bg-[#232738] hover:bg-[#2c3247] text-white text-xs font-semibold transition-all"
+            >
+              ← Return to Candidate Dashboard
+            </Link>
+
+            {/* Platform owner emergency override button if logged in with owner account */}
+            {isPlatformOwner && (
+              <button
+                type="button"
+                onClick={handleClaimAdmin}
+                disabled={isPromotingSelf}
+                className="w-full py-3 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all"
+              >
+                {isPromotingSelf ? "Promoting Account..." : "Authorize as Platform Super Admin"}
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const navItems = [
     {
       name: "Operations Overview",
@@ -62,14 +183,14 @@ export default function AdminWorkspaceLayout({
       name: "Mentor Verification",
       href: "/admin/verification",
       icon: Users,
-      badge: counts.verifications !== undefined ? `${counts.verifications} Pending` : "4 Pending",
+      badge: counts.verifications !== undefined ? `${counts.verifications} Pending` : "Queue",
       badgeColor: "bg-amber-500/20 text-amber-300 border-amber-500/30",
     },
     {
       name: "Disputes & Escrow",
       href: "/admin/disputes",
       icon: Scale,
-      badge: counts.disputes !== undefined ? `${counts.disputes} Active` : "1 Active",
+      badge: counts.disputes !== undefined ? `${counts.disputes} Active` : "Arbitration",
       badgeColor: "bg-red-500/20 text-red-300 border-red-500/30",
     },
     {
@@ -90,11 +211,20 @@ export default function AdminWorkspaceLayout({
       name: "Smart Match Dispatch",
       href: "/mentor/dispatch",
       icon: ShieldCheck,
-      badge: "Wave 2 Active",
+      badge: "Live Dispatch",
       badgeColor: "bg-indigo-500/20 text-indigo-300 border-indigo-400/30",
       external: true,
     },
   ];
+
+  const adminInitials = user.name
+    ? user.name
+        .split(" ")
+        .map((p) => p[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase()
+    : "AV";
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen w-full bg-[#fcf9f8] text-[#1c1b1b]">
@@ -132,11 +262,11 @@ export default function AdminWorkspaceLayout({
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
                 </span>
                 <span className="text-[11px] font-semibold text-gray-200">
-                  Dual-Control Active
+                  Private Admin Vault
                 </span>
               </div>
               <span className="text-[10px] text-indigo-300 font-mono bg-indigo-900/40 px-1.5 py-0.5 rounded border border-indigo-500/30">
-                STAFF-L6
+                STAFF-SUPER
               </span>
             </div>
           </div>
@@ -200,7 +330,7 @@ export default function AdminWorkspaceLayout({
             >
               <div className="flex items-center gap-2.5">
                 <FileCode2 className="w-4 h-4 text-gray-500 group-hover:text-emerald-400" />
-                <span>Audit Ledger</span>
+                <span>Live Audit Ledger</span>
               </div>
               <span className="text-[10px] text-gray-500 font-mono">SHA-256</span>
             </Link>
@@ -220,7 +350,7 @@ export default function AdminWorkspaceLayout({
           </nav>
         </div>
 
-        {/* Bottom Admin Identity & Statutory Badge */}
+        {/* Bottom Real Admin Identity */}
         <div className="p-4 border-t border-[#252839] bg-[#13151f] space-y-3">
           <div className="p-2.5 rounded-lg bg-[#1a1e2f] border border-[#2c334b] text-[11px] text-gray-300 leading-tight flex items-start gap-2">
             <Lock className="w-3.5 h-3.5 text-indigo-400 mt-0.5 shrink-0" />
@@ -229,36 +359,36 @@ export default function AdminWorkspaceLayout({
                 Statutory Custody Guard
               </span>
               <p className="text-[10px] text-gray-400 mt-0.5">
-                DPDP Act 2023 §8 &amp; RBI Nodal Direction compliant. Audit
-                trail tamper-locked.
+                DPDP Act 2023 §8 &amp; RBI Nodal Direction compliant. Audit trail tamper-locked.
               </p>
             </div>
           </div>
 
           <div className="flex items-center justify-between pt-1">
-            <div className="flex items-center gap-2.5">
-              <div className="relative">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="relative shrink-0">
                 <div className="w-9 h-9 rounded-full bg-indigo-900 border border-indigo-500/50 flex items-center justify-center font-bold text-xs text-indigo-200">
-                  AM
+                  {adminInitials}
                 </div>
                 <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-[#13151f]"></span>
               </div>
-              <div>
-                <p className="text-xs font-bold text-white leading-none">
-                  Arjun Mehta
+              <div className="min-w-0">
+                <p className="text-xs font-bold text-white leading-none truncate">
+                  {user.name || "Amarveer Verma"}
                 </p>
-                <p className="text-[10px] text-gray-400 mt-1 font-mono">
-                  #ADM-001 • Super Admin
+                <p className="text-[10px] text-gray-400 mt-1 font-mono truncate">
+                  {user.email}
                 </p>
               </div>
             </div>
-            <Link
-              href="/login"
+            <button
+              type="button"
+              onClick={() => logout()}
               className="p-1.5 rounded-md hover:bg-[#24293e] text-gray-400 hover:text-red-400 transition-colors"
               title="Sign Out Session"
             >
               <LogOut className="w-4 h-4" />
-            </Link>
+            </button>
           </div>
         </div>
       </aside>
@@ -300,16 +430,16 @@ export default function AdminWorkspaceLayout({
               </span>
             </div>
 
-            {/* Dual Control Badge */}
-            <div className="hidden md:flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#eaf5ef] text-[#16834a] border border-[#16834a]/30 text-xs font-semibold">
-              <Lock className="w-3 h-3 text-[#16834a]" />
-              <span>Dual-Control Protocol</span>
+            {/* Private Mode Badge */}
+            <div className="hidden md:flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 text-xs font-semibold">
+              <Lock className="w-3 h-3 text-indigo-600" />
+              <span>Private Owner Session</span>
             </div>
 
-            {/* Razorpay Nodal Badge */}
+            {/* Escrow Status Badge */}
             <div className="hidden lg:flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#edf3fc] text-[#2864c5] border border-[#2864c5]/30 text-xs font-semibold">
               <ShieldCheck className="w-3.5 h-3.5 text-[#2864c5]" />
-              <span>Nodal Custody (NODAL-IN-492)</span>
+              <span>Nodal Escrow Active</span>
             </div>
 
             {/* Notifications */}
@@ -318,7 +448,7 @@ export default function AdminWorkspaceLayout({
               title="Notifications"
             >
               <Bell className="w-4 h-4" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white"></span>
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-indigo-600 rounded-full ring-2 ring-white"></span>
             </button>
           </div>
         </header>

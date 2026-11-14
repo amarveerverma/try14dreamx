@@ -40,7 +40,7 @@ interface AuthContextType {
     fullName: string,
     role: UserRole,
     phone?: string
-  ) => Promise<{ success: boolean; error?: string }>;
+  ) => Promise<{ success: boolean; error?: string; hasSession?: boolean }>;
   signInWithGoogle: () => Promise<void>;
   upgradeMembership: (tier: "pro" | "elite", annual?: boolean) => Promise<void>;
   cancelMembership: () => Promise<void>;
@@ -254,7 +254,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await fetchProfile(data.user.id, data.user.email);
       }
 
-      return { success: true };
+      return { success: true, hasSession: !!data.session };
     } catch (err) {
       return { success: false, error: err instanceof Error ? err.message : "Registration failed" };
     }

@@ -72,10 +72,23 @@ export default function SignUpPage() {
       return;
     }
 
-    // Route to email verification step (preserving redirect if candidate was booking)
     const redirectParam = typeof window !== "undefined"
       ? new URLSearchParams(window.location.search).get("redirect")
       : null;
+
+    // If auto-logged in (email confirmation disabled in Supabase), route directly to onboarding
+    if (res.hasSession) {
+      if (redirectParam) {
+        router.push(redirectParam);
+      } else if (role === "mentor") {
+        router.push("/mentor/onboarding");
+      } else {
+        router.push("/dashboard/onboarding");
+      }
+      return;
+    }
+
+    // Otherwise route to OTP verification step
     const dest = redirectParam
       ? `/verify-email?email=${encodeURIComponent(cleanEmail)}&role=${role}&redirect=${encodeURIComponent(redirectParam)}`
       : `/verify-email?email=${encodeURIComponent(cleanEmail)}&role=${role}`;

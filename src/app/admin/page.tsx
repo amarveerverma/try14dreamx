@@ -32,8 +32,27 @@ export default function AdminDashboardPage() {
   const [pauseConfirmed, setPauseConfirmed] = React.useState(false);
   const [liveAnalytics, setLiveAnalytics] = React.useState<any>(null);
   const [liveQueues, setLiveQueues] = React.useState<any>(null);
+  const [overview, setOverview] = React.useState<any>(null);
+  const [isOverviewLoading, setIsOverviewLoading] = React.useState(true);
+  const [changingUserId, setChangingUserId] = React.useState<string | null>(null);
+  const [roleMessage, setRoleMessage] = React.useState<string>("");
+
+  const loadOverview = React.useCallback(async () => {
+    try {
+      const res = await fetch("/api/admin/overview");
+      if (res.ok) {
+        const data = await res.json();
+        setOverview(data);
+      }
+    } catch (e) {
+      console.warn("Could not load overview:", e);
+    } finally {
+      setIsOverviewLoading(false);
+    }
+  }, []);
 
   React.useEffect(() => {
+    loadOverview();
     async function loadData() {
       try {
         const [anRes, qRes] = await Promise.all([
@@ -47,7 +66,31 @@ export default function AdminDashboardPage() {
       }
     }
     loadData();
-  }, []);
+  }, [loadOverview]);
+
+  const handlePromoteRole = async (targetUserId: string, newRole: "student" | "mentor" | "admin") => {
+    setChangingUserId(targetUserId);
+    setRoleMessage("");
+    try {
+      const res = await fetch("/api/admin/promote", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ targetUserId, newRole }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setRoleMessage(`Successfully updated role to ${newRole.toUpperCase()}`);
+        await loadOverview();
+      } else {
+        setRoleMessage(`Error: ${data.error || "Failed to update role"}`);
+      }
+    } catch {
+      setRoleMessage("Network error updating user role.");
+    } finally {
+      setChangingUserId(null);
+      setTimeout(() => setRoleMessage(""), 5000);
+    }
+  };
 
   const events = [
     {
@@ -235,22 +278,32 @@ export default function AdminDashboardPage() {
           </div>
           <div className="mt-2.5 flex items-baseline gap-2">
             <span className="text-2xl sm:text-3xl font-extrabold text-[#1c1b1b] tracking-tight">
-              {liveAnalytics?.metrics?.gmv ? `₹${Number(liveAnalytics.metrics.gmv.amount_inr).toLocaleString('en-IN')}` : '₹24,82,400'}
+              {overview?.metrics?.escrow?.totalGmvInr !== undefined
+                ? `₹${overview.metrics.escrow.totalGmvInr.toLocaleString('en-IN')}`
+                : liveAnalytics?.metrics?.gmv
+                ? `₹${Number(liveAnalytics.metrics.gmv.amount_inr).toLocaleString('en-IN')}`
+                : '₹0'}
             </span>
             <span className="text-xs font-bold text-[#16834a] bg-[#eaf5ef] px-2 py-0.5 rounded flex items-center gap-0.5">
-              <TrendingUp className="w-3 h-3" /> {liveAnalytics?.metrics?.take_rate ? `${liveAnalytics.metrics.take_rate.percentage}% Take Rate` : '+18.4%'}
+              <TrendingUp className="w-3 h-3" /> 20% Take Rate
             </span>
           </div>
           <div className="mt-3 pt-3 border-t border-gray-100 text-xs space-y-1">
             <div className="flex justify-between items-center text-gray-600">
               <span>Platform Take Fee:</span>
               <span className="font-bold text-[#1c1b1b] font-mono">
-                {liveAnalytics?.metrics?.take_rate ? `₹${(liveAnalytics.metrics.take_rate.platform_fee_paise / 100).toLocaleString('en-IN')}` : '₹4,96,480'}
+                {overview?.metrics?.escrow?.platformRevenueInr !== undefined
+                  ? `₹${overview.metrics.escrow.platformRevenueInr.toLocaleString('en-IN')}`
+                  : '₹0'}
               </span>
             </div>
             <div className="flex justify-between items-center text-gray-600">
               <span>Settlement Escrow:</span>
-              <span className="font-bold text-[#16834a] font-mono">100% Pre-funded</span>
+              <span className="font-bold text-[#16834a] font-mono">
+                {overview?.metrics?.escrow?.heldEscrowInr !== undefined
+                  ? `₹${overview.metrics.escrow.heldEscrowInr.toLocaleString('en-IN')} Locked`
+                  : '100% Pre-funded'}
+              </span>
             </div>
           </div>
           <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-[#3828b5] to-[#705cf6]"></div>
@@ -260,27 +313,31 @@ export default function AdminDashboardPage() {
         <div className="p-5 rounded-xl bg-white border border-[#e7e7eb] shadow-xs relative overflow-hidden group hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between text-gray-400">
             <span className="text-[11px] font-bold uppercase tracking-wider text-gray-500">
-              In-Flight Deliverables
+              In-Flight Bookings &amp; Deliverables
             </span>
             <Clock className="w-4 h-4 text-[#3828b5]" />
           </div>
           <div className="mt-2.5 flex items-baseline gap-2">
             <span className="text-2xl sm:text-3xl font-extrabold text-[#1c1b1b] tracking-tight">
-              {liveQueues?.counts?.late_reports !== undefined ? `${liveQueues.counts.late_reports} Late / Queued` : '142 Active'}
+              {overview?.metrics?.bookings?.confirmed !== undefined
+                ? `${overview.metrics.bookings.confirmed} Active`
+                : liveQueues?.counts?.late_reports !== undefined
+                ? `${liveQueues.counts.late_reports} Active`
+                : '0 Active'}
             </span>
             <span className="text-xs font-bold text-[#16834a] bg-[#eaf5ef] px-2 py-0.5 rounded">
-              {liveAnalytics?.metrics?.report_sla_adherence ? `${liveAnalytics.metrics.report_sla_adherence.percentage}% SLA Met` : '99.2% SLA Met'}
+              {overview?.metrics?.bookings?.completed || 0} Settled
             </span>
           </div>
           <div className="mt-3 pt-3 border-t border-gray-100 text-xs space-y-1">
             <div className="flex justify-between items-center text-gray-600">
-              <span>On-Time Delivery Target:</span>
-              <span className="font-bold text-[#1c1b1b]">&gt; 95.0% within 48h</span>
+              <span>Total Bookings Lifetime:</span>
+              <span className="font-bold text-[#1c1b1b]">{overview?.metrics?.bookings?.total || 0} Sessions</span>
             </div>
             <div className="flex justify-between items-center text-gray-600">
-              <span>Late Exceptions:</span>
+              <span>Held in Reservation:</span>
               <span className="font-bold text-[#a7670b] bg-[#fbf4e8] px-1.5 py-0.5 rounded font-mono">
-                {liveQueues?.counts?.late_reports ?? 0} requiring audit
+                {overview?.metrics?.bookings?.held || 0} in checkout
               </span>
             </div>
           </div>
@@ -291,29 +348,31 @@ export default function AdminDashboardPage() {
         <div className="p-5 rounded-xl bg-white border border-[#e7e7eb] shadow-xs relative overflow-hidden group hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between text-gray-400">
             <span className="text-[11px] font-bold uppercase tracking-wider text-gray-500">
-              Dispute &amp; Exception Rate
+              Disputes &amp; Exceptions
             </span>
             <ShieldCheck className="w-4 h-4 text-[#3828b5]" />
           </div>
           <div className="mt-2.5 flex items-baseline gap-2">
             <span className="text-2xl sm:text-3xl font-extrabold text-[#1c1b1b] tracking-tight">
-              {liveAnalytics?.metrics?.dispute_rate ? `${liveAnalytics.metrics.dispute_rate.percentage}%` : '0.42%'}
+              {overview?.metrics?.queues?.activeDisputes !== undefined
+                ? `${overview.metrics.queues.activeDisputes} Active`
+                : '0 Active'}
             </span>
             <span className="text-xs font-bold text-[#16834a] bg-[#eaf5ef] px-2 py-0.5 rounded">
-              Target &lt; 3.0%
+              Target &lt; 1.0%
             </span>
           </div>
           <div className="mt-3 pt-3 border-t border-gray-100 text-xs space-y-1">
             <div className="flex justify-between items-center text-gray-600">
-              <span>Active Disputes:</span>
+              <span>Active Open Disputes:</span>
               <span className="font-bold text-[#1c1b1b]">
-                {liveQueues?.counts?.disputes ?? 1} in review
+                {overview?.metrics?.queues?.activeDisputes || 0} requiring mediation
               </span>
             </div>
             <div className="flex justify-between items-center text-gray-600">
-              <span>Dual Approvals Awaiting Co-sign:</span>
+              <span>Dispute Desk Status:</span>
               <span className="font-bold text-[#3828b5] font-mono">
-                {liveQueues?.counts?.financial_approvals ?? 0} queued
+                PRD §12 Protocol Active
               </span>
             </div>
           </div>
@@ -324,23 +383,31 @@ export default function AdminDashboardPage() {
         <div className="p-5 rounded-xl bg-white border border-[#e7e7eb] shadow-xs relative overflow-hidden group hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between text-gray-400">
             <span className="text-[11px] font-bold uppercase tracking-wider text-gray-500">
-              Accredited Mentor Pool
+              User Pool &amp; Capacity
             </span>
             <Users className="w-4 h-4 text-[#3828b5]" />
           </div>
           <div className="mt-2.5 flex items-baseline gap-2">
             <span className="text-2xl sm:text-3xl font-extrabold text-[#1c1b1b] tracking-tight">
-              {liveQueues?.counts?.verifications !== undefined ? `${liveQueues.counts.verifications} Pending` : '4 Pending'}
+              {overview?.metrics?.users?.total !== undefined
+                ? `${overview.metrics.users.total} Total`
+                : 'Live'}
             </span>
             <span className="text-xs font-bold text-[#3828b5] bg-[#3828b5]/10 px-2 py-0.5 rounded">
-              Review Queue Active
+              {overview?.metrics?.users?.mentors || 0} Mentors
             </span>
           </div>
           <div className="mt-3 pt-3 border-t border-gray-100 text-xs space-y-1">
             <div className="flex justify-between items-center text-gray-600">
-              <span>Pending Dual-Control Audits:</span>
+              <span>Candidates Registered:</span>
+              <span className="font-bold text-[#16834a] font-mono">
+                {overview?.metrics?.users?.students || 0} active
+              </span>
+            </div>
+            <div className="flex justify-between items-center text-gray-600">
+              <span>Pending Mentor Reviews:</span>
               <span className="font-bold text-[#a7670b] font-mono">
-                {liveQueues?.counts?.verifications ?? 4} queued
+                {overview?.metrics?.queues?.pendingVerifications || 0} queued
               </span>
             </div>
             <div className="flex justify-between items-center text-gray-600">
@@ -353,6 +420,100 @@ export default function AdminDashboardPage() {
           <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-amber-500 to-orange-400"></div>
         </div>
       </div>
+
+      {/* Real Users & Role Management Desk */}
+      {overview?.recentProfiles && overview.recentProfiles.length > 0 && (
+        <div className="bg-white rounded-xl border border-[#e7e7eb] shadow-xs p-5 space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 pb-3">
+            <div>
+              <h2 className="text-base font-bold text-[#1c1b1b] flex items-center gap-2">
+                <Users className="w-4 h-4 text-[#3828b5]" />
+                <span>Live Registered Users Directory &amp; Role Management</span>
+              </h2>
+              <p className="text-xs text-gray-500">
+                Direct live query from public.profiles database. Promote or adjust user permissions in real time.
+              </p>
+            </div>
+            {roleMessage && (
+              <span className="text-xs font-bold px-3 py-1 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">
+                {roleMessage}
+              </span>
+            )}
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs text-gray-700">
+              <thead className="bg-[#f6f3f2] text-gray-600 uppercase font-mono text-[10px]">
+                <tr>
+                  <th className="p-2.5">User</th>
+                  <th className="p-2.5">Email</th>
+                  <th className="p-2.5">Current Role</th>
+                  <th className="p-2.5">Track / Segment</th>
+                  <th className="p-2.5 text-right">Promote / Reassign Role</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {overview.recentProfiles.map((p: any) => (
+                  <tr key={p.id} className="hover:bg-gray-50/70 transition-colors">
+                    <td className="p-2.5 font-bold text-[#1c1b1b]">
+                      {p.full_name || "Unnamed User"}
+                    </td>
+                    <td className="p-2.5 font-mono text-gray-500">{p.email}</td>
+                    <td className="p-2.5">
+                      <span
+                        className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                          p.role === "admin"
+                            ? "bg-purple-100 text-purple-800"
+                            : p.role === "mentor"
+                            ? "bg-indigo-100 text-indigo-800"
+                            : "bg-emerald-100 text-emerald-800"
+                        }`}
+                      >
+                        {p.role}
+                      </span>
+                    </td>
+                    <td className="p-2.5 text-gray-500">{p.segment || "Standard"}</td>
+                    <td className="p-2.5 text-right">
+                      <div className="inline-flex items-center gap-1.5">
+                        {p.role !== "student" && (
+                          <button
+                            type="button"
+                            disabled={changingUserId === p.id}
+                            onClick={() => handlePromoteRole(p.id, "student")}
+                            className="px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 text-[11px] font-medium"
+                          >
+                            Set Student
+                          </button>
+                        )}
+                        {p.role !== "mentor" && (
+                          <button
+                            type="button"
+                            disabled={changingUserId === p.id}
+                            onClick={() => handlePromoteRole(p.id, "mentor")}
+                            className="px-2 py-1 rounded bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-[11px] font-semibold"
+                          >
+                            Set Mentor
+                          </button>
+                        )}
+                        {p.role !== "admin" && (
+                          <button
+                            type="button"
+                            disabled={changingUserId === p.id}
+                            onClick={() => handlePromoteRole(p.id, "admin")}
+                            className="px-2 py-1 rounded bg-purple-50 hover:bg-purple-100 text-purple-700 text-[11px] font-bold"
+                          >
+                            Set Admin
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* 3. Core Two-Column Canvas (8 cols Ledger / 4 cols Regulatory Health) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
