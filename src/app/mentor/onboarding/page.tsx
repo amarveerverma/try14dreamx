@@ -156,7 +156,10 @@ export default function MentorOnboardingPage() {
     "S06",
   ]);
 
-  // Step 3: Identity & Credential Audit (Option A: Verified Badges Model)
+  // Step 3: Identity & Pedigree Verification (Employed vs Alumni/Retired Track)
+  const [employmentStatus, setEmploymentStatus] = React.useState<"employed" | "alumni">("employed");
+  const [pastEmployer, setPastEmployer] = React.useState("");
+  const [pastJobTitle, setPastJobTitle] = React.useState("");
   const [workEmail, setWorkEmail] = React.useState("");
   const [workEmailOtp, setWorkEmailOtp] = React.useState("");
   const [emailOtpVerified, setEmailOtpVerified] = React.useState(false);
@@ -319,9 +322,21 @@ export default function MentorOnboardingPage() {
         return false;
       }
     } else if (step === 3) {
-      if (!emailOtpVerified && !uploadedBadge && !workEmail.trim()) {
-        setSubmitError("Please verify your corporate work email with the 6-digit OTP or upload an employer badge.");
-        return false;
+      if (employmentStatus === "employed") {
+        if (!emailOtpVerified && !uploadedBadge && !workEmail.trim()) {
+          setSubmitError("Please verify your corporate work email with the 6-digit OTP to earn your verified company badge.");
+          return false;
+        }
+      } else {
+        // Alumni / Retired Track
+        if (!pastEmployer.trim()) {
+          setSubmitError("Please specify your previous tier-1 employer (e.g. Ex-Google, Ex-Amazon, Ex-Microsoft).");
+          return false;
+        }
+        if (!linkedinUrl.trim() && !uploadedBadge) {
+          setSubmitError("Please provide your LinkedIn profile URL or upload a relieving letter / service certificate to verify your alumni credentials.");
+          return false;
+        }
       }
     } else if (step === 4) {
       if (!agreedToEscrow || !agreedToConduct) {
@@ -367,6 +382,17 @@ export default function MentorOnboardingPage() {
 
       // 2. Persist to Supabase if authenticated session exists
       if (resolvedUserId) {
+        const isAlumni = employmentStatus === "alumni";
+        const effectiveEmployer = isAlumni
+          ? (pastEmployer.trim().toLowerCase().startsWith("ex-") ? pastEmployer.trim() : `Ex-${pastEmployer.trim()}`)
+          : (verifiedCompany || currentEmployer);
+
+        const effectiveTitle = isAlumni
+          ? (pastJobTitle.trim() || jobTitle || "Former Senior Practitioner")
+          : jobTitle;
+
+        const effectiveStatus = (employmentStatus === "employed" && emailOtpVerified) ? "approved" : "pending";
+
         // Upsert into public.mentor_applications
         const { data: appData, error: appError } = await supabase
           .from("mentor_applications")
@@ -376,21 +402,22 @@ export default function MentorOnboardingPage() {
               full_name: fullName,
               email: email,
               phone: phone || null,
-              current_employer: currentEmployer,
-              job_title: jobTitle,
+              current_employer: effectiveEmployer,
+              job_title: effectiveTitle,
               years_of_experience: Number(yearsOfExperience),
               linkedin_url: linkedinUrl || null,
               bio: bio || null,
               domains: selectedDomains,
               requested_services: selectedServices,
-              work_email: workEmail,
-              work_email_verified: emailOtpVerified,
-              work_proof_file_name: uploadedBadge || "Corporate_ID_Verification.pdf",
-              work_proof_file_url: "s3://dreamx-mentor-verification/" + (uploadedBadge || "Corporate_ID_Verification.pdf"),
+              work_email: isAlumni ? null : workEmail,
+              work_email_verified: isAlumni ? false : emailOtpVerified,
+              work_proof_file_name: uploadedBadge || (isAlumni ? "Alumni_LinkedIn_Verification" : "Corporate_ID_Verification.pdf"),
+              work_proof_file_url: "s3://dreamx-mentor-verification/" + (uploadedBadge || "Alumni_LinkedIn_Verification"),
               id_document_type: idType,
               id_document_masked: idNumber,
               weekly_availability_hours: Number(weeklyHours),
-              status: "pending",
+              status: effectiveStatus,
+              employment_type: employmentStatus,
               updated_at: new Date().toISOString(),
             },
             { onConflict: "user_id" }
@@ -408,7 +435,7 @@ export default function MentorOnboardingPage() {
         const approvalsPayload = selectedServices.map((code) => ({
           mentor_id: resolvedUserId as string,
           service_code: code,
-          status: "pending" as const,
+          status: effectiveStatus as any,
           updated_at: new Date().toISOString(),
         }));
         await supabase
@@ -419,16 +446,17 @@ export default function MentorOnboardingPage() {
         await supabase.from("mentor_profiles").upsert(
           {
             id: resolvedUserId,
-            current_employer: verifiedCompany || currentEmployer,
-            job_title: jobTitle,
+            current_employer: effectiveEmployer,
+            job_title: effectiveTitle,
             years_of_experience: Number(yearsOfExperience),
-            verification_status: emailOtpVerified ? "approved" : "pending",
+            verification_status: effectiveStatus,
             approved_services: selectedServices,
             bio: bio || null,
             linkedin_url: linkedinUrl || null,
-            work_email: workEmail || null,
-            work_email_verified: emailOtpVerified,
-            verified_company: verifiedCompany || currentEmployer,
+            work_email: isAlumni ? null : (workEmail || null),
+            work_email_verified: isAlumni ? false : emailOtpVerified,
+            verified_company: effectiveEmployer,
+            employment_type: employmentStatus,
             hourly_rate_inr: customSessionFee,
             upi_id: payoutMethod === "upi" ? upiId : null,
             bank_account_number: payoutMethod === "bank" ? accountNumber : null,
@@ -1148,7 +1176,7 @@ export default function MentorOnboardingPage() {
                 </div>
               )}
 
-              {/* STEP 3: Identity & Employer Proof (Dual-Control Audit) */}
+              {/* STEP 3: Identity & Pedigree Verification (Dual-Track Model) */}
               {currentStep === 3 && (
                 <div className="space-y-6 animate-in fade-in duration-200">
                   <div>
@@ -1156,276 +1184,368 @@ export default function MentorOnboardingPage() {
                       STAGE 03 / 04
                     </span>
                     <h2 className="text-xl sm:text-2xl font-extrabold text-[#1c1b1b] font-heading tracking-tight mt-1">
-                      Step 3: Upload Employment Proof &amp; Identity Verification
+                      Step 3: Verify Your Engineering Pedigree
                     </h2>
                     <p className="text-xs sm:text-sm text-[#474554] mt-1 leading-relaxed">
-                      To guarantee 100% verified credentials for candidates, all mentors must complete employment verification via corporate email, work ID badge, or offer letter per PRD §9.1.
+                      Choose your current track to earn your verified badge. Active engineers verify in 30 seconds via work email OTP; alumni and retired leaders verify through their past senior tenure or LinkedIn.
                     </p>
                   </div>
 
-                  {/* Card 1: Corporate Email (Option A: Instant Verified Badge) */}
-                  <div className="bg-white border border-[#e7e7eb] rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
-                    <div className="flex items-center justify-between pb-3 border-b border-[#e7e7eb]">
-                      <div className="flex items-center gap-2">
-                        <span className="material-symbols-outlined text-[#5145cd] text-[20px]">verified</span>
-                        <div>
-                          <span className="text-sm font-bold text-[#1c1b1b] block">
-                            Corporate Work Email Verification
-                          </span>
-                          <span className="text-[11px] text-[#777585]">
-                            Instant verification • 100% Free • Unlocks your official company badge
-                          </span>
-                        </div>
-                      </div>
-                      {emailOtpVerified && (
-                        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-[#eaf5ef] text-[#006d3a] border border-[#94f7b2]">
-                          <span className="material-symbols-outlined text-[13px]">check_circle</span>
-                          Verified {verifiedCompany || currentEmployer || "Employer"}
-                        </span>
-                      )}
-                    </div>
-
-                    {emailOtpVerified ? (
-                      <div className="p-4 rounded-xl bg-[#eaf5ef] border border-[#94f7b2] flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-xl bg-[#006d3a] text-white flex items-center justify-center font-bold text-lg shadow-sm">
-                            ✓
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs font-bold text-[#006d3a]">
-                                Verified {verifiedCompany || currentEmployer} Mentor Badge Active
-                              </span>
-                            </div>
-                            <p className="text-[11px] text-[#006d3a]/80 mt-0.5">
-                              Corporate domain <span className="font-mono font-bold">{workEmail}</span> confirmed. Candidates will see your verified company badge on your profile.
-                            </p>
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setEmailOtpVerified(false);
-                            setWorkEmailOtp("");
-                            setOtpMessage(null);
-                          }}
-                          className="text-xs font-bold text-[#5145cd] hover:underline"
-                        >
-                          Change Email
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        <label htmlFor="work-email" className="block text-xs font-bold text-[#1c1b1b]">
-                          Enter Your Work Email
-                        </label>
-                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                          <input
-                            id="work-email"
-                            type="email"
-                            value={workEmail}
-                            onChange={(e) => setWorkEmail(e.target.value)}
-                            placeholder="e.g. rahul@google.com or priya@swiggy.in"
-                            className="flex-1 px-3.5 py-2.5 rounded-xl border border-[#e7e7eb] bg-[#f6f3f2] text-xs font-medium text-[#1c1b1b] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5145cd]"
-                          />
-                          <button
-                            type="button"
-                            onClick={handleSendWorkEmailOtp}
-                            disabled={sendingOtp || !workEmail.includes("@")}
-                            className="px-4 py-2.5 rounded-xl bg-[#5145cd] hover:bg-[#4336b8] text-white text-xs font-bold shrink-0 disabled:opacity-50 transition-all flex items-center gap-1.5 justify-center"
-                          >
-                            {sendingOtp ? "Sending Code..." : "Send Verification Code"}
-                          </button>
-                        </div>
-
-                        {/* OTP Verification Box */}
-                        <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                          <input
-                            type="text"
-                            maxLength={6}
-                            value={workEmailOtp}
-                            onChange={(e) => setWorkEmailOtp(e.target.value)}
-                            placeholder="Enter 6-digit code"
-                            className="w-full sm:w-44 px-3 py-2.5 rounded-xl border border-[#e7e7eb] bg-[#f6f3f2] text-xs font-mono text-center text-[#1c1b1b] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5145cd]"
-                          />
-                          <button
-                            type="button"
-                            onClick={handleVerifyWorkEmailOtp}
-                            disabled={verifyingOtp || workEmailOtp.length < 6}
-                            className="px-4 py-2.5 rounded-xl bg-white border border-[#5145cd] text-[#5145cd] hover:bg-[#5145cd] hover:text-white text-xs font-bold shrink-0 disabled:opacity-50 transition-all"
-                          >
-                            {verifyingOtp ? "Verifying..." : "Verify & Activate Badge"}
-                          </button>
-                        </div>
-
-                        {otpMessage && (
-                          <div
-                            className={`p-3 rounded-xl text-xs font-semibold ${
-                              otpMessage.type === "success"
-                                ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
-                                : "bg-red-50 text-red-800 border border-red-200"
-                            }`}
-                          >
-                            {otpMessage.text}
-                          </div>
-                        )}
-
-                        <p className="text-[11px] text-[#777585]">
-                          Works with all corporate tech emails (Google, Microsoft, Amazon, Flipkart, TCS, Razorpay, etc.). No personal Gmail/Yahoo addresses.
-                        </p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Card 2: Employer Credential Upload */}
-                  <div className="bg-white border border-[#e7e7eb] rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
-                    <div className="flex items-center justify-between pb-3 border-b border-[#e7e7eb]">
-                      <div className="flex items-center gap-2">
-                        <span className="material-symbols-outlined text-[#5145cd] text-[20px]">badge</span>
-                        <div>
-                          <span className="text-sm font-bold text-[#1c1b1b] block">
-                            Alternate Proof: Employer ID Badge or Offer Letter
-                          </span>
-                          <span className="text-[11px] text-[#777585]">
-                            Optional if you already verified your corporate work email above
-                          </span>
-                        </div>
-                      </div>
-                      <span className="text-[10px] font-bold text-gray-600 bg-gray-100 px-2.5 py-0.5 rounded-full">
-                        {emailOtpVerified ? "Optional" : "For Consultants / Contractors"}
-                      </span>
-                    </div>
-
-                    {uploadedBadge ? (
-                      <div className="p-4 rounded-xl bg-[#f6f3f2] border border-[#94f7b2] flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-lg bg-[#eaf5ef] text-[#006d3a] flex items-center justify-center">
-                            <span className="material-symbols-outlined text-[20px]">picture_as_pdf</span>
-                          </div>
-                          <div>
-                            <span className="text-xs font-bold text-[#1c1b1b] block">{uploadedBadge}</span>
-                            <div className="flex items-center gap-2 mt-0.5">
-                              <span className="text-[10px] font-bold text-[#006d3a] bg-[#eaf5ef] px-1.5 py-0.2 rounded">
-                                Encrypted AES-256
-                              </span>
-                              <span className="text-[10px] text-[#777585]">SHA-256 Validated</span>
-                            </div>
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => setUploadedBadge(null)}
-                          className="text-xs font-bold text-[#5145cd] hover:underline"
-                        >
-                          Replace
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="relative border-2 border-dashed border-[#c8c4d6] hover:border-[#5145cd] rounded-xl p-8 text-center space-y-2 bg-[#fcf9f8] transition-colors">
-                        <input
-                          type="file"
-                          id="badge-upload-input"
-                          accept=".pdf,.png,.jpg,.jpeg"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              setUploadedBadge(`${file.name} (${(file.size / (1024 * 1024)).toFixed(1)} MB)`);
-                            }
-                          }}
-                          className="sr-only"
-                        />
-                        <div className="w-12 h-12 rounded-full bg-[#e3dfff] text-[#5145cd] flex items-center justify-center mx-auto">
-                          <span className="material-symbols-outlined text-[24px]">cloud_upload</span>
-                        </div>
-                        <div className="text-xs font-bold text-[#1c1b1b]">
-                          Drag and drop your work proof here, or{" "}
-                          <label htmlFor="badge-upload-input" className="text-[#5145cd] underline cursor-pointer hover:text-[#3828b5]">
-                            browse files
-                          </label>
-                        </div>
-                        <p className="text-[11px] text-[#777585]">
-                          Supported formats: PDF, PNG, JPG (Corporate ID Badge front &amp; back, recent Offer Letter, or Form 16)
-                        </p>
-                        <label
-                          htmlFor="badge-upload-input"
-                          className="inline-block mt-2 px-4 py-2 rounded-lg bg-white border border-[#e7e7eb] hover:bg-[#f6f3f2] text-xs font-bold text-[#1c1b1b] cursor-pointer shadow-xs"
-                        >
-                          Browse Document
-                        </label>
-                      </div>
-                    )}
-
-                    <div className="pt-1 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                      <p className="text-[11px] text-[#777585]">
-                        Note: You may redact compensation figures on offer letters. Only employer name, employee name, job title, and issuance date are audited.
-                      </p>
+                  {/* Track Selector: Currently Employed vs Alumni/Retired */}
+                  <div className="bg-white border border-[#e7e7eb] rounded-2xl p-5 sm:p-6 shadow-xs space-y-3">
+                    <span className="text-xs font-bold text-[#1c1b1b] block uppercase tracking-wider text-gray-500">
+                      Select Verification Track
+                    </span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <button
                         type="button"
-                        onClick={() => setShowSampleGuide(!showSampleGuide)}
-                        className="text-[11px] font-bold text-[#5145cd] hover:underline flex items-center gap-1 shrink-0 cursor-pointer"
+                        onClick={() => {
+                          setEmploymentStatus("employed");
+                          setSubmitError(null);
+                        }}
+                        className={`p-4 rounded-xl text-left border transition-all ${
+                          employmentStatus === "employed"
+                            ? "border-[#5145cd] bg-indigo-50/60 text-[#130068] ring-1 ring-[#5145cd] shadow-xs"
+                            : "border-[#e7e7eb] bg-[#fcf9f8] text-[#474554] hover:bg-white"
+                        }`}
                       >
-                        <span className="material-symbols-outlined text-[14px]">info</span>
-                        {showSampleGuide ? "Hide Sample Guide" : "View Sample Accepted ID"}
+                        <div className="flex items-center justify-between pb-1">
+                          <span className="font-bold text-xs flex items-center gap-1.5 text-[#1c1b1b]">
+                            <span className="material-symbols-outlined text-[#5145cd] text-[18px]">domain</span>
+                            Currently Employed
+                          </span>
+                          <span className="text-[10px] font-bold text-[#006d3a] bg-[#eaf5ef] px-2 py-0.5 rounded-full border border-[#94f7b2]">
+                            Instant 30s OTP
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-[#777585] mt-1 leading-relaxed">
+                          For engineers currently working at tech product firms (Google, Microsoft, Amazon, Swiggy, etc.). Verifies in 30 seconds via work email.
+                        </p>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEmploymentStatus("alumni");
+                          setSubmitError(null);
+                        }}
+                        className={`p-4 rounded-xl text-left border transition-all ${
+                          employmentStatus === "alumni"
+                            ? "border-[#5145cd] bg-indigo-50/60 text-[#130068] ring-1 ring-[#5145cd] shadow-xs"
+                            : "border-[#e7e7eb] bg-[#fcf9f8] text-[#474554] hover:bg-white"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between pb-1">
+                          <span className="font-bold text-xs flex items-center gap-1.5 text-[#1c1b1b]">
+                            <span className="material-symbols-outlined text-amber-600 text-[18px]">history_edu</span>
+                            Ex-Employee / Retired / Consultant
+                          </span>
+                          <span className="text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                            Alumni Track
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-[#777585] mt-1 leading-relaxed">
+                          For ex-FAANG engineers, retired leaders, or advisors without a work email. Verified via relieving letter, ex-pass, or LinkedIn.
+                        </p>
                       </button>
                     </div>
+                  </div>
 
-                    {showSampleGuide && (
-                      <div className="p-4 rounded-xl bg-indigo-50/50 border border-indigo-100 space-y-3 text-xs animate-in fade-in duration-200">
-                        <div className="flex items-center justify-between border-b border-indigo-100 pb-2">
-                          <span className="font-bold text-[#3828b5] flex items-center gap-1.5">
-                            <span className="material-symbols-outlined text-[16px]">visibility</span>
-                            Sample Accepted ID Badge &amp; Redaction Guide
+                  {/* TRACK 1: ACTIVE CORPORATE WORK EMAIL */}
+                  {employmentStatus === "employed" && (
+                    <div className="space-y-4">
+                      <div className="bg-white border border-[#e7e7eb] rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
+                        <div className="flex items-center justify-between pb-3 border-b border-[#e7e7eb]">
+                          <div className="flex items-center gap-2">
+                            <span className="material-symbols-outlined text-[#5145cd] text-[20px]">verified</span>
+                            <div>
+                              <span className="text-sm font-bold text-[#1c1b1b] block">
+                                Corporate Work Email Verification
+                              </span>
+                              <span className="text-[11px] text-[#777585]">
+                                100% Free • Automated check • Unlocks your official company badge
+                              </span>
+                            </div>
+                          </div>
+                          {emailOtpVerified && (
+                            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-[#eaf5ef] text-[#006d3a] border border-[#94f7b2]">
+                              <span className="material-symbols-outlined text-[13px]">check_circle</span>
+                              Verified {verifiedCompany || currentEmployer || "Employer"}
+                            </span>
+                          )}
+                        </div>
+
+                        {emailOtpVerified ? (
+                          <div className="p-4 rounded-xl bg-[#eaf5ef] border border-[#94f7b2] flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-xl bg-[#006d3a] text-white flex items-center justify-center font-bold text-lg shadow-sm">
+                                ✓
+                              </div>
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs font-bold text-[#006d3a]">
+                                    Verified {verifiedCompany || currentEmployer} Mentor Shield Active
+                                  </span>
+                                </div>
+                                <p className="text-[11px] text-[#006d3a]/80 mt-0.5">
+                                  Domain <span className="font-mono font-bold">{workEmail}</span> confirmed. Candidates will see this verified badge on your public directory profile.
+                                </p>
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEmailOtpVerified(false);
+                                setWorkEmailOtp("");
+                                setOtpMessage(null);
+                              }}
+                              className="text-xs font-bold text-[#5145cd] hover:underline"
+                            >
+                              Change Email
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            <label htmlFor="work-email" className="block text-xs font-bold text-[#1c1b1b]">
+                              Enter Your Official Corporate Email
+                            </label>
+                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                              <input
+                                id="work-email"
+                                type="email"
+                                value={workEmail}
+                                onChange={(e) => setWorkEmail(e.target.value)}
+                                placeholder="e.g. rahul@google.com or priya@microsoft.com"
+                                className="flex-1 px-3.5 py-2.5 rounded-xl border border-[#e7e7eb] bg-[#f6f3f2] text-xs font-medium text-[#1c1b1b] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5145cd]"
+                              />
+                              <button
+                                type="button"
+                                onClick={handleSendWorkEmailOtp}
+                                disabled={sendingOtp || !workEmail.includes("@")}
+                                className="px-4 py-2.5 rounded-xl bg-[#5145cd] hover:bg-[#4336b8] text-white text-xs font-bold shrink-0 disabled:opacity-50 transition-all flex items-center gap-1.5 justify-center"
+                              >
+                                {sendingOtp ? "Sending Code..." : "Send Verification Code"}
+                              </button>
+                            </div>
+
+                            {/* OTP Verification Box */}
+                            <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                              <input
+                                type="text"
+                                maxLength={6}
+                                value={workEmailOtp}
+                                onChange={(e) => setWorkEmailOtp(e.target.value)}
+                                placeholder="Enter 6-digit code"
+                                className="w-full sm:w-44 px-3 py-2.5 rounded-xl border border-[#e7e7eb] bg-[#f6f3f2] text-xs font-mono text-center text-[#1c1b1b] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5145cd]"
+                              />
+                              <button
+                                type="button"
+                                onClick={handleVerifyWorkEmailOtp}
+                                disabled={verifyingOtp || workEmailOtp.length < 6}
+                                className="px-4 py-2.5 rounded-xl bg-white border border-[#5145cd] text-[#5145cd] hover:bg-[#5145cd] hover:text-white text-xs font-bold shrink-0 disabled:opacity-50 transition-all"
+                              >
+                                {verifyingOtp ? "Verifying..." : "Verify & Activate Badge"}
+                              </button>
+                            </div>
+
+                            {otpMessage && (
+                              <div
+                                className={`p-3 rounded-xl text-xs font-semibold ${
+                                  otpMessage.type === "success"
+                                    ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                                    : "bg-red-50 text-red-800 border border-red-200"
+                                }`}
+                              >
+                                {otpMessage.text}
+                              </div>
+                            )}
+
+                            <div className="p-3 rounded-xl bg-[#f6f3f2] border border-[#e7e7eb] text-[11px] text-[#474554] space-y-1">
+                              <div className="flex items-center gap-1.5 font-bold text-[#1c1b1b]">
+                                <span className="material-symbols-outlined text-[16px] text-[#5145cd]">lock</span>
+                                <span>100% Privacy Guarantee for Active Mentors:</span>
+                              </div>
+                              <p className="text-[#777585] leading-relaxed">
+                                We only use this address for a single OTP verification. Your company inbox will <strong>never receive booking reminders, candidate messages, or payout receipts</strong>. All platform communication stays strictly on your personal registered email.
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Alternate upload for active employees whose corporate firewall blocks outside OTP */}
+                      <div className="bg-white border border-[#e7e7eb] rounded-2xl p-5 sm:p-6 shadow-xs space-y-3">
+                        <div className="flex items-center justify-between pb-2 border-b border-[#e7e7eb]">
+                          <span className="text-xs font-bold text-[#1c1b1b] flex items-center gap-1.5">
+                            <span className="material-symbols-outlined text-[18px] text-gray-500">badge</span>
+                            Alternate: Upload Corporate ID Badge (Optional)
                           </span>
-                          <span className="text-[10px] font-semibold text-[#006d3a] bg-[#eaf5ef] px-2 py-0.5 rounded-full">
-                            DPDP Act 2023 Compliant
+                          <span className="text-[10px] font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                            {emailOtpVerified ? "Optional" : "If OTP is blocked by firewall"}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-[#777585]">
+                          If your employer&apos;s email gateway blocks external automated emails, you can upload a photo of your work badge or company offer letter.
+                        </p>
+                        {uploadedBadge ? (
+                          <div className="p-3 rounded-xl bg-[#f6f3f2] border border-[#94f7b2] flex items-center justify-between text-xs">
+                            <span className="font-bold text-[#1c1b1b]">{uploadedBadge}</span>
+                            <button
+                              type="button"
+                              onClick={() => setUploadedBadge(null)}
+                              className="text-xs font-bold text-[#5145cd] hover:underline"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        ) : (
+                          <label className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-[#e7e7eb] hover:bg-[#f6f3f2] text-xs font-bold text-[#1c1b1b] cursor-pointer shadow-2xs">
+                            <span className="material-symbols-outlined text-[16px]">upload_file</span>
+                            <span>Browse ID Badge (PDF/Image)</span>
+                            <input
+                              type="file"
+                              accept=".pdf,.png,.jpg,.jpeg"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) setUploadedBadge(file.name);
+                              }}
+                              className="sr-only"
+                            />
+                          </label>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* TRACK 2: ALUMNI / RETIRED / INDEPENDENT CONSULTANT */}
+                  {employmentStatus === "alumni" && (
+                    <div className="space-y-4">
+                      <div className="bg-white border border-[#e7e7eb] rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
+                        <div className="flex items-center justify-between pb-3 border-b border-[#e7e7eb]">
+                          <div className="flex items-center gap-2">
+                            <span className="material-symbols-outlined text-amber-600 text-[20px]">workspace_premium</span>
+                            <div>
+                              <span className="text-sm font-bold text-[#1c1b1b] block">
+                                Alumni &amp; Past Experience Accreditation
+                              </span>
+                              <span className="text-[11px] text-[#777585]">
+                                Verified via Relieving Letter, Ex-Employee ID, or LinkedIn Profile
+                              </span>
+                            </div>
+                          </div>
+                          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                            Ex-FAANG / Tier-1 Badge
                           </span>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-[11px]">
-                          <div className="p-3 rounded-lg bg-white border border-[#e7e7eb] shadow-2xs space-y-2">
-                            <div className="flex items-center justify-between border-b border-gray-100 pb-1.5">
-                              <span className="font-black text-gray-900 tracking-tight">ACME TECH / ENTERPRISE</span>
-                              <span className="text-[9px] font-bold text-gray-400">CORPORATE PASS</span>
-                            </div>
-                            <div className="flex gap-2.5 items-center">
-                              <div className="w-10 h-10 rounded-md bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-400 text-[10px]">
-                                Photo
-                              </div>
-                              <div className="space-y-0.5">
-                                <div className="font-bold text-gray-900 text-xs">Sample Legal Name</div>
-                                <div className="text-[10px] text-[#5145cd] font-semibold">Lead Systems Architect</div>
-                                <div className="text-[9px] text-gray-400">Emp ID: AC-882104 • Valid 2026</div>
-                              </div>
-                            </div>
-                            <div className="pt-1 text-[9px] text-emerald-700 bg-emerald-50 p-1.5 rounded flex items-center gap-1">
-                              <span className="material-symbols-outlined text-[12px]">check_circle</span>
-                              <span>Accepted: Clear Name, Senior Title, and Employer Logo</span>
-                            </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="space-y-1.5">
+                            <label htmlFor="past-employer-input" className="block text-xs font-bold text-[#1c1b1b]">
+                              Previous Tier-1 Employer *
+                            </label>
+                            <input
+                              id="past-employer-input"
+                              type="text"
+                              value={pastEmployer}
+                              onChange={(e) => setPastEmployer(e.target.value)}
+                              placeholder="e.g. Google, Amazon, Microsoft, Uber, Razorpay"
+                              className="w-full px-3.5 py-2.5 rounded-xl border border-[#e7e7eb] bg-[#f6f3f2] text-xs font-medium text-[#1c1b1b] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5145cd]"
+                            />
+                            <p className="text-[10px] text-[#777585]">
+                              Your profile badge will be formatted as: &quot;Ex-{pastEmployer || "Google"}&quot;
+                            </p>
                           </div>
 
-                          <div className="space-y-1.5 text-gray-600">
-                            <span className="font-bold text-gray-900 block text-xs">What Our Audit Desk Checks:</span>
-                            <div className="flex items-start gap-1.5">
-                              <span className="text-emerald-600 font-bold">✓</span>
-                              <span><strong>Employer Name &amp; Logo</strong> must be clearly identifiable.</span>
+                          <div className="space-y-1.5">
+                            <label htmlFor="past-title-input" className="block text-xs font-bold text-[#1c1b1b]">
+                              Former Senior Designation *
+                            </label>
+                            <input
+                              id="past-title-input"
+                              type="text"
+                              value={pastJobTitle}
+                              onChange={(e) => setPastJobTitle(e.target.value)}
+                              placeholder="e.g. Staff L6 Engineer, Former Director of Eng"
+                              className="w-full px-3.5 py-2.5 rounded-xl border border-[#e7e7eb] bg-[#f6f3f2] text-xs font-medium text-[#1c1b1b] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5145cd]"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-1.5 pt-1">
+                          <label htmlFor="linkedin-alumni-input" className="block text-xs font-bold text-[#1c1b1b]">
+                            Public LinkedIn Profile URL *
+                          </label>
+                          <input
+                            id="linkedin-alumni-input"
+                            type="url"
+                            value={linkedinUrl}
+                            onChange={(e) => setLinkedinUrl(e.target.value)}
+                            placeholder="https://linkedin.com/in/yourname"
+                            className="w-full px-3.5 py-2.5 rounded-xl border border-[#e7e7eb] bg-[#f6f3f2] text-xs font-medium text-[#1c1b1b] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5145cd]"
+                          />
+                          <p className="text-[10px] text-[#777585]">
+                            Used by our verification desk to confirm past tenure dates and public recommendations.
+                          </p>
+                        </div>
+
+                        {/* Relieving letter / Alumni proof upload */}
+                        <div className="space-y-2 pt-2 border-t border-[#e7e7eb]">
+                          <label className="block text-xs font-bold text-[#1c1b1b]">
+                            Upload Relieving Letter, Ex-Pass, or Service Certificate (Optional)
+                          </label>
+                          <p className="text-[11px] text-[#777585]">
+                            You may redact compensation figures. Only employer name, your legal name, and tenure dates are verified.
+                          </p>
+                          {uploadedBadge ? (
+                            <div className="p-3.5 rounded-xl bg-[#f6f3f2] border border-[#94f7b2] flex items-center justify-between text-xs">
+                              <div className="flex items-center gap-2">
+                                <span className="material-symbols-outlined text-[18px] text-[#006d3a]">description</span>
+                                <span className="font-bold text-[#1c1b1b]">{uploadedBadge}</span>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => setUploadedBadge(null)}
+                                className="text-xs font-bold text-[#5145cd] hover:underline"
+                              >
+                                Replace
+                              </button>
                             </div>
-                            <div className="flex items-start gap-1.5">
-                              <span className="text-emerald-600 font-bold">✓</span>
-                              <span><strong>Full Name</strong> must match your Government ID KYC.</span>
-                            </div>
-                            <div className="flex items-start gap-1.5">
-                              <span className="text-emerald-600 font-bold">✓</span>
-                              <span><strong>Senior Role (3+ YoE)</strong> to confirm accreditation bar.</span>
-                            </div>
-                            <div className="flex items-start gap-1.5 text-amber-800">
-                              <span className="text-amber-600 font-bold">🛡️</span>
-                              <span><strong>Allowed Redactions:</strong> Compensation figures and residential address may be masked.</span>
+                          ) : (
+                            <label className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-[#e7e7eb] hover:bg-[#f6f3f2] text-xs font-bold text-[#1c1b1b] cursor-pointer shadow-2xs">
+                              <span className="material-symbols-outlined text-[18px]">cloud_upload</span>
+                              <span>Upload Relieving Letter / Service Certificate</span>
+                              <input
+                                type="file"
+                                accept=".pdf,.png,.jpg,.jpeg"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) setUploadedBadge(file.name);
+                                }}
+                                className="sr-only"
+                              />
+                            </label>
+                          )}
+                        </div>
+
+                        {/* Live Alumni Badge Preview */}
+                        <div className="p-4 rounded-xl bg-amber-50/60 border border-amber-200 flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-xl bg-amber-600 text-white flex items-center justify-center font-bold text-sm">
+                            ★
+                          </div>
+                          <div>
+                            <span className="text-xs font-bold text-amber-950 block">
+                              Accredited Alumni Badge Preview:
+                            </span>
+                            <div className="inline-flex items-center gap-1.5 mt-1 px-2.5 py-0.5 rounded-full bg-white border border-amber-300 text-amber-900 font-bold text-xs">
+                              <span>✓ Ex-{pastEmployer || "Google"}</span>
+                              <span className="text-gray-400">•</span>
+                              <span className="text-gray-600 font-normal">{pastJobTitle || "Former Staff Engineer"}</span>
                             </div>
                           </div>
                         </div>
                       </div>
-                    )}
-                  </div>
+                    </div>
+                  )}
 
                   {/* Card 3: Government Identity Document & DPDP Masking */}
                   <div className="bg-white border border-[#e7e7eb] rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">

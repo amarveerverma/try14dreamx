@@ -144,6 +144,7 @@ export interface Database {
           work_email_verified?: boolean;
           verified_company?: string | null;
           hourly_rate_inr?: number;
+          employment_type?: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -166,6 +167,7 @@ export interface Database {
           work_email_verified?: boolean;
           verified_company?: string | null;
           hourly_rate_inr?: number;
+          employment_type?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -188,6 +190,7 @@ export interface Database {
           work_email_verified?: boolean;
           verified_company?: string | null;
           hourly_rate_inr?: number;
+          employment_type?: string | null;
           updated_at?: string;
         };
         Relationships: [];
@@ -402,6 +405,7 @@ export interface Database {
           id_document_masked: string | null;
           weekly_availability_hours: number;
           status: VerificationStatus;
+          employment_type?: string | null;
           rejection_reason: string | null;
           reviewed_by: string | null;
           reviewed_at: string | null;
@@ -429,6 +433,7 @@ export interface Database {
           id_document_masked?: string | null;
           weekly_availability_hours?: number;
           status?: VerificationStatus;
+          employment_type?: string | null;
           rejection_reason?: string | null;
           reviewed_by?: string | null;
           reviewed_at?: string | null;
@@ -456,6 +461,7 @@ export interface Database {
           id_document_masked?: string | null;
           weekly_availability_hours?: number;
           status?: VerificationStatus;
+          employment_type?: string | null;
           rejection_reason?: string | null;
           reviewed_by?: string | null;
           reviewed_at?: string | null;
