@@ -242,9 +242,19 @@ export default function SignUpPage() {
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
-              <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700 flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 shrink-0" />
-                <span>{error}</span>
+              <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700 flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
+                  <span className="font-semibold leading-relaxed">{error}</span>
+                </div>
+                {(error.toLowerCase().includes("already exists") || error.toLowerCase().includes("log in") || error.toLowerCase().includes("sign in")) && (
+                  <Link
+                    href={`/login?email=${encodeURIComponent(email)}&role=${role}`}
+                    className="self-start inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#3828b5] hover:bg-[#2e2195] text-white font-bold text-xs shadow-xs transition-colors"
+                  >
+                    <span>Sign In to Your Account With Password →</span>
+                  </Link>
+                )}
               </div>
             )}
 

@@ -304,14 +304,14 @@ function VerifyEmailContent() {
                   <span>{isVerifying ? "Activating Portal Access..." : "Verify Email & Enter Portal →"}</span>
                 </button>
 
-                <div className="text-center pt-1">
+                <div className="pt-2 flex flex-col gap-2 text-center">
                   <Link
-                    href={`/login?email=${encodeURIComponent(email)}&redirect=${encodeURIComponent(
+                    href={`/login?email=${encodeURIComponent(email)}&role=${role}&redirect=${encodeURIComponent(
                       redirectUrl || (role === "mentor" ? "/mentor/onboarding" : "/dashboard/onboarding")
                     )}`}
-                    className="text-xs font-bold text-[#3828b5] hover:underline"
+                    className="w-full py-2.5 px-4 rounded-xl border border-[#3828b5]/30 bg-indigo-50/50 hover:bg-indigo-50 text-[#3828b5] font-bold text-xs flex items-center justify-center gap-1.5 transition-colors"
                   >
-                    Already created your password? Sign in to your account →
+                    <span>Already set your password? Sign in directly →</span>
                   </Link>
                 </div>
 

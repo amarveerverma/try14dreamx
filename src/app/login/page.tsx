@@ -28,7 +28,12 @@ export default function LoginPage() {
     }
     return "seeker";
   });
-  const [email, setEmail] = React.useState("");
+  const [email, setEmail] = React.useState(() => {
+    if (typeof window !== "undefined") {
+      return new URLSearchParams(window.location.search).get("email") || "";
+    }
+    return "";
+  });
   const [password, setPassword] = React.useState("");
   const [showPassword, setShowPassword] = React.useState(false);
   const [rememberDevice, setRememberDevice] = React.useState(true);

@@ -40,7 +40,7 @@ interface AuthContextType {
     fullName: string,
     role: UserRole,
     phone?: string
-  ) => Promise<{ success: boolean; error?: string; hasSession?: boolean }>;
+  ) => Promise<{ success: boolean; error?: string; hasSession?: boolean; alreadyExists?: boolean }>;
   signInWithGoogle: () => Promise<void>;
   upgradeMembership: (tier: "pro" | "elite", annual?: boolean) => Promise<void>;
   cancelMembership: () => Promise<void>;
@@ -241,8 +241,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     phone?: string
   ) => {
     try {
+      const cleanEmail = email.trim().toLowerCase();
       const { data, error } = await supabase.auth.signUp({
-        email,
+        email: cleanEmail,
         password,
         options: {
           data: {
@@ -257,11 +258,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { success: false, error: error.message };
       }
 
-      if (data.user) {
+      // Check if user already exists (Supabase returns an empty identities array for existing users)
+      if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+        return {
+          success: false,
+          error: "An account with this email address already exists. Please log in with your password.",
+          alreadyExists: true,
+        };
+      }
+
+      // If no session was returned by signUp, attempt immediate sign-in with the credentials provided
+      // because our database trigger auto_confirm_user() confirms the email immediately.
+      let hasSession = !!data.session;
+      if (!hasSession && data.user) {
+        try {
+          const { data: signInData } = await supabase.auth.signInWithPassword({
+            email: cleanEmail,
+            password,
+          });
+          if (signInData?.session) {
+            hasSession = true;
+            await fetchProfile(signInData.user.id, signInData.user.email);
+          }
+        } catch {
+          // ignore fallback attempt
+        }
+      } else if (data.user) {
         await fetchProfile(data.user.id, data.user.email);
       }
 
-      return { success: true, hasSession: !!data.session };
+      return { success: true, hasSession };
     } catch (err) {
       return { success: false, error: err instanceof Error ? err.message : "Registration failed" };
     }
