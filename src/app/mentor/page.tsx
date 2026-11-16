@@ -2,748 +2,1001 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { createClient } from "@/lib/supabase/client";
 
-interface InboundClaim {
-  id: string;
-  serviceCode: string;
-  serviceTitle: string;
-  duration: string;
-  remainingMinutes: number;
-  candidateId: string;
-  candidateLevel: string;
-  targetTrack: string;
-  dossierName?: string;
-  slotText: string;
-  slotSubtext: string;
-  payout: number;
-  mode: "live" | "async";
-}
+// Ambient Canvas & Modals
+import { FlowingGradientBackground, CanvasMode } from "@/components/mentor/FlowingGradientBackground";
+import { MentorModal } from "@/components/mentor/MentorModal";
 
-interface RemoteBooking {
-  id: string;
-  booking_ref: string;
-  service_code: string;
-  session_start: string;
-  session_end: string;
-  amount_paise: number;
-  status: string;
-  payment_status: string;
-  meeting_url: string | null;
-  pre_session_notes: string | null;
-  created_at: string;
-  student: {
-    id: string;
-    full_name: string | null;
-    email: string | null;
-    target_role: string | null;
-  } | null;
-  session_reports?: Array<{
-    id: string;
-    version: number;
-    is_latest: boolean;
-    sla_deadline_at: string;
-    submitted_at: string;
-    is_late: boolean;
-    deliverable_sha256: string | null;
-  }>;
-  mentor_settlements?: Array<{
-    id: string;
-    gross_amount_paise: number;
-    net_payout_paise: number;
-    payout_status: string;
-  }>;
-}
+// Types & Mock/Seed Data
+import {
+  SERVICES_CATALOGUE,
+  ServiceApproval,
+  WeeklySlot,
+  DateException,
+  DispatchOffer,
+  MentorBooking,
+  SessionReport,
+  FinancialLedgerRecord,
+  MentorProfileData,
+  DEFAULT_WEEKLY_SLOTS,
+  DEFAULT_DATE_EXCEPTIONS,
+  SEED_DISPATCH_OFFERS,
+  SEED_BOOKINGS,
+  SEED_REPORTS,
+  SEED_FINANCIAL_LEDGER,
+  SEED_NOTIFICATIONS,
+  SEED_PROFILE,
+  SEED_TRUST_PILLARS,
+  SEED_SERVICE_APPROVALS,
+  Tone
+} from "@/components/mentor/types";
 
-export default function MentorDashboardPage() {
-  const { user } = useAuth();
-  const supabase = React.useMemo(() => createClient(), []);
+// 10 Modular Views
+import { OverviewView } from "@/components/mentor/views/OverviewView";
+import { VerificationView } from "@/components/mentor/views/VerificationView";
+import { ServicesView } from "@/components/mentor/views/ServicesView";
+import { AvailabilityView } from "@/components/mentor/views/AvailabilityView";
+import { DispatchView } from "@/components/mentor/views/DispatchView";
+import { BookingsView } from "@/components/mentor/views/BookingsView";
+import { SessionConsoleView } from "@/components/mentor/views/SessionConsoleView";
+import { ReportsView } from "@/components/mentor/views/ReportsView";
+import { EarningsView } from "@/components/mentor/views/EarningsView";
+import { SettingsView } from "@/components/mentor/views/SettingsView";
 
-  const [claims, setClaims] = React.useState<InboundClaim[]>([]);
-  const [bookings, setBookings] = React.useState<RemoteBooking[]>([]);
-  const [loading, setLoading] = React.useState(true);
-  const [actionNotice, setActionNotice] = React.useState<string | null>(null);
+// Lucide Icons
+import {
+  LayoutDashboard,
+  ShieldCheck,
+  Grid,
+  Calendar,
+  Zap,
+  CalendarCheck,
+  Video,
+  FileCheck2,
+  DollarSign,
+  Settings,
+  ChevronLeft,
+  ChevronRight,
+  Search,
+  Bell,
+  HelpCircle,
+  LogOut,
+  Clock,
+  Sparkles,
+  CheckCircle,
+  X,
+  AlertTriangle
+} from "lucide-react";
 
-  // Load real bookings and metrics from Supabase
+type MentorTab =
+  | "overview"
+  | "verification"
+  | "services"
+  | "availability"
+  | "dispatch"
+  | "bookings"
+  | "sessions"
+  | "reports"
+  | "earnings"
+  | "settings";
+
+export default function MentorPortalPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { user, logout } = useAuth();
+
+  // Tab state synced with URL search query
+  const tabParam = searchParams.get("tab") as MentorTab | null;
+  const [activeTab, setActiveTab] = React.useState<MentorTab>(tabParam || "overview");
+
+  // Keep activeTab synced with query params
   React.useEffect(() => {
-    let isMounted = true;
-    async function loadData() {
-      if (!user) {
-        setLoading(false);
-        return;
-      }
-      try {
-        const { data, error } = await supabase
-          .from("bookings")
-          .select(`
-            id,
-            booking_ref,
-            service_code,
-            session_start,
-            session_end,
-            amount_paise,
-            status,
-            payment_status,
-            meeting_url,
-            pre_session_notes,
-            created_at,
-            student:profiles!bookings_student_id_fkey(id, full_name, email, target_role),
-            session_reports(id, version, is_latest, sla_deadline_at, submitted_at, is_late, deliverable_sha256),
-            mentor_settlements(id, gross_amount_paise, net_payout_paise, payout_status)
-          `)
-          .eq("mentor_id", user.id)
-          .order("session_start", { ascending: false });
+    if (tabParam && tabParam !== activeTab) {
+      setActiveTab(tabParam);
+    }
+  }, [tabParam, activeTab]);
 
-        if (!error && data && isMounted) {
-          setBookings(data as unknown as RemoteBooking[]);
+  const handleTabChange = (tab: MentorTab) => {
+    setActiveTab(tab);
+    const url = new URL(window.location.href);
+    url.searchParams.set("tab", tab);
+    window.history.pushState({}, "", url.toString());
+  };
+
+  const handleNavigate = (route: string, recordId?: string) => {
+    const validTabs: MentorTab[] = [
+      "overview",
+      "verification",
+      "services",
+      "availability",
+      "dispatch",
+      "bookings",
+      "sessions",
+      "reports",
+      "earnings",
+      "settings",
+    ];
+    if (validTabs.includes(route as MentorTab)) {
+      if (route === "bookings" && recordId) {
+        setHighlightedBookingId(recordId);
+      }
+      if (route === "sessions" && recordId) {
+        setHighlightedBookingId(recordId);
+      }
+      if (route === "reports" && recordId) {
+        setHighlightedReportId(recordId);
+      }
+      if (route === "dispatch" && recordId) {
+        setHighlightedOfferId(recordId);
+      }
+      handleTabChange(route as MentorTab);
+    }
+  };
+
+  // Canvas Mode state
+  const [canvasMode, setCanvasMode] = React.useState<CanvasMode>("vibrant");
+
+  // Sidebar collapse state
+  const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
+
+  // Global search query
+  const [searchQuery, setSearchQuery] = React.useState("");
+
+  // SLA Policy Modal
+  const [showPolicyModal, setShowPolicyModal] = React.useState(false);
+
+  // Notifications Popover
+  const [showNotifications, setShowNotifications] = React.useState(false);
+
+  // Role Simulator state
+  const [simulatedTier, setSimulatedTier] = React.useState<"tier1" | "tier2" | "tier3">("tier1");
+  const [isApplicantMode, setIsApplicantMode] = React.useState(false);
+
+  // Targeted record highlights
+  const [highlightedBookingId, setHighlightedBookingId] = React.useState<string | undefined>("BK-901");
+  const [highlightedOfferId, setHighlightedOfferId] = React.useState<string | undefined>(undefined);
+  const [highlightedReportId, setHighlightedReportId] = React.useState<string | undefined>(undefined);
+
+  // Toasts
+  const [toasts, setToasts] = React.useState<
+    Array<{ id: string; message: string; tone: Tone }>
+  >([]);
+
+  const addToast = (message: string, tone: Tone = "info") => {
+    const id = Math.random().toString(36).substring(2, 9);
+    setToasts((prev) => [...prev, { id, message, tone }]);
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 4500);
+  };
+
+  // Central Application Data State
+  const [profile, setProfile] = React.useState<MentorProfileData>(SEED_PROFILE);
+  const [trustPillars, setTrustPillars] = React.useState(SEED_TRUST_PILLARS);
+  const [serviceApprovals, setServiceApprovals] = React.useState<ServiceApproval[]>(SEED_SERVICE_APPROVALS);
+  const [dispatchOffers, setDispatchOffers] = React.useState<DispatchOffer[]>(SEED_DISPATCH_OFFERS);
+  const [bookings, setBookings] = React.useState<MentorBooking[]>(SEED_BOOKINGS);
+  const [reports, setReports] = React.useState<SessionReport[]>(SEED_REPORTS);
+  const [ledger, setLedger] = React.useState<FinancialLedgerRecord[]>(SEED_FINANCIAL_LEDGER);
+  const [weeklySlots, setWeeklySlots] = React.useState<WeeklySlot[]>(DEFAULT_WEEKLY_SLOTS);
+  const [exceptions, setExceptions] = React.useState<DateException[]>(DEFAULT_DATE_EXCEPTIONS);
+
+  // Load live Supabase profile if authenticated
+  React.useEffect(() => {
+    async function loadLiveProfile() {
+      if (!user) return;
+      try {
+        const supabase = createClient();
+        const { data: dbProfile } = await supabase
+          .from("mentor_profiles")
+          .select("*")
+          .eq("id", user.id)
+          .maybeSingle();
+
+        if (dbProfile) {
+          setProfile((prev) => ({
+            ...prev,
+            displayName: user.name || prev.displayName,
+            headline: dbProfile.job_title && dbProfile.current_employer ? `${dbProfile.job_title} at ${dbProfile.current_employer}` : prev.headline,
+            currentRoleLabel: dbProfile.current_employer ? `${dbProfile.job_title || "Staff Engineer"} (${dbProfile.current_employer})` : prev.currentRoleLabel,
+            bio: dbProfile.bio || prev.bio,
+            yearsOfExperience: dbProfile.years_of_experience || prev.yearsOfExperience,
+          }));
         }
       } catch (err) {
-        console.warn("Failed to load mentor bookings:", err);
-      } finally {
-        if (isMounted) setLoading(false);
+        console.error("Error loading live mentor profile:", err);
       }
     }
+    loadLiveProfile();
+  }, [user]);
 
-    loadData();
-    return () => {
-      isMounted = false;
+  // Workflow Handlers
+  const handleClaimOffer = async (
+    offerId: string,
+    chosenWindowLabel: string
+  ): Promise<"accepted" | "already_claimed"> => {
+    const offer = dispatchOffers.find((o) => o.id === offerId);
+    if (!offer) return "already_claimed";
+
+    if (offer.simulateContendedClaim) {
+      setDispatchOffers((prev) =>
+        prev.map((o) => (o.id === offerId ? { ...o, status: "Already Claimed" } : o))
+      );
+      addToast(
+        `Atomic Collision: Request ${offer.requestCode} was just claimed by another calibrated mentor. Claim locked.`,
+        "warning"
+      );
+      return "already_claimed";
+    }
+
+    // Accept offer
+    setDispatchOffers((prev) =>
+      prev.map((o) => (o.id === offerId ? { ...o, status: "Accepted" } : o))
+    );
+
+    // Create a new committed booking
+    const newBooking: MentorBooking = {
+      id: `BK-${Date.now().toString().slice(-4)}`,
+      bookingRef: `DX-BK-2026-${Math.floor(2000 + Math.random() * 8000)}`,
+      serviceId: offer.serviceId,
+      bookingMode: "Smart Match",
+      studentName: offer.studentAlias,
+      studentSegment: offer.studentSegment,
+      targetRole: offer.targetDomain,
+      targetDomain: offer.targetDomain,
+      sessionGoal: offer.goalSummary,
+      scheduledDate: chosenWindowLabel.split("·")[0]?.trim() || "Sat, 08 Nov 2026",
+      scheduledTime: chosenWindowLabel.split("·")[1]?.trim() || "10:30 – 11:30 IST",
+      durationMinutes: 60,
+      status: "Confirmed",
+      paymentStatus: "Verified",
+      joinPermittedByServer: false,
+      meetingProviderLabel: "Join link unlocks 10 min before scheduled start",
+      attendance: {},
+      authorizedDocuments: [
+        {
+          id: `doc-${Date.now()}`,
+          title: `${offer.studentAlias.split(" ")[0]}_Dossier_Context.pdf`,
+          type: "PDF Dossier",
+          signedUrlExpiresIn: "Generated at session window",
+          summaryPreview: offer.sessionContextNote,
+        },
+      ],
+      readinessContext: {
+        overallScore: 65,
+        rubricVersion: "rubric-v3.0",
+        lastAssessedDate: "3 days ago",
+        coverageLabel: "5 of 8 dimensions assessed",
+        dimensions: [
+          { dimension: "Technical Skills", score: 3, lastUpdated: "3 days ago", note: "Solid DS/Algo" },
+          { dimension: "Interview Skills", score: null, lastUpdated: "Not assessed", note: "Primary focus of today’s session" },
+          { dimension: "Communication", score: 3, lastUpdated: "3 days ago", note: "Clear explanations" },
+        ],
+      },
+      reportStatus: "Awaiting session",
+      timeline: [
+        {
+          timestamp: new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }) + " IST",
+          event: "Smart Match offer atomically claimed by mentor",
+          actor: "Mentor",
+        },
+        {
+          timestamp: new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }) + " IST",
+          event: "Booking confirmed & calendar invite queued",
+          actor: "System",
+        },
+      ],
     };
-  }, [user, supabase]);
 
-  // Derived financial metrics
-  const financialMetrics = React.useMemo(() => {
-    let accruedNetPaise = 0;
-    let inEscrowNetPaise = 0;
-    let completedCount = 0;
-    let lateCount = 0;
-
-    bookings.forEach((b) => {
-      b.mentor_settlements?.forEach((s) => {
-        if (s.payout_status === "eligible_for_payout" || s.payout_status === "disbursed") {
-          accruedNetPaise += s.net_payout_paise;
-        } else if (s.payout_status === "in_escrow") {
-          inEscrowNetPaise += s.net_payout_paise;
-        }
-      });
-
-      b.session_reports?.forEach((r) => {
-        if (r.is_latest) {
-          completedCount += 1;
-          if (r.is_late) lateCount += 1;
-        }
-      });
-    });
-
-    const slaCompliance = completedCount > 0 ? Math.round(((completedCount - lateCount) / completedCount) * 100) : 100;
-
-    return {
-      accruedRupees: Math.round(accruedNetPaise / 100),
-      escrowRupees: Math.round(inEscrowNetPaise / 100),
-      completedCount,
-      slaCompliance,
-      activeEngagements: bookings.filter((b) => b.status === "confirmed" || b.status === "in_progress").length,
-    };
-  }, [bookings]);
-
-  const handleAccept = (id: string, title: string) => {
-    setClaims((prev) => prev.filter((c) => c.id !== id));
-    setActionNotice(`Claim accepted for ${id} (${title}). Slot locked & Razorpay escrow hold active.`);
-    setTimeout(() => setActionNotice(null), 5000);
+    setBookings((prev) => [newBooking, ...prev]);
+    addToast(`Offer ${offer.requestCode} claimed successfully! Added to Bookings.`, "success");
+    return "accepted";
   };
 
-  const handleDecline = (id: string) => {
-    setClaims((prev) => prev.filter((c) => c.id !== id));
-    setActionNotice(`Claim ${id} declined. Cascaded to Wave 2 mentor pool.`);
-    setTimeout(() => setActionNotice(null), 4000);
+  const handleDeclineOffer = (offerId: string) => {
+    setDispatchOffers((prev) =>
+      prev.map((o) => (o.id === offerId ? { ...o, status: "Declined" } : o))
+    );
+    addToast("Dispatch offer declined. Returned to deterministic matching pool.", "neutral");
   };
+
+  const handleToggleServiceSetting = (
+    serviceId: string,
+    settingKey: "activeForBookings" | "directBookingEnabled" | "smartMatchEnabled"
+  ) => {
+    setServiceApprovals((prev) =>
+      prev.map((s) => (s.serviceId === serviceId ? { ...s, [settingKey]: !s[settingKey] } : s))
+    );
+    addToast("Service catalog preferences updated.", "success");
+  };
+
+  const handleSaveAvailability = (slots: WeeklySlot[], newExceptions: DateException[]) => {
+    setWeeklySlots(slots);
+    setExceptions(newExceptions);
+    addToast("Weekly IST availability windows saved successfully.", "success");
+  };
+
+  const handleMentorCancelBooking = (bookingId: string, reason: string) => {
+    setBookings((prev) =>
+      prev.map((b) =>
+        b.id === bookingId
+          ? {
+              ...b,
+              status: "Cancelled",
+              cancellationNote: `Cancelled by mentor (PRD §12.2): ${reason}`,
+              timeline: [
+                ...b.timeline,
+                {
+                  timestamp: new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }) + " IST",
+                  event: `Mentor cancelled session: ${reason}`,
+                  actor: "Mentor",
+                },
+              ],
+            }
+          : b
+      )
+    );
+    addToast("Session cancelled. Student has been notified with free rebooking credit.", "warning");
+  };
+
+  const handleRecordMentorJoin = (bookingId: string) => {
+    const timeStr = new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }) + " IST";
+    setBookings((prev) =>
+      prev.map((b) =>
+        b.id === bookingId
+          ? {
+              ...b,
+              attendance: { ...b.attendance, mentorJoinedAt: timeStr },
+              timeline: [
+                ...b.timeline,
+                { timestamp: timeStr, event: "Mentor entered authorized session vault", actor: "Mentor" },
+              ],
+            }
+          : b
+      )
+    );
+    addToast("Mentor attendance verified by server.", "success");
+  };
+
+  const handleMarkSessionCompleted = (bookingId: string) => {
+    const booking = bookings.find((b) => b.id === bookingId);
+    if (!booking) return;
+
+    const timeStr = new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }) + " IST";
+    const service = SERVICES_CATALOGUE.find((s) => s.id === booking.serviceId) || SERVICES_CATALOGUE[0];
+
+    // Update booking
+    setBookings((prev) =>
+      prev.map((b) =>
+        b.id === bookingId
+          ? {
+              ...b,
+              status: "Completed",
+              reportStatus: "Report pending",
+              reportDueInHours: 48,
+              attendance: { ...b.attendance, completedAt: timeStr },
+              timeline: [
+                ...b.timeline,
+                { timestamp: timeStr, event: "Session concluded — 48h report SLA timer started", actor: "System" },
+              ],
+            }
+          : b
+      )
+    );
+
+    // Create session report with 48h timer
+    const newReport: SessionReport = {
+      id: `RPT-${Math.floor(600 + Math.random() * 400)}`,
+      bookingId: booking.id,
+      bookingRef: booking.bookingRef,
+      serviceId: booking.serviceId,
+      studentName: booking.studentName,
+      studentSegment: booking.studentSegment,
+      targetRole: booking.targetRole,
+      sessionDate: `${booking.scheduledDate}, ${booking.scheduledTime}`,
+      status: "Report pending",
+      slaRemainingLabel: "47h 59m left (48h SLA)",
+      assessmentPurpose: service.shortOutcome,
+      summary: `Completed 1:1 ${service.name}. Candidate demonstrated strong engagement; diagnostic rubric in progress.`,
+      rubricScores: service.rubricCriteria.map((c) => ({
+        criterionId: c.id,
+        label: c.label,
+        rating: 3,
+        observation: "Demonstrated clear foundation; fine-tuning recommendations pending.",
+      })),
+      dimensionObservations: service.mappedDimensions.map((d) => ({
+        dimension: d,
+        score: 3,
+        observation: `Evaluated live during ${service.name} loop.`,
+      })),
+      strengths: ["Clear verbal articulation", "Receptive to structured critique"],
+      improvementAreas: ["Dry-run edge cases before implementation"],
+      actionPlan: [
+        {
+          id: `ap-${Date.now()}`,
+          action: "Review recommended reference material and practice structured constraint checklist.",
+          priority: "High",
+          timeframe: "Next 7 days",
+        },
+      ],
+      suggestedNextSteps: [
+        {
+          recommendedServiceId: "S06",
+          reason: "Reinforce live technical interviewing readiness.",
+        },
+      ],
+      assessmentLimitations: `Reflects single ${service.durationMinutes}-minute simulation under rubric-v3.0. Does not guarantee placement outcomes.`,
+      versions: [],
+    };
+
+    setReports((prev) => [newReport, ...prev]);
+    setHighlightedReportId(newReport.id);
+    addToast(
+      `Session marked Completed! 48-hour SLA report timer has started for ${booking.studentName}.`,
+      "info"
+    );
+  };
+
+  const handleSaveOrSubmitReport = (
+    bookingId: string,
+    reportPayload: Partial<SessionReport>,
+    isFinal: boolean
+  ) => {
+    const existing = reports.find((r) => r.bookingId === bookingId);
+    if (!existing) return;
+
+    if (isFinal) {
+      setReports((prev) =>
+        prev.map((r) =>
+          r.bookingId === bookingId
+            ? {
+                ...r,
+                ...reportPayload,
+                status: "Report delivered",
+                slaRemainingLabel: "Delivered within 48h SLA",
+                versions: [
+                  ...r.versions,
+                  {
+                    version: `v${r.versions.length + 1}.0`,
+                    createdAt: new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }),
+                    authorName: profile.displayName,
+                    changeNote: "Delivered to student portal and recorded in immutable escrow audit trail.",
+                  },
+                ],
+              }
+            : r
+        )
+      );
+
+      // Update booking
+      setBookings((prev) =>
+        prev.map((b) => (b.id === bookingId ? { ...b, reportStatus: "Report delivered" } : b))
+      );
+
+      // Add to financial ledger
+      const service = SERVICES_CATALOGUE.find((s) => s.id === existing.serviceId) || SERVICES_CATALOGUE[0];
+      const newLedgerEntry: FinancialLedgerRecord = {
+        id: `FIN-${Math.floor(400 + Math.random() * 600)}`,
+        bookingRef: existing.bookingRef,
+        serviceId: existing.serviceId,
+        studentName: existing.studentName,
+        completedDate: new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }),
+        grossListedPricePaise: service.listPricePaise,
+        studentAppliedDiscountLabel: "None (List Price)",
+        studentPaidPaise: service.listPricePaise,
+        mentorCalculationBasisPaise: service.listPricePaise,
+        adjustmentPaise: 0,
+        verificationStatus: "Provider Webhook Verified",
+        settlementStatus: "Recorded — Awaiting V-01/V-04 Settlement Gate",
+      };
+
+      setLedger((prev) => [newLedgerEntry, ...prev]);
+      addToast("Diagnostic Report delivered! Escrow settlement credit recorded in ledger.", "success");
+    } else {
+      setReports((prev) =>
+        prev.map((r) => (r.bookingId === bookingId ? { ...r, ...reportPayload } : r))
+      );
+      addToast("Report draft saved to local secure cache.", "neutral");
+    }
+  };
+
+  const handleExportStatementToast = () => {
+    addToast("Exporting non-dilution earnings ledger as CSV...", "info");
+    const headers = "ID,Booking Ref,Service ID,Student,Date,Gross Listed (Paise),Mentor Basis (Paise),Adjustment (Paise),Status\n";
+    const rows = ledger
+      .map(
+        (l) =>
+          `${l.id},${l.bookingRef},${l.serviceId},"${l.studentName}",${l.completedDate},${l.grossListedPricePaise},${l.mentorCalculationBasisPaise},${l.adjustmentPaise},"${l.settlementStatus}"`
+      )
+      .join("\n");
+    const blob = new Blob([headers + rows], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `dreamx-mentor-ledger-${new Date().toISOString().split("T")[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    addToast("Earnings statement CSV downloaded successfully.", "success");
+  };
+
+  // Nav Tab Definitions
+  const navTabs = [
+    { id: "overview", label: "Overview", icon: LayoutDashboard },
+    { id: "verification", label: "Verification", icon: ShieldCheck, badge: "3/3 Live" },
+    { id: "services", label: "Services (S01–S10)", icon: Grid },
+    { id: "availability", label: "Availability", icon: Calendar },
+    {
+      id: "dispatch",
+      label: "Dispatch Queue",
+      icon: Zap,
+      badge: dispatchOffers.filter((o) => o.status === "Pending").length.toString(),
+      badgeTone: "warning" as const,
+    },
+    {
+      id: "bookings",
+      label: "Bookings",
+      icon: CalendarCheck,
+      badge: bookings.filter((b) => b.status === "Ready to Join" || b.status === "Confirmed").length.toString(),
+    },
+    { id: "sessions", label: "Session Console", icon: Video },
+    {
+      id: "reports",
+      label: "Reports (48h SLA)",
+      icon: FileCheck2,
+      badge: reports.filter((r) => r.status === "Report pending" || r.status === "Revision requested").length.toString(),
+      badgeTone: "danger" as const,
+    },
+    { id: "earnings", label: "Earnings & Ledger", icon: DollarSign },
+    { id: "settings", label: "Settings", icon: Settings },
+  ];
 
   return (
-    <div className="flex flex-col w-full bg-[#fcf9f8] min-h-screen text-[#1c1b1b]">
-      {/* Top Header Ribbon */}
-      <div className="w-full bg-white border-b border-[#e7e7eb] px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap items-center justify-between gap-3 text-xs">
-        <div className="flex items-center gap-2">
-          <span className="font-semibold text-[#1c1b1b]">Mentor Hub</span>
-          <span className="text-[#c8c4d6]">/</span>
-          <span className="font-bold text-[#5145cd]">Overview &amp; Delivery Console</span>
-        </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#eaf5ef] border border-[#94f7b2] text-[#006d3a] font-semibold text-[11px]">
-            <span className="material-symbols-outlined text-[14px]">check_circle</span>
-            <span>Employment &amp; Identity Audit Verified (PRD §9.1)</span>
-          </div>
-          <span className="text-[#474554] text-[11px]">Asia/Kolkata (IST • UTC+05:30)</span>
-        </div>
-      </div>
+    <div className="relative min-h-screen w-full bg-[#0d0e15] text-white flex flex-col font-sans selection:bg-[#5145cd] selection:text-white">
+      {/* 1. Ambient Background Canvas */}
+      <FlowingGradientBackground mode={canvasMode} />
 
-      {actionNotice && (
-        <div className="mx-4 sm:mx-6 lg:mx-8 mt-4 p-3.5 rounded-xl bg-[#eaf5ef] border border-[#94f7b2] text-[#006d3a] text-xs font-semibold flex items-center justify-between shadow-xs animate-in fade-in">
-          <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-[16px]">verified</span>
-            <span>{actionNotice}</span>
+      {/* 2. Top Header Navigation */}
+      <header className="sticky top-0 z-40 w-full h-16 border-b border-white/10 bg-[#0d0e15]/80 backdrop-blur-xl flex items-center justify-between px-4 sm:px-6">
+        {/* Brand & Mode Controls */}
+        <div className="flex items-center gap-4">
+          <Link href="/mentor" className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#5145cd] to-violet-500 flex items-center justify-center font-extrabold text-white text-xs shadow-lg shadow-indigo-900/40">
+              DX
+            </div>
+            <div className="hidden sm:block">
+              <span className="font-extrabold text-sm tracking-tight text-white">DreamX</span>
+              <span className="text-[11px] font-mono text-gray-400 ml-1.5">Mentor Portal</span>
+            </div>
+          </Link>
+
+          {/* Canvas Mode Selector */}
+          <div className="flex items-center gap-1 p-1 rounded-xl bg-white/5 border border-white/10 text-xs">
+            {(["vibrant", "balanced", "calm", "showcase"] as CanvasMode[]).map((mode) => (
+              <button
+                key={mode}
+                type="button"
+                onClick={() => setCanvasMode(mode)}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold capitalize transition-all cursor-pointer ${
+                  canvasMode === mode
+                    ? "bg-[#5145cd] text-white shadow-sm"
+                    : "text-gray-400 hover:text-gray-200"
+                }`}
+              >
+                {mode}
+              </button>
+            ))}
           </div>
-          <button type="button" onClick={() => setActionNotice(null)} className="text-[#006d3a] hover:opacity-75">
-            <span className="material-symbols-outlined text-[16px]">close</span>
+        </div>
+
+        {/* Center: Global Search */}
+        <div className="hidden md:flex items-center w-72 lg:w-96">
+          <div className="relative w-full">
+            <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search services, candidates, ref codes..."
+              className="w-full pl-9 pr-4 py-1.5 rounded-xl bg-white/5 border border-white/10 text-xs text-white placeholder:text-gray-500 focus:outline-none focus:border-[#5145cd] focus:ring-1 focus:ring-[#5145cd] transition-all"
+            />
+          </div>
+        </div>
+
+        {/* Right Action Ribbon */}
+        <div className="flex items-center gap-3">
+          {/* Policy Guide */}
+          <button
+            type="button"
+            onClick={() => setShowPolicyModal(true)}
+            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-gray-300 transition-all cursor-pointer"
+          >
+            <HelpCircle className="w-3.5 h-3.5 text-indigo-400" />
+            <span>48h SLA Policy</span>
           </button>
-        </div>
-      )}
 
-      {/* Main Container */}
-      <main className="p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-6">
-        {/* Pending Mentor Accreditation Banner */}
-        {user && user.onboarding_completed === false && (
-          <div className="p-4 sm:p-5 rounded-2xl bg-indigo-50 border border-indigo-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs animate-in fade-in">
-            <div className="flex items-start sm:items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-indigo-100 text-[#5145cd] flex items-center justify-center shrink-0">
-                <span className="material-symbols-outlined text-[20px]">how_to_reg</span>
-              </div>
-              <div>
-                <h3 className="font-bold text-indigo-950 text-sm">Tier-1 Mentor Accreditation Incomplete</h3>
-                <p className="text-indigo-800 text-xs mt-0.5">
-                  Complete the 4-step accreditation dossier (employer work email verification, service module approvals, and Razorpay nodal payout setup) to receive live candidate dispatches.
-                </p>
-              </div>
-            </div>
-            <Link
-              href="/mentor/onboarding"
-              className="px-4 py-2.5 rounded-xl bg-[#5145cd] hover:bg-[#3828b5] text-white font-bold text-xs shrink-0 text-center transition-colors shadow-xs"
+          {/* Role Simulator Pill */}
+          <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-indigo-950/40 border border-indigo-500/20 text-xs">
+            <span className="text-[10px] text-indigo-300 font-mono">SIM:</span>
+            <select
+              value={simulatedTier}
+              onChange={(e) => {
+                const val = e.target.value as "tier1" | "tier2" | "tier3";
+                setSimulatedTier(val);
+                setIsApplicantMode(val === "tier3");
+                addToast(`Simulating ${val.toUpperCase()} Tier profile and price bands`, "info");
+              }}
+              className="bg-transparent text-white font-bold text-xs focus:outline-none cursor-pointer"
             >
-              Complete Mentor Onboarding →
-            </Link>
+              <option value="tier1" className="bg-[#12141f]">Tier 1 (FAANG / Ex-Google)</option>
+              <option value="tier2" className="bg-[#12141f]">Tier 2 (High-Growth Tech)</option>
+              <option value="tier3" className="bg-[#12141f]">Tier 3 (Enterprise IT)</option>
+            </select>
           </div>
-        )}
 
-        {/* Title Bar */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2.5">
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#1c1b1b] tracking-tight font-heading">
-                Mentor Delivery Console
-              </h1>
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#e3dfff] text-[#130068]">
-                L5 AI Lead
-              </span>
-            </div>
-            <p className="text-xs sm:text-sm text-[#474554] mt-1">
-              Review live Smart Match dispatch offers, upcoming sessions, and deliverable SLAs.
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <Link
-              href="/mentor/earnings"
-              className="px-4 py-2.5 bg-white border border-[#e7e7eb] hover:bg-[#f6f3f2] text-[#1c1b1b] text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-2"
+          {/* Notifications Trigger */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setShowNotifications(!showNotifications)}
+              className="relative p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 transition-all cursor-pointer"
             >
-              <span className="material-symbols-outlined text-[18px]">receipt_long</span>
-              <span>View Past Payouts</span>
-            </Link>
-            <Link
-              href="/mentor/availability"
-              className="px-4 py-2.5 bg-[#5145cd] hover:bg-[#3828b5] text-white text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-2 focus:ring-2 focus:ring-offset-2 focus:ring-[#5145cd]"
-            >
-              <span className="material-symbols-outlined text-[18px]">calendar_month</span>
-              <span>Update Weekly Availability</span>
-            </Link>
-          </div>
-        </div>
+              <Bell className="w-4 h-4" />
+              <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-amber-400 ring-2 ring-[#0d0e15]" />
+            </button>
 
-        {/* Bento Metric Stats (3 Cards) */}
-        <section aria-label="Key Performance Metrics" className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {/* Metric 1 */}
-          <div className="bg-white border border-[#e7e7eb] rounded-2xl p-5 shadow-xs flex flex-col justify-between hover:border-[#c8c4d6] transition-colors">
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[11px] font-bold text-[#777585] uppercase tracking-wider">
-                  Accrued Earnings
-                </span>
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#eaf5ef] text-[#006d3a]">
-                  <span className="material-symbols-outlined text-[13px]">check</span>
-                  {financialMetrics.accruedRupees > 0 ? "Weekly Payout Accruing" : "Direct Escrow Protected"}
-                </span>
-              </div>
-              <div className="flex items-baseline gap-2 mt-1">
-                <span className="text-3xl font-extrabold text-[#1c1b1b] tracking-tight tabular-nums font-heading">
-                  ₹{financialMetrics.accruedRupees.toLocaleString("en-IN")}
-                </span>
-                <span className="text-xs text-[#006d3a] font-bold">80% Net Rate Basis</span>
-              </div>
-              <p className="text-xs text-[#474554] mt-2 leading-relaxed">
-                Direct weekly disbursement via Razorpay UPI/NEFT • 20% platform cut &amp; 10% Section 194J TDS computed per session
-              </p>
-            </div>
-            <div className="mt-4 pt-3 border-t border-[#e7e7eb] flex items-center justify-between text-xs">
-              <span className="text-[#474554] font-medium flex items-center gap-1">
-                <span className="material-symbols-outlined text-sm text-[#777585]">lock_clock</span>
-                Pending in 48h Escrow Lock:
-              </span>
-              <span className="font-bold text-[#1c1b1b] tabular-nums">
-                ₹{financialMetrics.escrowRupees.toLocaleString("en-IN")}
-              </span>
-            </div>
-          </div>
-
-          {/* Metric 2 */}
-          <div className="bg-white border border-[#e7e7eb] rounded-2xl p-5 shadow-xs flex flex-col justify-between hover:border-[#c8c4d6] transition-colors">
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[11px] font-bold text-[#777585] uppercase tracking-wider">
-                  Delivery SLA Compliance
-                </span>
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#eaf5ef] text-[#006d3a]">
-                  <span className="material-symbols-outlined text-[13px]">verified</span>
-                  PRD §10.5 Guaranteed
-                </span>
-              </div>
-              <div className="flex items-baseline gap-2 mt-1">
-                <span className="text-3xl font-extrabold text-[#1c1b1b] tracking-tight tabular-nums font-heading">
-                  {financialMetrics.slaCompliance}%
-                </span>
-                <span className="text-xs text-[#006d3a] font-bold">
-                  {financialMetrics.completedCount} Reports Audited
-                </span>
-              </div>
-              <p className="text-xs text-[#474554] mt-2 leading-relaxed">
-                48-hour diagnostic turnaround SLA required to unlock escrow settlements and maintain calibrated rank
-              </p>
-            </div>
-            <div className="mt-4 pt-3 border-t border-[#e7e7eb] flex flex-col gap-1.5">
-              <div className="flex justify-between text-xs">
-                <span className="text-[#474554]">SLA Margin Buffer</span>
-                <span className="font-bold text-[#006d3a]">48h max turnaround</span>
-              </div>
-              <div className="w-full bg-[#f0eded] h-2 rounded-full overflow-hidden">
-                <div
-                  className="bg-[#006d3a] h-full rounded-full transition-all duration-500"
-                  style={{ width: `${financialMetrics.slaCompliance}%` }}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Metric 3 */}
-          <div className="bg-white border border-[#e7e7eb] rounded-2xl p-5 shadow-xs flex flex-col justify-between hover:border-amber-300 transition-colors">
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[11px] font-bold text-[#777585] uppercase tracking-wider">
-                  Live Smart Match Queue
-                </span>
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                  Wave 1 Priority
-                </span>
-              </div>
-              <div className="flex items-baseline gap-2 mt-1">
-                <span className="text-3xl font-extrabold text-[#1c1b1b] tracking-tight tabular-nums font-heading">
-                  {claims.length} Active Offers
-                </span>
-              </div>
-              <p className="text-xs text-[#474554] mt-2 leading-relaxed">
-                Candidate requests dynamically routed by the PRD §10 affinity matcher based on your calibration
-              </p>
-            </div>
-            <div className="mt-4 pt-3 border-t border-[#e7e7eb] flex items-center justify-between text-xs">
-              <span className="text-amber-800 font-medium flex items-center gap-1">
-                <span className="material-symbols-outlined text-sm text-amber-600">hourglass_top</span>
-                Auto-expires to Wave 2 in:
-              </span>
-              <span className="font-bold text-amber-900 bg-amber-100 px-2 py-0.5 rounded font-mono">
-                {claims.length > 0 ? "<25 mins" : "Idle"}
-              </span>
-            </div>
-          </div>
-        </section>
-
-        {/* Section 1: Smart Match Dispatch Claims */}
-        <section aria-labelledby="dispatch-section-title" className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="h-6 w-1 rounded-full bg-[#5145cd]" />
-              <h2 className="text-lg font-bold text-[#1c1b1b] font-heading" id="dispatch-section-title">
-                Smart Match Dispatch Inbound Claims
-              </h2>
-              <span className="text-[11px] text-[#474554] bg-[#f0eded] px-2 py-0.5 rounded font-mono">
-                PRD §10.3 Inbound Router
-              </span>
-            </div>
-            <span className="text-xs text-[#777585] font-medium hidden sm:inline">
-              First-Accept-Locks-Slot Protocol
-            </span>
-          </div>
-
-          {claims.length === 0 ? (
-            <div className="p-8 bg-white border border-[#e7e7eb] rounded-2xl text-center text-xs text-[#777585] flex flex-col items-center justify-center gap-2">
-              <span className="material-symbols-outlined text-3xl text-gray-400">inbox</span>
-              <p className="font-semibold text-gray-700">No pending inbound claims right now</p>
-              <p className="max-w-md text-gray-500">
-                When candidates initiate Smart Match requests matching your calibrated tier and approved services, dispatch alerts will appear here in real time.
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-              {claims.map((claim) => (
-                <div
-                  key={claim.id}
-                  className="bg-white border border-[#e7e7eb] rounded-2xl p-5 shadow-xs hover:border-[#5145cd]/40 transition-all flex flex-col justify-between relative overflow-hidden"
-                >
-                  <div className="absolute top-0 left-0 right-0 h-1 bg-[#5145cd]" />
-                  <div>
-                    {/* Header */}
-                    <div className="flex items-start justify-between gap-2 mb-3 pt-1">
-                      <div>
-                        <span className="text-[11px] font-bold text-[#5145cd] tracking-wider uppercase font-mono">
-                          REQUEST {claim.id}
-                        </span>
-                        <h3 className="text-base font-bold text-[#1c1b1b] mt-0.5">
-                          {claim.serviceCode}: {claim.serviceTitle}
-                        </h3>
-                        <span className="inline-flex items-center gap-1 text-xs text-[#474554] mt-0.5">
-                          <span className="material-symbols-outlined text-[14px]">schedule</span>
-                          {claim.duration}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1 bg-amber-50 text-amber-900 border border-amber-200 px-2.5 py-1 rounded-full text-xs font-bold shrink-0">
-                        <span className="material-symbols-outlined text-sm text-amber-600 animate-spin">timer</span>
-                        <span>{claim.remainingMinutes}m remaining</span>
-                      </div>
-                    </div>
-
-                    {/* Dossier */}
-                    <div className="bg-[#f6f3f2] rounded-xl p-3.5 space-y-2 border border-[#e7e7eb] mb-4">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="font-bold text-[#1c1b1b] flex items-center gap-1.5">
-                          <span className="material-symbols-outlined text-sm text-[#777585]">person</span>
-                          Candidate {claim.candidateId}
-                        </span>
-                        <span className="text-[#777585] text-[11px]">{claim.candidateLevel}</span>
-                      </div>
-                      <div className="text-xs text-[#474554] space-y-1">
-                        <p>
-                          <strong className="text-[#1c1b1b]">Target Track:</strong> {claim.targetTrack}
-                        </p>
-                        {claim.dossierName && (
-                          <p className="flex items-center gap-1 text-[#5145cd]">
-                            <span className="material-symbols-outlined text-xs">attach_file</span>
-                            <span className="underline cursor-pointer">{claim.dossierName}</span>
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Slot */}
-                    <div className="flex items-center gap-2 text-xs text-[#1c1b1b] mb-3 px-1">
-                      <span className="material-symbols-outlined text-base text-[#006d3a]">event</span>
-                      <span className="font-bold">{claim.slotText}</span>
-                      <span className="text-[#474554] text-[11px]">{claim.slotSubtext}</span>
-                    </div>
-                  </div>
-
-                  {/* Actions & Payout */}
-                  <div className="pt-3 border-t border-[#e7e7eb] flex items-center justify-between mt-2">
-                    <div>
-                      <span className="text-[10px] text-[#777585] uppercase font-bold block">
-                        Net Mentor Payout
-                      </span>
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-xl font-extrabold text-[#1c1b1b] tabular-nums font-heading">
-                          ₹{claim.payout}
-                        </span>
-                        <span className="text-[10px] text-[#006d3a] font-bold">Protected Escrow</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => handleDecline(claim.id)}
-                        className="px-3 py-2 text-xs text-[#474554] hover:text-[#ba1a1a] hover:bg-red-50 rounded-xl transition-colors font-bold"
-                      >
-                        Decline
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleAccept(claim.id, claim.serviceTitle)}
-                        className="px-4 py-2 text-xs bg-[#5145cd] hover:bg-[#3828b5] text-white rounded-xl font-bold transition-all shadow-xs flex items-center gap-1.5 focus:ring-2 focus:ring-offset-1 focus:ring-[#5145cd]"
-                      >
-                        <span className="material-symbols-outlined text-[14px]">check_circle</span>
-                        Accept Offer &amp; Lock Calendar
-                      </button>
-                    </div>
-                  </div>
+            {/* Notifications Popover */}
+            {showNotifications && (
+              <div className="absolute right-0 mt-2 w-80 rounded-2xl bg-[#141624] border border-white/10 p-4 shadow-2xl space-y-3 z-50 backdrop-blur-xl">
+                <div className="flex items-center justify-between pb-2 border-b border-white/10">
+                  <span className="text-xs font-bold text-white">Notifications &amp; Alerts</span>
+                  <button
+                    type="button"
+                    onClick={() => setShowNotifications(false)}
+                    className="text-gray-400 hover:text-white"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
                 </div>
-              ))}
-            </div>
-          )}
-        </section>
 
-        {/* Section 2: Confirmed Sessions & Pipeline Table */}
-        <section aria-labelledby="pipeline-section-title" className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="h-6 w-1 rounded-full bg-[#006d3a]" />
-              <h2 className="text-lg font-bold text-[#1c1b1b] font-heading" id="pipeline-section-title">
-                Confirmed Sessions &amp; Deliverable Pipeline
-              </h2>
-              <span className="text-[11px] text-[#474554] bg-[#f0eded] px-2 py-0.5 rounded font-mono">
-                PRD §11.1 &amp; §11.2 Tracking
-              </span>
-            </div>
-            <span className="text-xs text-[#474554]">
-              {financialMetrics.activeEngagements} Active Engagement{financialMetrics.activeEngagements === 1 ? "" : "s"}
-            </span>
-          </div>
-
-          <div className="bg-white border border-[#e7e7eb] rounded-2xl overflow-hidden shadow-xs">
-            {bookings.length === 0 ? (
-              <div className="p-12 text-center flex flex-col items-center justify-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-[#f6f3f2] flex items-center justify-center text-[#777585]">
-                  <span className="material-symbols-outlined text-2xl">event_available</span>
+                <div className="space-y-2 text-xs">
+                  {SEED_NOTIFICATIONS.map((n) => (
+                    <div
+                      key={n.id}
+                      onClick={() => {
+                        handleNavigate(n.targetRoute, n.targetRecordId);
+                        setShowNotifications(false);
+                      }}
+                      className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 cursor-pointer space-y-1 transition-all"
+                    >
+                      <div className="flex items-center justify-between text-indigo-300 font-bold">
+                        <span className="flex items-center gap-1.5">{n.title}</span>
+                        <span className="text-[10px] font-mono text-gray-400">{n.timestamp}</span>
+                      </div>
+                      <p className="text-gray-300 text-[11px] leading-relaxed">{n.description}</p>
+                    </div>
+                  ))}
                 </div>
-                <div className="max-w-md">
-                  <h3 className="font-bold text-[#1c1b1b] text-sm">No Active Engagements</h3>
-                  <p className="text-xs text-[#777585] mt-1">
-                    You do not have any sessions booked yet. Open weekly slots in Availability so matching candidates can schedule 1:1 sessions with you.
-                  </p>
-                </div>
-                <Link
-                  href="/mentor/availability"
-                  className="mt-2 inline-flex items-center gap-2 px-4 py-2 bg-[#5145cd] text-white text-xs font-bold rounded-xl hover:bg-[#3828b5] transition-all shadow-xs"
-                >
-                  <span className="material-symbols-outlined text-sm">calendar_month</span>
-                  <span>Configure Weekly Availability</span>
-                </Link>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse text-xs">
-                  <thead>
-                    <tr className="bg-[#f6f3f2] border-b border-[#e7e7eb] text-[11px] font-bold text-[#777585] uppercase tracking-wider">
-                      <th className="py-3 px-4">Candidate &amp; Goal</th>
-                      <th className="py-3 px-4">Service Module</th>
-                      <th className="py-3 px-4">Scheduled Date &amp; Time</th>
-                      <th className="py-3 px-4">Meet Telemetry Link</th>
-                      <th className="py-3 px-4">48h Deliverable SLA Countdown</th>
-                      <th className="py-3 px-4 text-right">Status &amp; Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#e7e7eb]">
-                    {bookings.map((booking) => {
-                      const start = new Date(booking.session_start);
-                      const latestReport = booking.session_reports?.find((r) => r.is_latest);
-                      const isCompleted = booking.status === "completed" || !!latestReport;
-                      const candidateName = booking.student?.full_name || "Verified Candidate";
-                      const candidateId = booking.student?.id ? booking.student.id.slice(0, 8).toUpperCase() : "DX-CAND";
-                      const candidateGoal = booking.student?.target_role || "Target: Software Engineering";
-
-                      return (
-                        <tr key={booking.id} className="hover:bg-[#f6f3f2]/50 transition-colors">
-                          <td className="py-3.5 px-4">
-                            <div className="font-bold text-[#1c1b1b]">{candidateName}</div>
-                            <div className="text-[11px] text-[#474554]">#{candidateId} • {candidateGoal}</div>
-                          </td>
-                          <td className="py-3.5 px-4">
-                            <span className="font-bold text-[#1c1b1b]">{booking.service_code} Session</span>
-                            <span className="block text-[11px] text-[#777585]">Ref: {booking.booking_ref}</span>
-                          </td>
-                          <td className="py-3.5 px-4">
-                            <div className="font-bold text-[#1c1b1b]">
-                              {start.toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" })}
-                            </div>
-                            <div className="text-[11px] text-[#474554]">
-                              {start.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })} IST
-                            </div>
-                          </td>
-                          <td className="py-3.5 px-4">
-                            {booking.meeting_url ? (
-                              <div>
-                                <a
-                                  href={booking.meeting_url}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#eaf5ef] text-[#006d3a] font-mono text-[11px] font-bold hover:underline"
-                                >
-                                  <span className="material-symbols-outlined text-[14px]">videocam</span>
-                                  {booking.meeting_url.replace(/^https?:\/\//, "").slice(0, 24)}...
-                                </a>
-                                <span className="block text-[10px] text-[#777585] mt-0.5">Google Meet Live</span>
-                              </div>
-                            ) : (
-                              <span className="text-[11px] text-[#777585]">Link generated 15m prior</span>
-                            )}
-                          </td>
-                          <td className="py-3.5 px-4">
-                            {latestReport ? (
-                              <div>
-                                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#006d3a]">
-                                  <span className="material-symbols-outlined text-xs">verified</span>
-                                  Delivered &amp; Signed
-                                </span>
-                                {latestReport.deliverable_sha256 && (
-                                  <span className="block text-[10px] text-[#777585] font-mono">
-                                    SHA-256: {latestReport.deliverable_sha256.slice(0, 10)}...
-                                  </span>
-                                )}
-                              </div>
-                            ) : isCompleted ? (
-                              <div>
-                                <div className="flex items-center gap-1.5 text-amber-800 font-bold">
-                                  <span className="material-symbols-outlined text-xs text-amber-600">alarm</span>
-                                  Report Due
-                                </div>
-                                <span className="text-[10px] text-amber-700">48h SLA Active</span>
-                              </div>
-                            ) : (
-                              <div>
-                                <span className="text-[11px] text-[#5145cd] font-bold">Session Upcoming</span>
-                                <span className="block text-[10px] text-[#777585]">SLA begins post-call</span>
-                              </div>
-                            )}
-                          </td>
-                          <td className="py-3.5 px-4 text-right">
-                            <div className="flex items-center justify-end gap-2">
-                              <Link
-                                href="/mentor/sessions"
-                                className="px-2.5 py-1.5 border border-[#e7e7eb] hover:bg-[#f6f3f2] text-[#1c1b1b] rounded-lg text-xs font-bold transition-colors"
-                              >
-                                {latestReport ? "View Scorecard" : "Open Dossier"}
-                              </Link>
-                              {booking.meeting_url && !latestReport && (
-                                <a
-                                  href={booking.meeting_url}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="px-3 py-1.5 bg-[#006d3a] text-white rounded-lg text-xs font-bold hover:bg-[#00522b] transition-all flex items-center gap-1 shadow-xs"
-                                >
-                                  <span className="material-symbols-outlined text-[14px]">play_arrow</span>
-                                  Join Call
-                                </a>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
               </div>
             )}
           </div>
-        </section>
 
-        {/* Section 3: Tiered Mentor Compensation & Growth Framework */}
-        <section aria-labelledby="tiers-section-title" className="space-y-4">
-          <div className="flex items-center gap-2.5">
-            <div className="h-6 w-1 rounded-full bg-[#3c2cb8]" />
-            <h2 className="text-lg font-bold text-[#1c1b1b] font-heading" id="tiers-section-title">
-              Tiered Mentor Compensation &amp; Growth Framework
-            </h2>
-            <span className="text-[11px] text-[#474554] bg-[#f0eded] px-2 py-0.5 rounded font-mono">
-              PRD §9.4, §13.2
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {/* Tier 1 */}
-            <div className="bg-white border border-[#e7e7eb] rounded-2xl p-5 shadow-xs space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wider text-[#777585]">Tier 1</span>
-                <span className="px-2 py-0.5 rounded-full bg-[#f0eded] text-[#474554] text-[10px] font-bold">
-                  Cleared
-                </span>
-              </div>
-              <h3 className="text-base font-bold text-[#1c1b1b]">Base Mentor</h3>
-              <div className="text-2xl font-extrabold text-[#1c1b1b] font-heading">
-                ₹500 – ₹800 <span className="text-xs font-normal text-[#777585]">/ session</span>
-              </div>
-              <ul className="space-y-1.5 text-xs text-[#474554] pt-2 border-t border-[#e7e7eb]">
-                <li className="flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-[14px] text-[#006d3a]">check</span>
-                  Identity &amp; Work Domain Verified
-                </li>
-                <li className="flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-[14px] text-[#006d3a]">check</span>
-                  Initial 3 diagnostic sessions completed
-                </li>
-                <li className="flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-[14px] text-[#006d3a]">check</span>
-                  Standard calendar slot bookings
-                </li>
-              </ul>
+          {/* User Profile Pill */}
+          <div className="flex items-center gap-2.5 pl-2 border-l border-white/10">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center font-bold text-black text-xs shadow-md">
+              {profile.displayName ? profile.displayName.slice(0, 2).toUpperCase() : "AV"}
             </div>
-
-            {/* Tier 2 (Active) */}
-            <div className="bg-white border-2 border-[#5145cd] rounded-2xl p-5 shadow-md space-y-3 relative">
-              <div className="absolute -top-3 right-4 px-2.5 py-0.5 rounded-full bg-[#5145cd] text-white text-[10px] font-bold tracking-wider uppercase shadow-xs">
-                Active Tier (Accredited)
+            <div className="hidden xl:block text-left">
+              <div className="text-xs font-bold text-white leading-none">{profile.displayName}</div>
+              <div className="text-[10px] font-mono text-emerald-400 mt-0.5">
+                {simulatedTier === "tier1" ? "Tier 1 (FAANG / Ex-Google)" : simulatedTier === "tier2" ? "Tier 2 (High-Growth Tech)" : "Tier 3 (Enterprise IT)"}
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wider text-[#5145cd]">Tier 2</span>
-                <span className="px-2 py-0.5 rounded-full bg-[#eaf5ef] text-[#006d3a] text-[10px] font-bold">
-                  4.96 Rating
-                </span>
-              </div>
-              <h3 className="text-base font-bold text-[#1c1b1b]">Bar Raiser Lead</h3>
-              <div className="text-2xl font-extrabold text-[#5145cd] font-heading">
-                ₹800 – ₹1,200 <span className="text-xs font-normal text-[#777585]">/ session</span>
-              </div>
-              <ul className="space-y-1.5 text-xs text-[#474554] pt-2 border-t border-[#e7e7eb]">
-                <li className="flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-[14px] text-[#006d3a]">check</span>
-                  10+ completed audits (Current: 24)
-                </li>
-                <li className="flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-[14px] text-[#006d3a]">check</span>
-                  &gt;4.90 rating (Current: 4.96)
-                </li>
-                <li className="flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-[14px] text-[#006d3a]">check</span>
-                  Priority Wave 1 dispatch access (30m window)
-                </li>
-              </ul>
             </div>
-
-            {/* Tier 3 */}
-            <div className="bg-white border border-[#e7e7eb] rounded-2xl p-5 shadow-xs space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wider text-[#777585]">Tier 3</span>
-                <span className="px-2 py-0.5 rounded-full bg-[#e3dfff] text-[#130068] text-[10px] font-bold">
-                  Unlock in 6 sessions
-                </span>
-              </div>
-              <h3 className="text-base font-bold text-[#1c1b1b]">Principal / Staff Advisor</h3>
-              <div className="text-2xl font-extrabold text-[#1c1b1b] font-heading">
-                ₹1,500+ <span className="text-xs font-normal text-[#777585]">/ session</span>
-              </div>
-              <ul className="space-y-1.5 text-xs text-[#474554] pt-2 border-t border-[#e7e7eb]">
-                <li className="flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-[14px] text-[#777585]">circle</span>
-                  30+ completed Tier-1 scorecards
-                </li>
-                <li className="flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-[14px] text-[#006d3a]">check</span>
-                  0 candidate disputes logged
-                </li>
-                <li className="flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-[14px] text-[#777585]">circle</span>
-                  Direct VIP candidate bookings &amp; custom bundle priority
-                </li>
-              </ul>
-            </div>
-          </div>
-        </section>
-
-        {/* Footer Disclosures */}
-        <div className="p-4 rounded-2xl bg-white border border-[#e7e7eb] text-xs text-[#474554] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
-          <div className="space-y-0.5">
-            <span className="font-bold text-[#1c1b1b] block">
-              DreamX Outcome-Accountable Marketplace Protocol (PRD V3.0)
-            </span>
-            <p className="text-[11px] text-[#777585]">
-              All mentor payouts are calculated on 100% gross list price. Platform membership discounts are absorbed by DreamX treasury. Funds are secured via Razorpay Nodal Escrow.
-            </p>
-          </div>
-          <div className="flex items-center gap-2 shrink-0 text-[11px] font-mono">
-            <span className="px-2 py-1 rounded bg-[#f0eded] text-[#1c1b1b]">DPDP Act 2023 Shielded</span>
           </div>
         </div>
-      </main>
+      </header>
+
+      {/* 3. Main Workspace Container */}
+      <div className="relative z-10 flex-1 flex w-full max-w-[1920px] mx-auto overflow-hidden">
+        {/* Left Sidebar */}
+        <aside
+          className={`shrink-0 border-r border-white/10 bg-[#0d0e15]/60 backdrop-blur-md transition-all duration-300 flex flex-col justify-between py-4 ${
+            sidebarCollapsed ? "w-16 px-2" : "w-64 px-4"
+          }`}
+        >
+          {/* Top Nav Items */}
+          <div className="space-y-1">
+            <div className="flex items-center justify-between px-2 pb-3 mb-2 border-b border-white/5">
+              {!sidebarCollapsed && (
+                <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                  Navigation
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                className="p-1 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 ml-auto"
+                title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+              >
+                {sidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+              </button>
+            </div>
+
+            {navTabs.map((tab) => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => handleTabChange(tab.id as MentorTab)}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                    isActive
+                      ? "bg-[#5145cd] text-white shadow-lg shadow-indigo-950/40"
+                      : "text-gray-400 hover:text-white hover:bg-white/5"
+                  } ${sidebarCollapsed ? "justify-center px-0" : ""}`}
+                  title={sidebarCollapsed ? tab.label : undefined}
+                >
+                  <Icon className={`w-4 h-4 shrink-0 ${isActive ? "text-white" : "text-gray-400"}`} />
+                  {!sidebarCollapsed && (
+                    <span className="flex-1 text-left truncate">{tab.label}</span>
+                  )}
+                  {!sidebarCollapsed && tab.badge && (
+                    <span
+                      className={`text-[10px] font-mono px-1.5 py-0.5 rounded-md font-bold ${
+                        tab.badgeTone === "warning"
+                          ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                          : tab.badgeTone === "danger"
+                          ? "bg-red-500/20 text-red-300 border border-red-500/30"
+                          : "bg-white/10 text-gray-300"
+                      }`}
+                    >
+                      {tab.badge}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Bottom Sidebar Footer */}
+          <div className="pt-4 border-t border-white/5 space-y-2">
+            {!sidebarCollapsed ? (
+              <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 space-y-2">
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="text-gray-400">Escrow Guarantee</span>
+                  <span className="text-emerald-400 font-bold">100% Locked</span>
+                </div>
+                <div className="w-full bg-white/10 rounded-full h-1.5 overflow-hidden">
+                  <div className="bg-emerald-400 h-full w-full" />
+                </div>
+                <p className="text-[10px] text-gray-500 leading-snug">
+                  All sessions held in Razorpay Nodal Escrow until 48h rubric delivery.
+                </p>
+              </div>
+            ) : null}
+
+            <button
+              type="button"
+              onClick={async () => {
+                await logout();
+                router.replace("/login?role=mentor");
+              }}
+              className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-red-400 hover:bg-red-950/30 transition-all cursor-pointer ${
+                sidebarCollapsed ? "justify-center px-0" : ""
+              }`}
+              title="Sign Out"
+            >
+              <LogOut className="w-4 h-4 shrink-0" />
+              {!sidebarCollapsed && <span>Sign Out</span>}
+            </button>
+          </div>
+        </aside>
+
+        {/* Main Content Area */}
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+          {activeTab === "overview" && (
+            <OverviewView
+              profile={profile}
+              isApplicantMode={isApplicantMode}
+              trustPillars={trustPillars}
+              serviceApprovals={serviceApprovals}
+              dispatchOffers={dispatchOffers}
+              bookings={bookings}
+              reports={reports}
+              ledger={ledger}
+              onNavigate={handleNavigate}
+            />
+          )}
+
+          {activeTab === "verification" && (
+            <VerificationView
+              isApplicantMode={isApplicantMode}
+              trustPillars={trustPillars}
+              serviceApprovals={serviceApprovals}
+              onSubmitAdditionalEvidence={(serviceId, evidenceSummary) => {
+                setServiceApprovals((prev) =>
+                  prev.map((s) =>
+                    s.serviceId === serviceId
+                      ? { ...s, status: "Under review", evidenceSummary }
+                      : s
+                  )
+                );
+                addToast("Additional evidence submitted to Trust Reviewers (#VR-12).", "success");
+              }}
+              onRequestNewServiceApproval={(serviceId, evidenceSummary) => {
+                const newApproval: ServiceApproval = {
+                  serviceId,
+                  status: "Under review",
+                  activeForBookings: false,
+                  directBookingEnabled: false,
+                  smartMatchEnabled: false,
+                  submittedAt: new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }),
+                  reviewerNote: "Queued with Service Approval Reviewer. Target SLA: 2–3 business days.",
+                  evidenceSummary,
+                };
+                setServiceApprovals((prev) => [...prev.filter((s) => s.serviceId !== serviceId), newApproval]);
+                addToast(`Service ${serviceId} approval requested! Under review.`, "success");
+              }}
+            />
+          )}
+
+          {activeTab === "services" && (
+            <ServicesView
+              isApplicantMode={isApplicantMode}
+              serviceApprovals={serviceApprovals}
+              onToggleServiceSetting={handleToggleServiceSetting}
+              onNavigate={handleNavigate}
+            />
+          )}
+
+          {activeTab === "availability" && (
+            <AvailabilityView
+              weeklySlots={weeklySlots}
+              exceptions={exceptions}
+              bookings={bookings}
+              onSaveAvailability={handleSaveAvailability}
+            />
+          )}
+
+          {activeTab === "dispatch" && (
+            <DispatchView
+              isApplicantMode={isApplicantMode}
+              offers={dispatchOffers}
+              highlightedOfferId={highlightedOfferId}
+              onClaimOffer={handleClaimOffer}
+              onDeclineOffer={handleDeclineOffer}
+              onNavigate={handleNavigate}
+            />
+          )}
+
+          {activeTab === "bookings" && (
+            <BookingsView
+              bookings={bookings}
+              initialSelectedBookingId={highlightedBookingId}
+              onNavigate={handleNavigate}
+              onMentorCancelBooking={handleMentorCancelBooking}
+            />
+          )}
+
+          {activeTab === "sessions" && (
+            <SessionConsoleView
+              bookings={bookings}
+              reports={reports}
+              selectedBookingId={highlightedBookingId}
+              mentorName={profile.displayName}
+              onSelectBooking={(id) => setHighlightedBookingId(id)}
+              onRecordMentorJoin={handleRecordMentorJoin}
+              onMarkSessionCompleted={handleMarkSessionCompleted}
+              onSaveOrSubmitReport={handleSaveOrSubmitReport}
+            />
+          )}
+
+          {activeTab === "reports" && (
+            <ReportsView
+              reports={reports}
+              mentorName={profile.displayName}
+              initialReportId={highlightedReportId}
+              onOpenBookingInConsole={(bookingId) => {
+                setHighlightedBookingId(bookingId);
+                handleTabChange("sessions");
+              }}
+              onNavigate={handleNavigate}
+            />
+          )}
+
+          {activeTab === "earnings" && (
+            <EarningsView
+              ledger={ledger}
+              onExportStatementToast={handleExportStatementToast}
+            />
+          )}
+
+          {activeTab === "settings" && (
+            <SettingsView
+              mentorProfile={profile}
+              onToast={addToast}
+            />
+          )}
+        </main>
+      </div>
+
+      {/* 4. SLA Policy Modal */}
+      {showPolicyModal && (
+        <MentorModal
+          title="DreamX 48-Hour Escrow & Deliverable Policy"
+          open={showPolicyModal}
+          onClose={() => setShowPolicyModal(false)}
+          maxWidthClass="max-w-2xl"
+          footer={
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={() => setShowPolicyModal(false)}
+                className="px-4 py-2 rounded-xl bg-[#5145cd] text-white text-xs font-bold shadow-md hover:bg-[#4338ca] transition-all cursor-pointer"
+              >
+                I Understand &amp; Agree
+              </button>
+            </div>
+          }
+        >
+          <div className="space-y-4 text-xs text-gray-300 leading-relaxed">
+            <div className="p-3.5 rounded-xl bg-indigo-950/40 border border-indigo-500/20 flex items-start gap-3">
+              <ShieldCheck className="w-5 h-5 text-indigo-400 shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <div className="font-bold text-white">Trust Architecture &amp; Payout Release</div>
+                <p className="text-gray-400">
+                  To protect both mentors and candidates, DreamX operates an institutional 80/20 non-dilution escrow split under PRD §7.3.
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <h4 className="font-bold text-white uppercase tracking-wider text-[11px]">Key Mentor Obligations</h4>
+              <ul className="space-y-2 list-disc list-inside text-gray-400 pl-1">
+                <li>
+                  <strong className="text-gray-200">Session Attendance:</strong> Join via the encrypted Jitsi Vault within 5 minutes of scheduled slot time.
+                </li>
+                <li>
+                  <strong className="text-gray-200">48-Hour Report SLA:</strong> Every S01–S10 session requires an 11-section structured rubric report submitted within 48 hours of session conclusion.
+                </li>
+                <li>
+                  <strong className="text-gray-200">Candidate Dispute Window:</strong> Candidates have 48 hours to inspect deliverables. If no dispute is filed, Razorpay Route automatically releases your 80% payout.
+                </li>
+                <li>
+                  <strong className="text-gray-200">Zero Moonlighting Exposure:</strong> All communications, reminders, and payout advice are delivered exclusively to your private email.
+                </li>
+              </ul>
+            </div>
+          </div>
+        </MentorModal>
+      )}
+
+      {/* 5. Floating Toast Container */}
+      <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-2 max-w-sm pointer-events-none">
+        {toasts.map((toast) => (
+          <div
+            key={toast.id}
+            className={`pointer-events-auto p-3.5 rounded-xl border shadow-2xl backdrop-blur-xl text-xs font-medium flex items-center gap-2.5 transition-all animate-in fade-in slide-in-from-bottom-2 ${
+              toast.tone === "success"
+                ? "bg-emerald-950/90 border-emerald-500/40 text-emerald-200"
+                : toast.tone === "warning"
+                ? "bg-amber-950/90 border-amber-500/40 text-amber-200"
+                : toast.tone === "danger"
+                ? "bg-red-950/90 border-red-500/40 text-red-200"
+                : "bg-[#141624]/90 border-indigo-500/30 text-indigo-200"
+            }`}
+          >
+            {toast.tone === "success" && <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />}
+            {toast.tone === "warning" && <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />}
+            {toast.tone === "danger" && <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />}
+            {toast.tone === "info" && <Sparkles className="w-4 h-4 text-indigo-400 shrink-0" />}
+            <span className="leading-snug flex-1">{toast.message}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
