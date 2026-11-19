@@ -25,6 +25,8 @@ export default function MentorWorkspaceLayout({
         router.replace(`/login?role=mentor&redirect=${encodeURIComponent(pathname)}`);
       } else if (user.role !== "mentor" && user.role !== "admin") {
         router.replace("/mentor/onboarding?notice=apply_as_mentor");
+      } else if (!user.onboarding_completed && pathname !== "/mentor/onboarding") {
+        router.replace("/mentor/onboarding");
       }
     }
   }, [user, isLoading, pathname, router]);

@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
+import { createClient } from "@/lib/supabase/client";
 import {
   LayoutDashboard,
   Compass,
@@ -133,16 +134,114 @@ export function StudentPortalShell({
     return SEED_STUDENT_PROFILE;
   });
 
+  const supabase = React.useMemo(() => createClient(), []);
+
   const [dimensions, setDimensions] = React.useState<ReadinessDimension[]>(SEED_DIMENSIONS);
   const [history, setHistory] = React.useState<ReadinessHistoryEntry[]>(SEED_READINESS_HISTORY);
   const [bookings, setBookings] = React.useState<StudentBooking[]>(SEED_STUDENT_BOOKINGS);
-  const [reports] = React.useState<StudentReport[]>(SEED_STUDENT_REPORTS);
+  const [reports, setReports] = React.useState<StudentReport[]>(SEED_STUDENT_REPORTS);
   const [journeyStages] = React.useState<JourneyStage[]>(SEED_JOURNEY_STAGES);
   const [voluntaryOutcomes, setVoluntaryOutcomes] = React.useState<VoluntaryOutcome[]>(SEED_VOLUNTARY_OUTCOMES);
   const [membership, setMembership] = React.useState<MembershipData>(SEED_MEMBERSHIP);
   const [bundleServiceIds, setBundleServiceIds] = React.useState<string[]>(["S01", "S06"]);
   const [notifications, setNotifications] = React.useState<StudentNotification[]>(SEED_NOTIFICATIONS);
   const [toasts, setToasts] = React.useState<ToastMessage[]>([]);
+
+  // 1. Fetch live authenticated student data from Supabase
+  React.useEffect(() => {
+    if (!user || !user.id) return;
+    const currentUserId: string = user.id;
+    let isCancelled = false;
+
+    async function loadStudentData() {
+      try {
+        // Fetch Profile
+        const { data: dbProfile } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", currentUserId)
+          .maybeSingle();
+
+        if (dbProfile && !isCancelled) {
+          const names = (dbProfile.full_name || user?.name || user?.email?.split("@")[0] || "").split(" ");
+          setProfile((prev) => ({
+            ...prev,
+            firstName: names[0] || prev.firstName,
+            lastName: names.slice(1).join(" ") || prev.lastName,
+            email: dbProfile.email || prev.email,
+            targetRole: dbProfile.target_role || prev.targetRole,
+          }));
+        }
+
+        // Fetch Live Bookings
+        const { data: dbBookings } = await supabase
+          .from("bookings")
+          .select("id, booking_ref, service_code, amount_paise, status, payment_status, created_at, session_start, mentor_id")
+          .eq("student_id", currentUserId)
+          .order("created_at", { ascending: false });
+
+        if (dbBookings && !isCancelled) {
+          const mappedBookings: StudentBooking[] = (dbBookings as any[]).map((b) => {
+            const svc = getServiceById(b.service_code);
+            return {
+              id: b.id,
+              bookingRef: b.booking_ref,
+              serviceId: b.service_code,
+              mode: b.booking_ref.includes("SM") ? "Smart Match" : "Direct",
+              mentorName: "Assigned Verified Mentor",
+              mentorSlug: "mentor",
+              mentorVerificationLabel: "Verified Tech Practitioner",
+              dateLabel: b.session_start ? new Date(b.session_start).toLocaleDateString() : "To Be Scheduled",
+              timeLabel: b.session_start ? new Date(b.session_start).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "Flexible",
+              durationMinutes: svc.durationMinutes,
+              status: b.status === "in_progress" ? "Ready to Join" : b.status === "confirmed" ? "Upcoming" : b.status === "completed" ? "Completed" : "Cancelled",
+              listedPricePaise: svc.listPricePaise,
+              appliedDiscountLabel: "Standard Fee",
+              discountPaise: 0,
+              finalPaidPaise: b.amount_paise || svc.listPricePaise,
+              paymentStatus: "Payment Verified",
+              joinPermittedByServer: b.status === "in_progress",
+              reportStatus: b.status === "completed" ? "Report delivered" : "Awaiting session",
+              timeline: [{ timestamp: b.created_at, label: "Booking Confirmed" }],
+            };
+          });
+          setBookings(mappedBookings);
+        }
+
+        // Check for baseline assessment in localStorage
+        const savedBaseline = typeof window !== "undefined" ? localStorage.getItem(`dreamx_baseline_score_${currentUserId}`) : null;
+        const savedRatings = typeof window !== "undefined" ? localStorage.getItem(`dreamx_baseline_ratings_${currentUserId}`) : null;
+        if (savedBaseline && savedRatings && !isCancelled) {
+          try {
+            const parsedRatings = JSON.parse(savedRatings);
+            setDimensions((prev) =>
+              prev.map((d, idx) => {
+                const rating = parsedRatings[idx + 1];
+                if (rating) {
+                  return {
+                    ...d,
+                    score: rating,
+                    status: "Baseline Self-Report",
+                    assessorLabel: "Candidate Self-Calibration",
+                  };
+                }
+                return d;
+              })
+            );
+          } catch (e) {
+            console.warn("Could not parse saved onboarding ratings:", e);
+          }
+        }
+      } catch (err) {
+        console.warn("Error loading student live data:", err);
+      }
+    }
+
+    loadStudentData();
+    return () => {
+      isCancelled = true;
+    };
+  }, [user?.id, supabase]);
 
   // Sync tab with URL search parameter
   React.useEffect(() => {

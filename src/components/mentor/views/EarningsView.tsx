@@ -206,7 +206,15 @@ export function EarningsView({ ledger, onExportStatementToast }: EarningsViewPro
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100">
-              {filteredRecords.map((r) => {
+              {filteredRecords.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="py-12 text-center text-xs text-zinc-500">
+                    <p className="font-semibold text-zinc-700 mb-1">No settlement records found</p>
+                    <p>Earnings and nodal payouts from completed sessions will appear here in real time.</p>
+                  </td>
+                </tr>
+              ) : (
+                filteredRecords.map((r) => {
                 const service = getServiceById(r.serviceId);
 
                 return (
@@ -250,7 +258,7 @@ export function EarningsView({ ledger, onExportStatementToast }: EarningsViewPro
                     </td>
                   </tr>
                 );
-              })}
+              }))}
             </tbody>
           </table>
         </div>

@@ -91,27 +91,12 @@ export default function SignUpPage() {
       return;
     }
 
-    const redirectParam = typeof window !== "undefined"
-      ? new URLSearchParams(window.location.search).get("redirect")
-      : null;
-
-    // If auto-logged in (email confirmation disabled in Supabase), route directly to onboarding
-    if (res.hasSession) {
-      if (redirectParam) {
-        router.push(redirectParam);
-      } else if (role === "mentor") {
-        router.push("/mentor/onboarding");
-      } else {
-        router.push("/dashboard/onboarding");
-      }
-      return;
+    // Instant registration: route directly to mandatory onboarding wizard without magic links or signup OTPs
+    if (role === "mentor") {
+      router.push("/mentor/onboarding");
+    } else {
+      router.push("/dashboard/onboarding");
     }
-
-    // Otherwise route to OTP verification step
-    const dest = redirectParam
-      ? `/verify-email?email=${encodeURIComponent(cleanEmail)}&role=${role}&redirect=${encodeURIComponent(redirectParam)}`
-      : `/verify-email?email=${encodeURIComponent(cleanEmail)}&role=${role}`;
-    router.push(dest);
   };
 
   return (

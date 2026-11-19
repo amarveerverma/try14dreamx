@@ -18,13 +18,15 @@ export default function StudentDashboardLayout({
     return <>{children}</>;
   }
 
-  // Auth gate
+  // Auth & Onboarding gate
   React.useEffect(() => {
     if (!isLoading) {
       if (!user) {
         router.replace(`/login?redirect=${encodeURIComponent(pathname)}`);
       } else if (user.role === "mentor" && pathname === "/dashboard") {
         router.replace("/mentor");
+      } else if (!user.onboarding_completed && pathname !== "/dashboard/onboarding") {
+        router.replace("/dashboard/onboarding");
       }
     }
   }, [user, isLoading, pathname, router]);

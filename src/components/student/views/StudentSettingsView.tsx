@@ -7,7 +7,12 @@ import {
   CheckCircle2,
   Save,
   Lock,
+  KeyRound,
+  Eye,
+  EyeOff,
+  AlertCircle,
 } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 import { StudentModal } from "../ui/StudentModal";
 import { StudentProfileData, CandidateSegment } from "../types";
 
@@ -31,6 +36,16 @@ export function StudentSettingsView({
   );
   const [savedSuccess, setSavedSuccess] = React.useState<boolean>(false);
 
+  // Password Update State
+  const [newPassword, setNewPassword] = React.useState("");
+  const [confirmPassword, setConfirmPassword] = React.useState("");
+  const [showPassword, setShowPassword] = React.useState(false);
+  const [isUpdatingPassword, setIsUpdatingPassword] = React.useState(false);
+  const [passwordError, setPasswordError] = React.useState<string | null>(null);
+  const [passwordSuccess, setPasswordSuccess] = React.useState(false);
+
+  const supabase = React.useMemo(() => createClient(), []);
+
   React.useEffect(() => {
     setFormState(profile);
   }, [profile]);
@@ -40,6 +55,37 @@ export function StudentSettingsView({
     onSaveProfile(formState);
     setSavedSuccess(true);
     setTimeout(() => setSavedSuccess(false), 3000);
+  };
+
+  const handleUpdatePassword = async () => {
+    setPasswordError(null);
+    setPasswordSuccess(false);
+
+    if (newPassword.length < 8) {
+      setPasswordError("Password must be at least 8 characters long.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError("Passwords do not match.");
+      return;
+    }
+
+    setIsUpdatingPassword(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) {
+        setPasswordError(error.message || "Failed to update password.");
+      } else {
+        setPasswordSuccess(true);
+        setNewPassword("");
+        setConfirmPassword("");
+        setTimeout(() => setPasswordSuccess(false), 4000);
+      }
+    } catch {
+      setPasswordError("Network error while updating password.");
+    } finally {
+      setIsUpdatingPassword(false);
+    }
   };
 
   return (
@@ -311,6 +357,74 @@ export function StudentSettingsView({
             >
               Request Data Export or Account Deletion
             </button>
+          </section>
+
+          {/* Security & Password Management */}
+          <section className="rounded-2xl border border-white/80 bg-white/94 backdrop-blur-md p-5 sm:p-6 shadow-xs space-y-4">
+            <h2 className="text-base font-semibold text-zinc-900 flex items-center gap-2 border-b border-zinc-200/80 pb-3">
+              <KeyRound className="h-4 w-4 text-[#5145cd]" />
+              Account Security &amp; Password
+            </h2>
+
+            <div className="space-y-3 text-xs">
+              <div>
+                <label className="block text-xs font-semibold text-zinc-800">
+                  New Password
+                </label>
+                <div className="relative mt-1">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Minimum 8 characters"
+                    className="w-full rounded-xl border border-zinc-300 bg-white px-3.5 py-2 text-xs pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-2.5 text-zinc-400 hover:text-zinc-600"
+                  >
+                    {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-zinc-800">
+                  Confirm New Password
+                </label>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Re-enter new password"
+                  className="mt-1 w-full rounded-xl border border-zinc-300 bg-white px-3.5 py-2 text-xs"
+                />
+              </div>
+
+              {passwordError && (
+                <div className="p-2.5 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700 flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{passwordError}</span>
+                </div>
+              )}
+
+              {passwordSuccess && (
+                <div className="p-2.5 rounded-lg bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
+                  <span>Password updated successfully.</span>
+                </div>
+              )}
+
+              <button
+                type="button"
+                disabled={isUpdatingPassword || !newPassword}
+                onClick={handleUpdatePassword}
+                className="w-full rounded-xl bg-[#5145cd] hover:bg-[#4338ca] text-white px-3.5 py-2 text-xs font-semibold shadow-xs disabled:opacity-50 transition-colors cursor-pointer"
+              >
+                {isUpdatingPassword ? "Updating Password..." : "Update Password"}
+              </button>
+            </div>
           </section>
         </div>
       </form>

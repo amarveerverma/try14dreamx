@@ -184,9 +184,9 @@ export default function MentorPortalPage() {
   const [weeklySlots, setWeeklySlots] = React.useState<WeeklySlot[]>(DEFAULT_WEEKLY_SLOTS);
   const [exceptions, setExceptions] = React.useState<DateException[]>(DEFAULT_DATE_EXCEPTIONS);
 
-  // Load live Supabase profile if authenticated
+  // Load live Supabase profile, bookings, and slots if authenticated
   React.useEffect(() => {
-    async function loadLiveProfile() {
+    async function loadLiveMentorData() {
       if (!user) return;
       try {
         const supabase = createClient();
@@ -206,11 +206,70 @@ export default function MentorPortalPage() {
             yearsOfExperience: dbProfile.years_of_experience || prev.yearsOfExperience,
           }));
         }
+
+        // Live Bookings for this Mentor
+        const { data: dbBookings } = await supabase
+          .from("bookings")
+          .select("id, booking_ref, service_code, amount_paise, status, payment_status, created_at, session_start")
+          .eq("mentor_id", user.id)
+          .order("created_at", { ascending: false });
+
+        if (dbBookings && dbBookings.length > 0) {
+          const mapped: MentorBooking[] = dbBookings.map((b) => ({
+            id: b.id,
+            bookingRef: b.booking_ref,
+            serviceId: b.service_code,
+            bookingMode: b.booking_ref.includes("SM") ? "Smart Match" : "Direct",
+            studentName: "Enrolled Candidate",
+            studentSegment: "Candidate",
+            targetRole: "Engineering Candidate",
+            targetDomain: "Technology",
+            sessionGoal: "Diagnostic Assessment",
+            scheduledDate: b.session_start ? new Date(b.session_start).toLocaleDateString() : "To be scheduled",
+            scheduledTime: b.session_start ? new Date(b.session_start).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "Flexible",
+            durationMinutes: 60,
+            status: b.status === "in_progress" ? "Ready to Join" : b.status === "confirmed" ? "Confirmed" : b.status === "completed" ? "Completed" : "Cancelled",
+            paymentStatus: b.payment_status === "captured" ? "Verified" : "Pending",
+            joinPermittedByServer: b.status === "in_progress",
+            meetingProviderLabel: "Join link unlocks 10 min before scheduled start",
+            attendance: {},
+            authorizedDocuments: [],
+            readinessContext: {
+              overallScore: null,
+              rubricVersion: "PRD-v3.0",
+              lastAssessedDate: "Awaiting Assessment",
+              coverageLabel: "Unassessed",
+              dimensions: [],
+            },
+            reportStatus: b.status === "completed" ? "Report delivered" : "Awaiting session",
+            timeline: [],
+          }));
+          setBookings(mapped);
+        }
+
+        // Live Availability Slots
+        const { data: dbSlots } = await supabase
+          .from("mentor_availability_slots")
+          .select("*")
+          .eq("mentor_id", user.id);
+
+        if (dbSlots && dbSlots.length > 0) {
+          const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+          setWeeklySlots(
+            dbSlots.map((s) => ({
+              id: s.id,
+              dayOfWeek: dayNames[s.day_of_week] || "Monday",
+              startTime: s.start_time,
+              endTime: s.end_time,
+              enabled: s.is_active,
+            }))
+          );
+        }
       } catch (err) {
-        console.error("Error loading live mentor profile:", err);
+        console.error("Error loading live mentor data:", err);
       }
     }
-    loadLiveProfile();
+    loadLiveMentorData();
   }, [user]);
 
   // Workflow Handlers
@@ -313,10 +372,36 @@ export default function MentorPortalPage() {
     addToast("Service catalog preferences updated.", "success");
   };
 
-  const handleSaveAvailability = (slots: WeeklySlot[], newExceptions: DateException[]) => {
+  const handleSaveAvailability = async (slots: WeeklySlot[], newExceptions: DateException[]) => {
     setWeeklySlots(slots);
     setExceptions(newExceptions);
     addToast("Weekly IST availability windows saved successfully.", "success");
+
+    if (user?.id) {
+      try {
+        const supabase = createClient();
+        const dayMap: Record<string, number> = {
+          Sunday: 0,
+          Monday: 1,
+          Tuesday: 2,
+          Wednesday: 3,
+          Thursday: 4,
+          Friday: 5,
+          Saturday: 6,
+        };
+        for (const slot of slots) {
+          await supabase.from("mentor_availability_slots").upsert({
+            mentor_id: user.id,
+            day_of_week: dayMap[slot.dayOfWeek] ?? 1,
+            start_time: slot.startTime,
+            end_time: slot.endTime,
+            is_active: slot.enabled,
+          });
+        }
+      } catch (err) {
+        console.warn("Could not sync availability slots to Supabase:", err);
+      }
+    }
   };
 
   const handleMentorCancelBooking = (bookingId: string, reason: string) => {

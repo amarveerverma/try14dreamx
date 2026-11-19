@@ -17,13 +17,41 @@ import {
   FileCode2,
   RotateCcw,
 } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 
 export default function AdminDisputesPage() {
+  const supabase = React.useMemo(() => createClient(), []);
   const [selectedProtocol, setSelectedProtocol] = React.useState<"A" | "B" | "C">("A");
   const [coSigned, setCoSigned] = React.useState(false);
   const [executingDisgorgement, setExecutingDisgorgement] = React.useState(false);
   const [disgorgementSuccess, setDisgorgementSuccess] = React.useState(false);
   const [playingAudio, setPlayingAudio] = React.useState(false);
+  const [disputes, setDisputes] = React.useState<any[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    async function loadDisputes() {
+      try {
+        const { data } = await supabase
+          .from("disputes")
+          .select("*, bookings(booking_ref, amount_paise, service_code)")
+          .order("created_at", { ascending: false });
+        if (data) setDisputes(data);
+      } catch (err) {
+        console.warn("Could not load disputes:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    loadDisputes();
+  }, [supabase]);
+
+  const activeDisputes = disputes.filter(
+    (d) => d.status === "opened" || d.status === "under_review" || d.status === "evidence_pending"
+  );
+  const resolvedDisputes = disputes.filter(
+    (d) => d.status?.startsWith("resolved") || d.status === "cancelled"
+  );
 
   const handleExecuteRuling = () => {
     setExecutingDisgorgement(true);
@@ -38,9 +66,14 @@ export default function AdminDisputesPage() {
     const csvContent =
       "data:text/csv;charset=utf-8," +
       "CaseID,Candidate,Mentor,Session,EscrowHold,Protocol,Status\n" +
-      `"DSP-104","Candidate #DX-3312","Rajesh Kannan (#MTR-402)","SES-7120","₹799","Protocol ${selectedProtocol}","${coSigned ? "Executed" : "Awaiting Co-Sign"}"\n` +
-      `"DSP-103","Candidate #DX-7749","Dr. Neha Kapoor (#MTR-218)","SES-7094","₹529","Dismissed (No-Show)","Resolved"\n` +
-      `"DSP-101","Candidate #DX-4190","Rohan Deshmukh (#MTR-305)","SES-6981","₹760","50% Mutual Restitution","Resolved"\n`;
+      disputes
+        .map(
+          (d) =>
+            `"${d.dispute_ref || d.id}","${d.student_id}","${d.mentor_id}","${d.booking_id}","₹${
+              (d.refund_amount_paise || 0) / 100
+            }","Protocol ${selectedProtocol}","${d.status}"`
+        )
+        .join("\n");
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
@@ -102,14 +135,22 @@ export default function AdminDisputesPage() {
             </div>
             <div className="mt-2.5 flex items-baseline gap-2">
               <span className="text-2xl sm:text-3xl font-extrabold text-[#1c1b1b]">
-                1 Case
+                {activeDisputes.length} {activeDisputes.length === 1 ? "Case" : "Cases"}
               </span>
-              <span className="text-xs font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded border border-red-200">
-                In-Flight
+              <span
+                className={`text-xs font-bold px-2 py-0.5 rounded border ${
+                  activeDisputes.length > 0
+                    ? "text-red-600 bg-red-50 border-red-200"
+                    : "text-[#16834a] bg-[#eaf5ef] border-[#16834a]/20"
+                }`}
+              >
+                {activeDisputes.length > 0 ? "In-Flight" : "Clear"}
               </span>
             </div>
             <p className="mt-1 text-xs text-gray-500">
-              Case DSP-104 • 42h remaining of 72h SLA window
+              {activeDisputes.length > 0
+                ? `${activeDisputes.length} active arbitration case(s) in SLA window`
+                : "Zero active dispute tickets in escalation"}
             </p>
           </div>
           <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-600">
@@ -129,14 +170,14 @@ export default function AdminDisputesPage() {
             </div>
             <div className="mt-2.5 flex items-baseline gap-2">
               <span className="text-2xl sm:text-3xl font-extrabold text-[#1c1b1b]">
-                ₹1,278
+                ₹{resolvedDisputes.reduce((acc, d) => acc + (d.refund_amount_paise || 0) / 100, 0)}
               </span>
               <span className="text-xs font-bold text-[#16834a] bg-[#eaf5ef] px-2 py-0.5 rounded">
-                MTD Processed
+                Live Disgorged
               </span>
             </div>
             <p className="mt-1 text-xs text-gray-500">
-              2 automated refunds due to mentor SLA delay
+              {resolvedDisputes.length} automated refunds recorded in database
             </p>
           </div>
           <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-600">
@@ -156,14 +197,14 @@ export default function AdminDisputesPage() {
             </div>
             <div className="mt-2.5 flex items-baseline gap-2">
               <span className="text-2xl sm:text-3xl font-extrabold text-[#1c1b1b]">
-                0.42%
+                {disputes.length > 0 ? `${((activeDisputes.length / disputes.length) * 100).toFixed(2)}%` : "0.00%"}
               </span>
               <span className="text-xs font-bold text-[#16834a] bg-[#eaf5ef] px-2 py-0.5 rounded">
                 Target &lt; 1.50%
               </span>
             </div>
             <p className="mt-1 text-xs text-gray-500">
-              99.58% clean delivery rate across 142 completed sessions
+              100% clean delivery rate across completed sessions
             </p>
           </div>
           <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-600">
@@ -173,424 +214,38 @@ export default function AdminDisputesPage() {
         </div>
       </div>
 
-      {/* 3. In-Depth Active Dispute Case Card (DSP-104) */}
+      {/* 3. In-Depth Active Dispute Case Card */}
+      {activeDisputes.length === 0 ? (
+        <div className="rounded-xl border border-[#e7e7eb] bg-white shadow-xs p-12 text-center space-y-3">
+          <div className="w-12 h-12 rounded-2xl bg-[#eaf5ef] text-[#16834a] flex items-center justify-center mx-auto border border-[#16834a]/20">
+            <ShieldCheck className="w-6 h-6" />
+          </div>
+          <h3 className="text-base font-extrabold text-[#1c1b1b]">Zero Active Escrow Disputes</h3>
+          <p className="text-xs text-gray-500 max-w-md mx-auto leading-relaxed">
+            All candidate bookings, mentor deliveries, and nodal escrow transactions are operating normally under PRD §12.1. Any arbitration escalation raised by a candidate or mentor will populate here in real time.
+          </p>
+        </div>
+      ) : (
       <div className="rounded-xl border border-[#e7e7eb] bg-white shadow-xs overflow-hidden">
         {/* Card Header & Metadata Bar */}
         <div className="bg-[#f6f3f2] p-5 border-b border-[#e7e7eb]">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
             <div className="flex flex-wrap items-center gap-3">
               <span className="text-xl font-extrabold text-[#1c1b1b] font-mono">
-                Case #DSP-104
+                Case #{activeDisputes[0]?.dispute_ref || activeDisputes[0]?.id?.slice(0, 8)}
               </span>
               <span className="text-gray-300">•</span>
               <h2 className="text-base font-bold text-[#1c1b1b]">
-                SLA Delivery Breach &amp; Incomplete 8-D Rubric
+                {activeDisputes[0]?.reason_code || "SLA Delivery Exception"}
               </h2>
               <span className="rounded bg-[#3828b5]/10 border border-[#3828b5]/20 px-2 py-0.5 text-xs font-bold text-[#3828b5]">
-                S06 Technical Mock Drill
+                {activeDisputes[0]?.bookings?.service_code || "Active Session"}
               </span>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-red-100 border border-red-200 px-3 py-1 text-xs font-bold text-red-800">
-                <AlertTriangle className="w-3.5 h-3.5" />
-                High Priority / Disgorgement Triggered
-              </span>
-            </div>
-          </div>
-
-          {/* Key Metadata Strip */}
-          <div className="mt-4 grid grid-cols-2 md:grid-cols-5 gap-3 pt-3 border-t border-[#e7e7eb] text-xs">
-            <div>
-              <span className="text-gray-400 uppercase tracking-wider text-[10px] font-bold block">
-                Candidate
-              </span>
-              <div className="font-bold text-[#1c1b1b]">Aakash Gupta</div>
-              <div className="text-gray-500 text-[11px]">#DX-3312 • SDE-2 Candidate</div>
-            </div>
-
-            <div>
-              <span className="text-gray-400 uppercase tracking-wider text-[10px] font-bold block">
-                Mentor
-              </span>
-              <div className="font-bold text-[#1c1b1b]">Rajesh Kannan</div>
-              <div className="text-gray-500 text-[11px]">#MTR-402 • Staff Software Engineer</div>
-            </div>
-
-            <div>
-              <span className="text-gray-400 uppercase tracking-wider text-[10px] font-bold block">
-                Session Ref
-              </span>
-              <div className="font-bold text-[#1c1b1b]">SES-7120</div>
-              <div className="text-gray-500 text-[11px]">Concurrency &amp; System Drill</div>
-            </div>
-
-            <div>
-              <span className="text-gray-400 uppercase tracking-wider text-[10px] font-bold block">
-                Escrow Hold
-              </span>
-              <div className="font-bold text-[#3828b5]">₹799 Locked</div>
-              <div className="text-gray-500 text-[11px]">Nodal Escrow #ESC-7120</div>
-            </div>
-
-            <div className="col-span-2 md:col-span-1">
-              <span className="text-gray-400 uppercase tracking-wider text-[10px] font-bold block">
-                72h SLA Resolution Timer
-              </span>
-              <div className="font-bold text-[#a7670b] flex items-center gap-1">
-                <Clock className="w-3.5 h-3.5 text-[#a7670b]" />
-                <span>42h 18m Remaining</span>
-              </div>
-              <div className="text-gray-500 text-[11px]">Cutoff: Nov 14, 08:30 PM IST</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Incident Timeline Bar */}
-        <div className="p-5 border-b border-[#e7e7eb] bg-white">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-4">
-            Incident Telemetry &amp; Chronological Ledger
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {/* Step 1 */}
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-[#f6f3f2] border border-[#e7e7eb]">
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#eaf5ef] text-[#16834a] font-bold text-xs shrink-0">
-                <Check className="w-4 h-4" />
-              </div>
-              <div>
-                <div className="text-xs font-bold text-[#1c1b1b]">01: Call Completed</div>
-                <div className="text-[11px] text-gray-500 mt-0.5">Nov 09, 08:30 PM IST</div>
-                <div className="text-[11px] text-[#16834a] font-semibold mt-1">Google Meet 61m Verified</div>
-              </div>
-            </div>
-
-            {/* Step 2 (Breached) */}
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-red-50 border border-red-200">
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-red-600 text-white font-bold text-xs shrink-0">
-                !
-              </div>
-              <div>
-                <div className="text-xs font-bold text-red-700">02: 48h SLA Cutoff</div>
-                <div className="text-[11px] text-red-600 mt-0.5">Nov 11, 08:30 PM IST</div>
-                <div className="text-[11px] text-red-700 font-bold mt-1">Breached by 5 hours</div>
-              </div>
-            </div>
-
-            {/* Step 3 */}
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-[#f6f3f2] border border-[#e7e7eb]">
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-100 text-[#3828b5] font-bold text-xs shrink-0">
-                <Gavel className="w-3.5 h-3.5" />
-              </div>
-              <div>
-                <div className="text-xs font-bold text-[#1c1b1b]">03: Escalation Filed</div>
-                <div className="text-[11px] text-gray-500 mt-0.5">Nov 11, 09:15 PM IST</div>
-                <div className="text-[11px] text-gray-700 font-medium mt-1">Candidate requested refund</div>
-              </div>
-            </div>
-
-            {/* Step 4 */}
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-[#f6f3f2] border border-[#e7e7eb]">
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-amber-100 text-[#a7670b] font-bold text-xs shrink-0">
-                <Clock className="w-3.5 h-3.5" />
-              </div>
-              <div>
-                <div className="text-xs font-bold text-[#1c1b1b]">04: Late Rubric Upload</div>
-                <div className="text-[11px] text-gray-500 mt-0.5">Nov 12, 01:30 AM IST</div>
-                <div className="text-[11px] text-[#a7670b] font-medium mt-1">Scorecard submitted (Late)</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Evidence Vault (3-Column Comparison Panel) */}
-        <div className="p-5 border-b border-[#e7e7eb] bg-gray-50/50">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-4">
-            Arbitration Evidence Vault &amp; Witness Telemetry
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Col 1: Telemetry */}
-            <div className="rounded-lg border border-[#e7e7eb] bg-white p-4 shadow-xs space-y-3">
-              <div className="flex items-center gap-2 text-[#1c1b1b] text-sm font-bold pb-2 border-b border-gray-100">
-                <FileCode2 className="w-4 h-4 text-[#3828b5]" />
-                <span>1. Session Telemetry Data</span>
-              </div>
-              <div className="space-y-2 text-xs">
-                <div className="flex justify-between py-1 border-b border-gray-100">
-                  <span className="text-gray-500">Platform Hook</span>
-                  <span className="font-semibold text-[#1c1b1b]">Google Meet API v2</span>
-                </div>
-                <div className="flex justify-between py-1 border-b border-gray-100">
-                  <span className="text-gray-500">Candidate Join/Leave</span>
-                  <span className="font-medium text-[#1c1b1b]">20:29:12 – 21:30:18</span>
-                </div>
-                <div className="flex justify-between py-1 border-b border-gray-100">
-                  <span className="text-gray-500">Mentor Join/Leave</span>
-                  <span className="font-medium text-[#1c1b1b]">20:28:44 – 21:30:10</span>
-                </div>
-                <div className="flex justify-between py-1 border-b border-gray-100">
-                  <span className="text-gray-500">Audio Clarity Stream</span>
-                  <span className="text-[#16834a] font-bold">98.4% Clean (0 Drops)</span>
-                </div>
-                <div className="flex justify-between py-1">
-                  <span className="text-gray-500">Screenshare Activity</span>
-                  <span className="font-medium text-[#1c1b1b]">12 slides &amp; VS Code log</span>
-                </div>
-              </div>
-              <div className="pt-2">
-                <button
-                  onClick={() => {
-                    setPlayingAudio(!playingAudio);
-                    if (!playingAudio) alert("Transcript summary audio stream playing (60s summary).");
-                  }}
-                  className="w-full inline-flex items-center justify-center gap-1.5 rounded-lg border border-[#e7e7eb] bg-[#f6f3f2] py-2 text-xs font-semibold text-[#1c1b1b] hover:bg-gray-100 transition-colors"
-                >
-                  <Headphones className="w-3.5 h-3.5 text-[#3828b5]" />
-                  <span>{playingAudio ? "Pause Audio Transcript" : "Listen to AI Transcript Summary"}</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Col 2: Candidate Statement */}
-            <div className="rounded-lg border border-[#e7e7eb] bg-white p-4 shadow-xs space-y-3">
-              <div className="flex items-center justify-between pb-2 border-b border-gray-100">
-                <div className="flex items-center gap-2 text-[#1c1b1b] text-sm font-bold">
-                  <AlertTriangle className="w-4 h-4 text-red-500" />
-                  <span>2. Candidate Escalation</span>
-                </div>
-                <span className="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded font-mono">
-                  11-Nov 21:15
-                </span>
-              </div>
-              <div className="rounded-lg bg-[#f6f3f2] p-3 text-xs italic text-gray-700 leading-relaxed border-l-2 border-[#3828b5]">
-                “The live 60-minute technical interview happened as planned. However, the mentor failed to upload the promised 8-dimension rubric scorecard and curated prep materials within the mandatory 48-hour SLA window. I have an upcoming on-site interview and required this feedback immediately. I am requesting an escrow disgorgement refund.”
-              </div>
-              <div className="flex items-center justify-between text-xs pt-1">
-                <span className="text-gray-400">PRD Reference</span>
-                <span className="font-bold text-[#1c1b1b]">PRD §12.1 (Deliverable SLA)</span>
-              </div>
-            </div>
-
-            {/* Col 3: Mentor Statement */}
-            <div className="rounded-lg border border-[#e7e7eb] bg-white p-4 shadow-xs space-y-3">
-              <div className="flex items-center justify-between pb-2 border-b border-gray-100">
-                <div className="flex items-center gap-2 text-[#1c1b1b] text-sm font-bold">
-                  <FileText className="w-4 h-4 text-amber-600" />
-                  <span>3. Mentor Defense &amp; Log</span>
-                </div>
-                <span className="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded font-mono">
-                  12-Nov 01:30
-                </span>
-              </div>
-              <div className="rounded-lg bg-[#f6f3f2] p-3 text-xs italic text-gray-700 leading-relaxed border-l-2 border-[#a7670b]">
-                “I conducted a rigorous 61-minute mock interview covering Distributed Systems and concurrency. An unforeseen Sev-1 production outage at my primary workplace delayed my scorecard transcription by 5 hours. The complete 8-dimension scorecard, written code analysis, and recommended reading have now been uploaded in full.”
-              </div>
-              <div className="flex items-center justify-between text-xs pt-1">
-                <span className="text-gray-400">Scorecard Artifact</span>
-                <span className="text-[#3828b5] font-semibold flex items-center gap-1">
-                  <span>DSP-104-Rubric.pdf (1.4MB)</span>
-                  <ExternalLink className="w-3 h-3" />
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Enforceable Statutory Rulings (PRD §12.2 & §21) */}
-        <div className="p-5 bg-white space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div>
-              <h3 className="text-base font-bold text-[#1c1b1b]">
-                Enforceable Statutory Rulings (PRD §12.2 &amp; §21 Dual-Control Execution)
-              </h3>
-              <p className="text-xs text-gray-500">
-                Select an institutional determination protocol below. Changes execute directly against Razorpay Nodal Escrow Node #ESC-7120 upon dual-signoff.
-              </p>
-            </div>
-            <span className="text-xs font-bold text-[#3828b5] bg-[#3828b5]/10 px-3 py-1 rounded-full self-start sm:self-auto">
-              PRD Standard Decision Tree
-            </span>
-          </div>
-
-          {/* 3 Decision Protocol Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Protocol A */}
-            <div
-              onClick={() => setSelectedProtocol("A")}
-              className={`relative rounded-xl p-4 cursor-pointer transition-all flex flex-col justify-between ${
-                selectedProtocol === "A"
-                  ? "border-2 border-[#3828b5] bg-indigo-50/30 shadow-sm"
-                  : "border border-[#e7e7eb] hover:border-gray-400 bg-white"
-              }`}
-            >
-              <div className="absolute -top-2.5 right-4 rounded-full bg-[#3828b5] px-2 py-0.5 text-[10px] font-bold text-white uppercase tracking-wider">
-                PRD §12.2 Recommended
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <div className={`h-4 w-4 rounded-full border-2 flex items-center justify-center ${selectedProtocol === "A" ? "border-[#3828b5]" : "border-gray-400"}`}>
-                    {selectedProtocol === "A" && <div className="h-2 w-2 rounded-full bg-[#3828b5]"></div>}
-                  </div>
-                  <span className="text-sm font-bold text-[#1c1b1b]">
-                    Protocol A: 80% Escrow Disgorgement
-                  </span>
-                </div>
-                <p className="mt-2 text-xs text-gray-600 leading-relaxed">
-                  SLA delay breached 48h deadline, but 60m live interview was completed. Disgorge 80% of escrow back to candidate, allowing mentor 20% pro-rata compensation.
-                </p>
-
-                <div className="mt-3 rounded-lg bg-[#f6f3f2] p-2.5 space-y-1 text-xs">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Candidate Refund:</span>
-                    <span className="font-bold text-[#16834a]">₹639.20 (80%)</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Mentor Settlement:</span>
-                    <span className="font-semibold text-[#1c1b1b]">₹159.80 (20%)</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Scorecard Deliverable:</span>
-                    <span className="text-[#3828b5] font-semibold">Released to Candidate</span>
-                  </div>
-                </div>
-              </div>
-              <div className="mt-3 pt-2 text-[11px] text-gray-400 border-t border-gray-100">
-                Remediation: Advisory Note issued to Mentor Rajesh Kannan.
-              </div>
-            </div>
-
-            {/* Protocol B */}
-            <div
-              onClick={() => setSelectedProtocol("B")}
-              className={`rounded-xl p-4 cursor-pointer transition-all flex flex-col justify-between ${
-                selectedProtocol === "B"
-                  ? "border-2 border-[#3828b5] bg-indigo-50/30 shadow-sm"
-                  : "border border-[#e7e7eb] hover:border-gray-400 bg-white"
-              }`}
-            >
-              <div>
-                <div className="flex items-center gap-2">
-                  <div className={`h-4 w-4 rounded-full border-2 flex items-center justify-center ${selectedProtocol === "B" ? "border-[#3828b5]" : "border-gray-400"}`}>
-                    {selectedProtocol === "B" && <div className="h-2 w-2 rounded-full bg-[#3828b5]"></div>}
-                  </div>
-                  <span className="text-sm font-bold text-[#1c1b1b]">
-                    Protocol B: 100% Full Disgorgement
-                  </span>
-                </div>
-                <p className="mt-2 text-xs text-gray-600 leading-relaxed">
-                  Strict zero-tolerance ruling. Unexcused delay past 48h cancels full mentor compensation. Candidate receives full restitution.
-                </p>
-
-                <div className="mt-3 rounded-lg bg-[#f6f3f2] p-2.5 space-y-1 text-xs">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Candidate Refund:</span>
-                    <span className="font-bold text-red-600">₹799.00 (100%)</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Mentor Settlement:</span>
-                    <span className="font-semibold text-[#1c1b1b]">₹0.00 (0%)</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Mentor Rating Strike:</span>
-                    <span className="text-red-600 font-bold">Strike 1 Recorded</span>
-                  </div>
-                </div>
-              </div>
-              <div className="mt-3 pt-2 text-[11px] text-gray-400 border-t border-gray-100">
-                Remediation: Automatic 7-day mentor suspension from dispatch pool.
-              </div>
-            </div>
-
-            {/* Protocol C */}
-            <div
-              onClick={() => setSelectedProtocol("C")}
-              className={`rounded-xl p-4 cursor-pointer transition-all flex flex-col justify-between ${
-                selectedProtocol === "C"
-                  ? "border-2 border-[#3828b5] bg-indigo-50/30 shadow-sm"
-                  : "border border-[#e7e7eb] hover:border-gray-400 bg-white"
-              }`}
-            >
-              <div>
-                <div className="flex items-center gap-2">
-                  <div className={`h-4 w-4 rounded-full border-2 flex items-center justify-center ${selectedProtocol === "C" ? "border-[#3828b5]" : "border-gray-400"}`}>
-                    {selectedProtocol === "C" && <div className="h-2 w-2 rounded-full bg-[#3828b5]"></div>}
-                  </div>
-                  <span className="text-sm font-bold text-[#1c1b1b]">
-                    Protocol C: Dismiss Dispute &amp; Release
-                  </span>
-                </div>
-                <p className="mt-2 text-xs text-gray-600 leading-relaxed">
-                  Accept mentor emergency outage defense. Dismiss candidate dispute, release completed scorecard, and disperse full escrow.
-                </p>
-
-                <div className="mt-3 rounded-lg bg-[#f6f3f2] p-2.5 space-y-1 text-xs">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Candidate Refund:</span>
-                    <span className="font-semibold text-[#1c1b1b]">₹0.00 (0%)</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Mentor Settlement:</span>
-                    <span className="font-bold text-[#16834a]">₹799.00 (100%)</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Dispute Status:</span>
-                    <span className="font-semibold text-gray-700">Dismissed as Unfounded</span>
-                  </div>
-                </div>
-              </div>
-              <div className="mt-3 pt-2 text-[11px] text-gray-400 border-t border-gray-100">
-                Remediation: No platform penalties recorded for either party.
-              </div>
-            </div>
-          </div>
-
-          {/* Dual-Control Signatory Action Bar */}
-          <div className="mt-5 rounded-xl bg-[#f6f3f2] p-4 border border-[#e7e7eb] flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-            <div className="flex flex-wrap items-center gap-3 text-xs">
-              <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-[#e7e7eb]">
-                <CheckCircle2 className="w-4 h-4 text-[#16834a]" />
-                <div>
-                  <span className="font-bold text-[#1c1b1b]">Examiner 1: Signed</span>
-                  <span className="text-gray-500 block text-[10px]">Arjun Mehta (#ADM-001)</span>
-                </div>
-              </div>
-
-              <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border ${coSigned ? "bg-white border-[#16834a]/30" : "bg-white border-amber-300"}`}>
-                {coSigned ? (
-                  <CheckCircle2 className="w-4 h-4 text-[#16834a]" />
-                ) : (
-                  <Hourglass className="w-4 h-4 text-[#a7670b] animate-spin" />
-                )}
-                <div>
-                  <span className={`font-bold ${coSigned ? "text-[#16834a]" : "text-[#a7670b]"}`}>
-                    {coSigned ? "Examiner 2: Dual-Signed" : "Examiner 2: Awaiting Co-Signatory"}
-                  </span>
-                  <span className="text-gray-500 block text-[10px]">
-                    {coSigned ? "Priyadarshini Rao (#ADM-004)" : "Dual-Custody Key Required"}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3">
-              {disgorgementSuccess ? (
-                <div className="px-4 py-2 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                  <span>Protocol {selectedProtocol} Disgorgement Executed against Nodal Gate!</span>
-                </div>
-              ) : (
-                <button
-                  disabled={executingDisgorgement}
-                  onClick={handleExecuteRuling}
-                  className="px-5 py-2.5 rounded-lg bg-[#3828b5] text-white hover:bg-[#2e2195] text-xs font-bold shadow-xs transition-all flex items-center gap-2 disabled:opacity-50"
-                >
-                  <Gavel className="w-4 h-4" />
-                  <span>{executingDisgorgement ? "Transacting Nodal Disgorgement..." : `Co-Sign & Execute Protocol ${selectedProtocol}`}</span>
-                </button>
-              )}
             </div>
           </div>
         </div>
       </div>
+      )}
 
       {/* 4. Closed Disputes Historical Log */}
       <div className="bg-white rounded-xl border border-[#e7e7eb] p-5 shadow-xs space-y-4">
@@ -604,62 +259,36 @@ export default function AdminDisputesPage() {
             </p>
           </div>
           <span className="text-xs font-mono text-gray-500 bg-gray-100 px-2.5 py-1 rounded">
-            3 Resolved Cases
+            {resolvedDisputes.length} Resolved {resolvedDisputes.length === 1 ? "Case" : "Cases"}
           </span>
         </div>
 
-        <div className="divide-y divide-[#e7e7eb]">
-          <div className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <span className="font-mono font-bold text-[#1c1b1b]">DSP-103</span>
-                <span className="text-gray-400">•</span>
-                <span className="font-semibold text-gray-800">Candidate No-Show (Missed Appointment)</span>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-700">
-                  DISMISSED
-                </span>
-              </div>
-              <p className="text-[11px] text-gray-500">
-                Session SES-7094 • Case DX-7749 vs Mentor MTR-218 • Escrow ₹529 released to mentor per PRD §11.1
-              </p>
-            </div>
-            <span className="font-mono text-gray-400 text-[11px]">Resolved Oct 28, 2026</span>
+        {resolvedDisputes.length === 0 ? (
+          <div className="py-8 text-center text-xs text-gray-500">
+            No historical disputes recorded. All completed sessions have concluded cleanly with zero escalations.
           </div>
-
-          <div className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <span className="font-mono font-bold text-[#1c1b1b]">DSP-101</span>
-                <span className="text-gray-400">•</span>
-                <span className="font-semibold text-gray-800">Partial Audio Failure during Mock</span>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#edf3fc] text-[#2864c5]">
-                  MUTUAL 50% RESTITUTION
-                </span>
+        ) : (
+          <div className="divide-y divide-[#e7e7eb]">
+            {resolvedDisputes.map((d) => (
+              <div key={d.id} className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono font-bold text-[#1c1b1b]">{d.dispute_ref || d.id?.slice(0, 8)}</span>
+                    <span className="text-gray-400">•</span>
+                    <span className="font-semibold text-gray-800">{d.reason_code}</span>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-700">
+                      {d.status?.toUpperCase()}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-gray-500">
+                    {d.resolution_notes || "Resolved under PRD §12.1"}
+                  </p>
+                </div>
+                <span className="font-mono text-gray-400 text-[11px]">{new Date(d.resolved_at || d.created_at).toLocaleDateString()}</span>
               </div>
-              <p className="text-[11px] text-gray-500">
-                Session SES-6981 • Tanvi Mathur vs Kunal Roy • ₹380 refunded to candidate, ₹380 settled to mentor
-              </p>
-            </div>
-            <span className="font-mono text-gray-400 text-[11px]">Resolved Oct 14, 2026</span>
+            ))}
           </div>
-
-          <div className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <span className="font-mono font-bold text-[#1c1b1b]">DSP-098</span>
-                <span className="text-gray-400">•</span>
-                <span className="font-semibold text-gray-800">48h Deliverable SLA Delay</span>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-50 text-red-700">
-                  PROTOCOL A DISGORGEMENT
-                </span>
-              </div>
-              <p className="text-[11px] text-gray-500">
-                Session SES-6840 • S07 System Design • ₹639.20 (80%) refunded to candidate via Nodal Gate
-              </p>
-            </div>
-            <span className="font-mono text-gray-400 text-[11px]">Resolved Sep 30, 2026</span>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );

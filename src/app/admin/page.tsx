@@ -92,93 +92,46 @@ export default function AdminDashboardPage() {
     }
   };
 
-  const events = [
-    {
-      id: "EVT-9921",
-      category: "escrow",
-      time: "2 mins ago",
-      title: "Escrow Pre-Funding for S06 Technical Mock Interview",
-      statusPill: "ESCROW HELD ₹799",
-      statusColor: "bg-[#eaf5ef] text-[#16834a] border-[#16834a]/20",
-      candidate: "#DX-8421 (Tier-1 Cohort)",
-      mentor: "Rajesh Kannan (Staff SWE, Tier-1 Tech)",
-      ref: "RPZ-NODAL: #RPZ-88491",
-      sha: "0x9a8f...4d2",
-      verificationNote: "Node Confirmed",
-      verified: true,
-    },
-    {
-      id: "EVT-9918",
-      category: "escrow",
-      time: "14 mins ago",
-      title: "8-Dimension Rubric Scorecard Committed & Deliverable Validated",
-      statusPill: "RELEASED ₹799 (NODAL)",
-      statusColor: "bg-indigo-50 text-[#3828b5] border-indigo-200",
-      candidate: "Service: S05 Resume Red-Pen",
-      mentor: "Signed by: Siddharth Iyer (Gojek)",
-      ref: "Artifact: DEL-SCR-3108",
-      sha: "0x8f2d...34f",
-      verificationNote: "Rubric Verified",
-      verified: true,
-    },
-    {
-      id: "EVT-9914",
-      category: "sla",
-      time: "28 mins ago",
-      title: "Smart Match Wave 2 Escalation Triggered for REQ-8902",
-      statusPill: "CASCADE ACTIVE (WAVE 2)",
-      statusColor: "bg-[#fbf4e8] text-[#a7670b] border-[#a7670b]/20",
-      candidate: "Reason: 30-min Wave 1 timer expired",
-      mentor: "Action: Dispatched to 14 accredited Wave 2 mentors",
-      ref: "REQ-8902-S06",
-      sha: "0x77c1...b12",
-      verificationNote: "Cascading Broadcast",
-      verified: false,
-    },
-    {
-      id: "EVT-9908",
-      category: "audits",
-      time: "45 mins ago",
-      title: "New Mentor Application Submitted: Meera Krishnan",
-      statusPill: "AUDIT PENDING (STAFF DUAL)",
-      statusColor: "bg-gray-100 text-gray-700 border-gray-200",
-      candidate: "Role: Staff SDE @ Flipkart (10 YoE)",
-      mentor: "Credentials: Tier-1 & Tier-2 Docs Pushed to Sandbox",
-      ref: "MTR-APP-1045",
-      sha: "0x3e19...8aa",
-      verificationNote: "Awaiting Examiner 1",
-      verified: false,
-      actionHref: "/admin/verification",
-    },
-    {
-      id: "EVT-9892",
-      category: "sla",
-      time: "1h 12m ago",
-      title: "Automated SLA Breach Refund Triggered under PRD §12.2",
-      statusPill: "AUTO-REFUNDED 80% (₹639)",
-      statusColor: "bg-red-50 text-red-700 border-red-200",
-      candidate: "Session: #SES-7120",
-      mentor: "Breach: 48-Hour delivery limit missed by 1h 00m",
-      ref: "REFUND-RPZ-7491",
-      sha: "0x2a14...599",
-      verificationNote: "Non-Discretionary",
-      verified: false,
-    },
-    {
-      id: "EVT-9884",
-      category: "audits",
-      time: "1h 40m ago",
-      title: "Dual-Control KYC Clearance Granted for Pilot Mentor",
-      statusPill: "ACCREDITED (TRIPLE-TRUST)",
-      statusColor: "bg-[#eaf5ef] text-[#16834a] border-[#16834a]/20",
-      candidate: "Accredited: S06 System Design + S10 Bar Raiser",
-      mentor: "Signatories: Priyadarshini Rao & Arjun Mehta",
-      ref: "MTR-402-ACCR",
-      sha: "0x4f9a...81c",
-      verificationNote: "Dual-Approved",
-      verified: true,
-    },
-  ];
+  const events = React.useMemo(() => {
+    const list: any[] = [];
+    if (overview?.auditLogs && Array.isArray(overview.auditLogs)) {
+      overview.auditLogs.forEach((log: any) => {
+        list.push({
+          id: log.id?.slice(0, 8) || "LOG",
+          category: "audits",
+          time: new Date(log.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          title: `Audit: ${log.action} on ${log.target_type}`,
+          statusPill: `LOGGED (${log.reason_code || "AUDIT"})`,
+          statusColor: "bg-gray-100 text-gray-700 border-gray-200",
+          candidate: `Target: ${log.target_id || "System"}`,
+          mentor: "System Audit Trail",
+          ref: log.id?.slice(0, 12) || "",
+          sha: "0x" + (log.id?.replace(/-/g, "").slice(0, 8) || "00000000"),
+          verificationNote: "Audit Trail Recorded",
+          verified: true,
+        });
+      });
+    }
+    if (overview?.recentBookings && Array.isArray(overview.recentBookings)) {
+      overview.recentBookings.forEach((b: any) => {
+        list.push({
+          id: b.booking_ref || b.id?.slice(0, 8),
+          category: "escrow",
+          time: new Date(b.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          title: `Booking: ${b.service_code || "Service Session"}`,
+          statusPill: `${b.status?.toUpperCase() || "PENDING"} (₹${Math.round((b.amount_paise || 0) / 100)})`,
+          statusColor: b.status === "completed" ? "bg-indigo-50 text-[#3828b5] border-indigo-200" : "bg-[#eaf5ef] text-[#16834a] border-[#16834a]/20",
+          candidate: `Ref: ${b.booking_ref}`,
+          mentor: `Status: ${b.status}`,
+          ref: b.booking_ref,
+          sha: "0x" + (b.id?.replace(/-/g, "").slice(0, 8) || "00000000"),
+          verificationNote: b.payment_status === "captured" ? "Escrow Funded" : "Pending Capture",
+          verified: b.status === "completed",
+        });
+      });
+    }
+    return list;
+  }, [overview]);
 
   const filteredEvents = events.filter((ev) => {
     if (activeTab === "escrow" && ev.category !== "escrow") return false;
@@ -606,7 +559,13 @@ export default function AdminDashboardPage() {
 
             {/* Event Rows */}
             <div className="divide-y divide-[#e7e7eb]">
-              {filteredEvents.map((evt) => (
+              {filteredEvents.length === 0 ? (
+                <div className="p-8 text-center text-xs text-gray-500">
+                  <p className="font-bold text-sm text-[#1c1b1b] mb-1">No ledger events recorded</p>
+                  <p>Escrow milestones, nodal payouts, and audit trails will populate here in real time from Supabase.</p>
+                </div>
+              ) : (
+                filteredEvents.map((evt) => (
                 <div
                   key={evt.id}
                   className="p-4 hover:bg-gray-50 transition-colors flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs"
@@ -663,7 +622,7 @@ export default function AdminDashboardPage() {
                     )}
                   </div>
                 </div>
-              ))}
+              )))}
             </div>
 
             {/* Pagination & Cryptographic Integrity Footer */}
