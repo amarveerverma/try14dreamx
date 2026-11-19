@@ -12,7 +12,6 @@ import {
   EyeOff,
   GraduationCap,
   Briefcase,
-  Shield,
   CheckCircle2,
   AlertCircle,
 } from "lucide-react";
@@ -20,11 +19,10 @@ import {
 export default function LoginPage() {
   const router = useRouter();
   const { user, isLoading: authLoading, signInWithEmail, signInWithGoogle } = useAuth();
-  const [role, setRole] = React.useState<"seeker" | "mentor" | "admin">(() => {
+  const [role, setRole] = React.useState<"seeker" | "mentor">(() => {
     if (typeof window !== "undefined") {
       const p = new URLSearchParams(window.location.search).get("role");
       if (p === "mentor") return "mentor";
-      if (p === "admin") return "admin";
     }
     return "seeker";
   });
@@ -95,7 +93,7 @@ export default function LoginPage() {
       return;
     }
 
-    const effectiveRole = res.role || (role === "mentor" ? "mentor" : role === "admin" ? "admin" : "student");
+    const effectiveRole = res.role || (role === "mentor" ? "mentor" : "student");
     const isOnboarded = res.onboarding_completed ?? false;
 
     if (effectiveRole === "admin") {
@@ -159,8 +157,8 @@ export default function LoginPage() {
             </p>
           </div>
 
-          {/* Role Segmented Switcher (3 Roles) */}
-          <div className="grid grid-cols-3 p-1 rounded-xl bg-[#f0eded] border border-[#e7e7eb] text-xs font-bold">
+          {/* Role Segmented Switcher (Candidate / Mentor) */}
+          <div className="grid grid-cols-2 p-1 rounded-xl bg-[#f0eded] border border-[#e7e7eb] text-xs font-bold">
             <button
               type="button"
               onClick={() => setRole("seeker")}
@@ -184,18 +182,6 @@ export default function LoginPage() {
             >
               <Briefcase className="w-3.5 h-3.5" />
               <span>Mentor</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setRole("admin")}
-              className={`py-2 px-2 rounded-lg transition-all flex items-center justify-center gap-1.5 ${
-                role === "admin"
-                  ? "bg-white text-[#3828b5] shadow-xs font-bold"
-                  : "text-gray-600 hover:text-[#1c1b1b]"
-              }`}
-            >
-              <Shield className="w-3.5 h-3.5" />
-              <span>Admin</span>
             </button>
           </div>
 
