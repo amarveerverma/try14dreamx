@@ -5,843 +5,1048 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { createClient } from "@/lib/supabase/client";
+import {
+  GraduationCap,
+  Briefcase,
+  Terminal,
+  RefreshCw,
+  CheckCircle2,
+  Check,
+  Building2,
+  Rocket,
+  Store,
+  FileText,
+  UploadCloud,
+  Link as LinkIcon,
+  GitBranch,
+  Sparkles,
+  ShieldCheck,
+  ArrowRight,
+  ArrowLeft,
+  Sliders,
+  Star,
+  Award,
+  AlertTriangle,
+  Lock,
+  MessageCircle,
+  ExternalLink,
+  ChevronRight,
+  BadgeCheck,
+} from "lucide-react";
 
+// ==========================================
+// 8-Dimension Competency Model
+// ==========================================
 interface DimensionItem {
   id: number;
   name: string;
-  weight: number; // percentage
+  weight: number;
   subtitle: string;
-  currentLevel: string;
-  levelBadge: string;
-  tag: string;
-  icon: string;
-  attachedFile?: string;
-  attachedFileSize?: string;
-  isGap?: boolean;
+  defaultRating: number;
+  sprintModule: string;
 }
 
-const INITIAL_DIMENSIONS: DimensionItem[] = [
+const DIMENSIONS: DimensionItem[] = [
   {
     id: 1,
-    name: "1. Resume & ATS Readiness",
+    name: "1. Resume & ATS Parsing",
     weight: 15,
-    subtitle: "Parsing fidelity, quantified XYZ impact, and ATS score threshold",
-    currentLevel: "Standard 2-page tech resume with clear project history, but lacks rigorous Google XYZ formula quantification and keyword optimization for Tier-1 GCC ATS parsers.",
-    levelBadge: "3 - Developing",
-    tag: "",
-    icon: "description",
-    attachedFile: "Resume_Candidate_Draft.pdf",
-    attachedFileSize: "1.4 MB",
+    subtitle: "Keyword alignment, quantified impact (XYZ formula), and parser pass-rate",
+    defaultRating: 4,
+    sprintModule: "S01: ATS Diagnostic & Resume Rewrite",
   },
   {
     id: 2,
-    name: "2. LinkedIn Profile Optimization",
-    weight: 10,
-    subtitle: "Recruiter search appearance, featured project artifacts & Boolean discoverability",
-    currentLevel: "Complete work and educational timeline, but missing recruiter Boolean keywords (e.g., Spring Boot, Redis, Kafka architecture) and featured media proofs.",
-    levelBadge: "3 - Developing",
-    tag: "Verified URL Added",
-    icon: "share",
+    name: "2. Data Structures & Algorithms",
+    weight: 15,
+    subtitle: "Core algorithmic patterns, time/space complexity, and live whiteboard defense",
+    defaultRating: 3,
+    sprintModule: "S04: DSA & Algorithmic Problem Solving Drill",
   },
   {
     id: 3,
-    name: "3. Portfolio & Code Artifacts",
-    weight: 5,
-    subtitle: "Public repositories, modular microservices, CI/CD and deployment documentation",
-    currentLevel: "GitHub repos exist but lack clean modularization, architecture sequence diagrams, containerized Dockerfiles, and deployment READMEs.",
-    levelBadge: "2 - Below Expected",
-    tag: "",
-    icon: "terminal",
+    name: "3. System Design & Scalability",
+    weight: 15,
+    subtitle: "Distributed caching, event streaming (Kafka), sharding, and fault tolerance",
+    defaultRating: 2,
+    sprintModule: "S06: Distributed High-Throughput Architectures",
   },
   {
     id: 4,
-    name: "4. STAR Communication & Behavioral",
+    name: "4. Behavioral STAR & Leadership",
     weight: 10,
-    subtitle: "Situation-Task-Action-Result structural precision under cross-functional pressure",
-    currentLevel: "Comfortable articulating past engineering trade-offs using structured STAR framework. Able to convey conflict resolution and ownership with clarity.",
-    levelBadge: "4 - Strong",
-    tag: "Solid Strength",
-    icon: "record_voice_over",
+    subtitle: "Situation-Task-Action-Result structural precision under executive pressure",
+    defaultRating: 4,
+    sprintModule: "S03: STAR Behavioral & Leadership Framing",
   },
   {
     id: 5,
-    name: "5. Technical Competence & System Design",
+    name: "5. Mock Interview Pressure Handling",
     weight: 15,
-    subtitle: "Target Scope: SDE-2 Backend (Distributed Systems, Concurrency, Sharding)",
-    currentLevel: "Solid mastery in Core Java & Microservices; however, lacks production experience with Redis distributed locks, high-throughput message streaming (Kafka), and Saga distributed transactions.",
-    levelBadge: "3 - Developing",
-    tag: "Domain Calibrated",
-    icon: "developer_board",
+    subtitle: "Clarifying ambiguous requirements, pacing under evaluation, and composure",
+    defaultRating: 3,
+    sprintModule: "S05: Full-Loop Technical Simulation",
   },
   {
     id: 6,
-    name: "6. Interview Acumen & Whiteboard Execution",
-    weight: 15,
-    subtitle: "Algorithmic live coding, edge case defense, and architectural whiteboarding",
-    currentLevel: "Fluent with classic LeetCode medium algorithms, but experiences performance anxiety when clarifying ambiguous requirements and scoping system boundaries under timed evaluation.",
-    levelBadge: "3 - Developing",
-    tag: "Standard Tier",
-    icon: "laptop_mac",
+    name: "6. Production Portfolio Proof",
+    weight: 10,
+    subtitle: "Public microservices, Docker containerization, CI/CD, and architecture diagrams",
+    defaultRating: 3,
+    sprintModule: "S02: Artifact & GitHub Architecture Audit",
   },
   {
     id: 7,
-    name: "7. Career Planning & Salary Negotiation",
-    weight: 20,
-    subtitle: "Offer restructuring, ESOP valuation models, counter-offer protocol",
-    currentLevel: "Candidate has never negotiated total compensation (base vs. performance bonuses), lacks understanding of vesting schedules/strike prices, and accepts first offers.",
-    levelBadge: "2 - Below Expected / Attention Needed",
-    tag: "Primary Competency Gap",
-    icon: "payments",
-    isGap: true,
+    name: "7. Salary & Equity Negotiation",
+    weight: 10,
+    subtitle: "Compensation restructuring, ESOP valuation models, and counter-offer protocol",
+    defaultRating: 2,
+    sprintModule: "S08: Offer & Salary Negotiation Benchmarks",
   },
   {
     id: 8,
-    name: "8. Professional Confidence & Presence",
+    name: "8. Architectural Code Cleanliness",
     weight: 10,
-    subtitle: "Imposter syndrome attenuation, senior panel presence, technical conviction",
-    currentLevel: "Solid fundamental engineering competence, but routinely doubts eligibility for Tier-1 Unicorns without prior brand name credentials.",
-    levelBadge: "3 - Developing",
-    tag: "Foundation",
-    icon: "psychology",
+    subtitle: "SOLID design principles, modularity, unit test coverage, and documentation",
+    defaultRating: 4,
+    sprintModule: "S07: Clean Code & Refactoring Clinic",
   },
 ];
 
-export default function OnboardingWizardPage() {
+// Career stages
+const CAREER_STAGES = [
+  {
+    id: "student",
+    title: "Final Year Undergraduate",
+    description: "Preparing for Tier-1 campus placement drives and first off-campus product SDE roles.",
+    icon: GraduationCap,
+    badge: "Campus Track",
+  },
+  {
+    id: "fresh_graduate",
+    title: "Fresh Graduate (<1 YoE)",
+    description: "Recently graduated engineer striving to secure a high-growth tech product role.",
+    icon: Award,
+    badge: "Entry Track",
+  },
+  {
+    id: "early_career",
+    title: "Early Career (1–3 YoE)",
+    description: "Targeting SDE-2 promotion, distributed systems depth, and Tier-1 product jump.",
+    icon: Terminal,
+    badge: "Active SDE-2 Track",
+  },
+  {
+    id: "career_switcher",
+    title: "Domain Switcher",
+    description: "Moving from QA, maintenance IT, or analytics into high-scale Backend/Platform Engineering.",
+    icon: RefreshCw,
+    badge: "Transition Track",
+  },
+];
+
+// Technical Domains
+const DOMAINS = [
+  "Backend & Distributed Systems",
+  "Fullstack Architecture",
+  "AI & ML Infrastructure",
+  "Cloud & DevOps Engineering",
+  "High-Scale Frontend",
+  "Data Science & Platform",
+];
+
+// Target Company Tiers
+const COMPANY_TIERS = [
+  {
+    id: "tier1_gcc",
+    title: "Tier-1 GCCs & MNCs",
+    examples: "Microsoft, Adobe, Intuit, Walmart",
+    icon: Building2,
+  },
+  {
+    id: "unicorns",
+    title: "High-Growth Unicorns",
+    examples: "Swiggy, Razorpay, Zepto, CRED",
+    icon: Rocket,
+  },
+  {
+    id: "startups",
+    title: "Funded Seed / Series-A",
+    examples: "Y Combinator, Matrix, Peak XV backed",
+    icon: Store,
+  },
+];
+
+export default function CandidateOnboardingPage() {
   const router = useRouter();
   const { user, completeOnboarding } = useAuth();
   const supabase = React.useMemo(() => createClient(), []);
 
-  // Dynamic Ratings State (1–5)
-  const [ratings, setRatings] = React.useState<Record<number, number>>({
-    1: 3,
-    2: 3,
-    3: 2,
-    4: 4,
-    5: 3,
-    6: 3,
-    7: 2,
-    8: 3,
+  const [isMounted, setIsMounted] = React.useState(false);
+  const [activeStep, setActiveStep] = React.useState<number>(1);
+  const [isSaving, setIsSaving] = React.useState(false);
+  const [saveSuccess, setSaveSuccess] = React.useState(false);
+
+  // Form states
+  const [selectedStage, setSelectedStage] = React.useState<string>("early_career");
+  const [selectedDomain, setSelectedDomain] = React.useState<string>("Backend & Distributed Systems");
+  const [selectedTiers, setSelectedTiers] = React.useState<string[]>(["tier1_gcc", "unicorns"]);
+  const [targetCtc, setTargetCtc] = React.useState<number>(36); // in Lakhs
+  const [linkedinUrl, setLinkedinUrl] = React.useState<string>("https://linkedin.com/in/");
+  const [githubUrl, setGithubUrl] = React.useState<string>("https://github.com/");
+  const [resumeFileName, setResumeFileName] = React.useState<string>("Resume_Draft_2025.pdf");
+  const [resumeUploaded, setResumeUploaded] = React.useState<boolean>(true);
+
+  // Ratings 1-5 for each of the 8 dimensions
+  const [ratings, setRatings] = React.useState<Record<number, number>>(() => {
+    const initial: Record<number, number> = {};
+    DIMENSIONS.forEach((d) => {
+      initial[d.id] = d.defaultRating;
+    });
+    return initial;
   });
 
-  const [isArtifactExempt, setIsArtifactExempt] = React.useState(false);
-  const [isSavedModalOpen, setIsSavedModalOpen] = React.useState(false);
-  const [isSaving, setIsSaving] = React.useState(false);
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
-  // Score Calculation
+  // Real-time calculated overall readiness score out of 100
   const calculatedScore = React.useMemo(() => {
-    let effectiveWeights: Record<number, number> = {
-      1: 15,
-      2: 10,
-      3: isArtifactExempt ? 0 : 5,
-      4: 10,
-      5: 15,
-      6: 15,
-      7: 20,
-      8: 10,
-    };
-
-    if (isArtifactExempt) {
-      // Redistribute the 5% weight proportionally across remaining 7 dimensions
-      const totalRemainingWeight = 95;
-      const factor = 100 / totalRemainingWeight;
-      effectiveWeights = {
-        1: 15 * factor,
-        2: 10 * factor,
-        3: 0,
-        4: 10 * factor,
-        5: 15 * factor,
-        6: 15 * factor,
-        7: 20 * factor,
-        8: 10 * factor,
-      };
-    }
-
     let total = 0;
-    Object.keys(effectiveWeights).forEach((idKey) => {
-      const id = Number(idKey);
-      const score = ratings[id] || 0;
-      const weight = effectiveWeights[id];
-      total += (weight * score) / 5;
+    DIMENSIONS.forEach((dim) => {
+      const score = ratings[dim.id] || 3;
+      total += (dim.weight * score) / 5;
     });
-
     return Math.min(100, Math.round(total));
-  }, [ratings, isArtifactExempt]);
+  }, [ratings]);
 
-  const setRatingFor = (id: number, val: number) => {
-    setRatings((prev) => ({ ...prev, [id]: val }));
-  };
+  // Find lowest rated dimension to dynamically recommend sprint priority
+  const lowestDimension = React.useMemo(() => {
+    let minDim = DIMENSIONS[0];
+    let minScore = ratings[minDim.id] || 5;
 
-  const handleSkip = () => {
-    setRatings({
-      1: 1,
-      2: 1,
-      3: 1,
-      4: 1,
-      5: 1,
-      6: 1,
-      7: 1,
-      8: 1,
+    DIMENSIONS.forEach((dim) => {
+      const score = ratings[dim.id] || 3;
+      if (score < minScore) {
+        minScore = score;
+        minDim = dim;
+      }
     });
+
+    return { dim: minDim, score: minScore };
+  }, [ratings]);
+
+  // Highest rated dimension
+  const highestDimension = React.useMemo(() => {
+    let maxDim = DIMENSIONS[0];
+    let maxScore = ratings[maxDim.id] || 1;
+
+    DIMENSIONS.forEach((dim) => {
+      const score = ratings[dim.id] || 3;
+      if (score > maxScore) {
+        maxScore = score;
+        maxDim = dim;
+      }
+    });
+
+    return { dim: maxDim, score: maxScore };
+  }, [ratings]);
+
+  const toggleTier = (id: string) => {
+    setSelectedTiers((prev) =>
+      prev.includes(id) ? (prev.length > 1 ? prev.filter((t) => t !== id) : prev) : [...prev, id]
+    );
   };
 
-  const handleSaveAndLock = async () => {
+  const setRating = (dimId: number, val: number) => {
+    setRatings((prev) => ({ ...prev, [dimId]: val }));
+  };
+
+  // Complete onboarding action
+  const handleCompleteOnboarding = async () => {
     setIsSaving(true);
     try {
-      if (user?.id) {
-        // Persist baseline score and ratings locally for real-time dashboard reflection
-        localStorage.setItem(`dreamx_baseline_score_${user.id}`, String(calculatedScore));
-        localStorage.setItem(`dreamx_baseline_ratings_${user.id}`, JSON.stringify(ratings));
+      const targetUserId = user?.id;
 
-        // Record baseline readiness score and mark onboarding as complete in Supabase
+      // 1. Persist to local storage for instant optimistic client reflection
+      if (typeof window !== "undefined") {
+        if (targetUserId) {
+          localStorage.setItem(`dreamx_baseline_score_${targetUserId}`, String(calculatedScore));
+          localStorage.setItem(`dreamx_baseline_ratings_${targetUserId}`, JSON.stringify(ratings));
+          localStorage.setItem(`dreamx_target_role_${targetUserId}`, selectedDomain);
+        }
+        localStorage.setItem("dreamx_onboarding_just_completed", "true");
+      }
+
+      // 2. Persist to Supabase profiles
+      if (targetUserId) {
+        const mappedSegment =
+          selectedStage === "student"
+            ? "student"
+            : selectedStage === "fresh_graduate"
+            ? "fresh_graduate"
+            : "early_career";
+
         await supabase
           .from("profiles")
           .update({
             onboarding_completed: true,
-            segment: calculatedScore >= 75 ? "early_career" : calculatedScore >= 50 ? "fresh_graduate" : "student",
+            segment: mappedSegment,
+            target_role: selectedDomain,
+            target_company_tier: selectedTiers.join(", "),
             updated_at: new Date().toISOString(),
           })
-          .eq("id", user.id);
+          .eq("id", targetUserId);
 
-        await completeOnboarding();
-      } else {
-        await completeOnboarding();
+        // 3. Record initial readiness baseline assessment
+        try {
+          await supabase.from("readiness_assessments").insert({
+            user_id: targetUserId,
+            overall_score: calculatedScore,
+            segment: mappedSegment,
+            rubric_version: "v3.0",
+            evidence_coverage: 75,
+            dimension_scores: ratings,
+            is_private: true,
+          });
+        } catch (subErr) {
+          console.warn("Baseline assessment insert error:", subErr);
+        }
       }
+
+      // 4. Update auth context state
+      await completeOnboarding();
+      setSaveSuccess(true);
+
+      // 5. Clean redirect to student dashboard
+      setTimeout(() => {
+        router.push("/dashboard");
+      }, 700);
     } catch (err) {
-      console.warn("Could not persist onboarding calibration:", err);
+      console.error("Failed to save onboarding calibration:", err);
+      // Fallback: still navigate so user is not blocked
+      router.push("/dashboard");
     } finally {
       setIsSaving(false);
-      setIsSavedModalOpen(true);
     }
   };
 
+  if (!isMounted) {
+    return (
+      <div className="min-h-screen bg-[#faf9f8] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 border-3 border-[#5145cd] border-t-transparent rounded-full animate-spin" />
+          <span className="text-xs font-semibold text-gray-500 font-mono">
+            Loading DreamX Calibration Engine...
+          </span>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col w-full bg-background min-h-screen">
-      {/* Top Standalone Header Bar */}
-      <header className="sticky top-0 w-full z-50 bg-surface/90 backdrop-blur-xl border-b border-outline-variant/30 shadow-xs">
-        <div className="h-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-4 sm:gap-6">
-            <Link href="/" className="flex items-center gap-2">
-              <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary text-on-primary font-bold text-base shadow-xs">
-                D
-              </span>
-              <span className="text-lg font-bold text-on-surface tracking-tight font-heading">
-                Dream<span className="text-primary">X</span>
+    <div className="min-h-screen bg-[#faf9f8] text-[#1c1b1b] flex flex-col font-sans antialiased selection:bg-[#5145cd]/15">
+      {/* ========================================================= */}
+      {/* 1. TOP STICKY APPLICATION BAR                             */}
+      {/* ========================================================= */}
+      <header className="sticky top-0 z-50 w-full bg-white/95 backdrop-blur-md border-b border-[#e7e7eb] shadow-xs">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+          {/* Left Brand Badge */}
+          <div className="flex items-center gap-3 sm:gap-4">
+            <Link href="/" className="flex items-center gap-2 group">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#3828b5] to-[#5145cd] text-white flex items-center justify-center font-extrabold text-sm shadow-xs font-mono group-hover:scale-105 transition-transform">
+                DX
+              </div>
+              <span className="text-lg font-extrabold text-[#1c1b1b] tracking-tight">
+                Dream<span className="text-[#5145cd]">X</span>
               </span>
             </Link>
-            <div className="h-4 w-px bg-outline-variant hidden sm:block" />
-            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-secondary-container/50 text-on-secondary-container text-xs font-semibold">
-              <span className="material-symbols-outlined text-[14px]">cloud_done</span>
-              <span>Auto-Saved</span>
+
+            <div className="h-4 w-px bg-gray-200 hidden sm:block" />
+
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200/60 text-emerald-700 text-xs font-semibold">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Diagnostic Setup</span>
             </div>
           </div>
 
-          <nav className="hidden md:flex items-center gap-6 text-xs font-semibold" aria-label="Wizard Steps">
-            <span className="text-on-surface-variant cursor-default">1. Academics</span>
-            <span className="text-on-surface-variant cursor-default">2. Skills</span>
-            <span className="text-on-surface-variant cursor-default">3. Preferences</span>
-            <span className="text-primary font-bold border-b-2 border-primary pb-1">4. Assessment</span>
-            <span className="text-on-surface-variant cursor-default">5. Review</span>
-          </nav>
+          {/* Stepper Progress Badges (Desktop) */}
+          <div className="hidden md:flex items-center gap-5 text-xs font-semibold">
+            <button
+              type="button"
+              onClick={() => setActiveStep(1)}
+              className={`flex items-center gap-1.5 transition-colors ${
+                activeStep >= 1 ? "text-[#5145cd] font-bold" : "text-gray-400"
+              }`}
+            >
+              <span className="w-5 h-5 rounded-full bg-[#5145cd]/10 text-[#5145cd] flex items-center justify-center text-[11px] font-bold">
+                1
+              </span>
+              <span>Stage</span>
+            </button>
+            <ChevronRight className="w-3.5 h-3.5 text-gray-300" />
+            <button
+              type="button"
+              onClick={() => setActiveStep(2)}
+              className={`flex items-center gap-1.5 transition-colors ${
+                activeStep >= 2 ? "text-[#5145cd] font-bold" : "text-gray-400"
+              }`}
+            >
+              <span className="w-5 h-5 rounded-full bg-[#5145cd]/10 text-[#5145cd] flex items-center justify-center text-[11px] font-bold">
+                2
+              </span>
+              <span>Domain</span>
+            </button>
+            <ChevronRight className="w-3.5 h-3.5 text-gray-300" />
+            <button
+              type="button"
+              onClick={() => setActiveStep(3)}
+              className={`flex items-center gap-1.5 transition-colors ${
+                activeStep >= 3 ? "text-[#5145cd] font-bold" : "text-gray-400"
+              }`}
+            >
+              <span className="w-5 h-5 rounded-full bg-[#5145cd] text-white flex items-center justify-center text-[11px] font-bold shadow-xs">
+                3
+              </span>
+              <span>8-D Rubric</span>
+            </button>
+            <ChevronRight className="w-3.5 h-3.5 text-gray-300" />
+            <button
+              type="button"
+              onClick={() => setActiveStep(4)}
+              className={`flex items-center gap-1.5 transition-colors ${
+                activeStep >= 4 ? "text-[#5145cd] font-bold" : "text-gray-400"
+              }`}
+            >
+              <span className="w-5 h-5 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center text-[11px]">
+                4
+              </span>
+              <span>Profile</span>
+            </button>
+          </div>
 
-          <div className="flex items-center gap-4">
+          {/* Right Action Helpers */}
+          <div className="flex items-center gap-3">
+            <a
+              href="https://wa.me/919999999999?text=Hi%20DreamX%20Concierge,%20I%20need%20help%20with%20onboarding"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-semibold border border-emerald-200 transition-colors"
+            >
+              <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
+              <span>1:1 Concierge</span>
+            </a>
+
             <Link
               href="/dashboard"
-              className="text-on-surface-variant hover:text-on-surface text-xs font-bold transition-colors flex items-center gap-1"
+              className="text-xs font-semibold text-gray-500 hover:text-gray-900 transition-colors px-2 py-1"
             >
-              <span>Save &amp; Exit to Dashboard</span>
+              Save &amp; Exit
             </Link>
-            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-on-primary text-xs font-bold shadow-xs">
-              <span className="material-symbols-outlined text-[18px]">person</span>
-            </div>
           </div>
+        </div>
+
+        {/* Dynamic Micro Progress Indicator */}
+        <div className="w-full bg-[#e7e7eb] h-1 relative overflow-hidden">
+          <div
+            className="h-full bg-gradient-to-r from-[#3828b5] to-[#5145cd] transition-all duration-500 ease-out"
+            style={{ width: `${Math.min(100, Math.max(25, (activeStep / 4) * 100))}%` }}
+          />
         </div>
       </header>
 
-      {/* Stepper Progress Header Container */}
-      <section className="w-full bg-surface-container-lowest border-b border-outline-variant/30 shadow-xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 py-5 sm:py-6">
-          {/* Top Metatag & Context Strip */}
-          <div className="flex flex-wrap items-center justify-between gap-4 mb-5">
-            <div className="flex items-center gap-3">
-              <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                <span>Candidate Profile Provisioning</span>
-              </span>
-              <span className="text-on-surface-variant text-xs font-medium">
-                Pipeline ID: <span className="font-bold text-on-surface font-mono">DX-2025-IND-8941</span>
-              </span>
-            </div>
-            <div className="flex items-center gap-2 text-on-surface-variant text-xs">
-              <span className="material-symbols-outlined text-[16px] text-secondary">verified_user</span>
-              <span>Deterministic Audit Mode • Active PRD v3.0 Rule Engine</span>
-            </div>
-          </div>
-
-          {/* 5-Step Visual Stepper Matrix */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-            {/* Step 1: Completed */}
-            <div className="flex items-start gap-3 p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/20">
-              <div className="w-7 h-7 rounded-full bg-secondary text-on-secondary flex items-center justify-center shrink-0">
-                <span className="material-symbols-outlined text-[16px]">check</span>
-              </div>
-              <div className="min-w-0">
-                <span className="text-secondary text-[10px] uppercase tracking-wider font-bold block">
-                  Stage 1 • Completed
-                </span>
-                <p className="text-xs font-bold text-on-surface truncate font-heading">Career Stage &amp; Segment</p>
-                <span className="text-on-surface-variant text-[11px] block truncate">Early Career (0–2 YoE)</span>
-              </div>
-            </div>
-
-            {/* Step 2: Completed */}
-            <div className="flex items-start gap-3 p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/20">
-              <div className="w-7 h-7 rounded-full bg-secondary text-on-secondary flex items-center justify-center shrink-0">
-                <span className="material-symbols-outlined text-[16px]">check</span>
-              </div>
-              <div className="min-w-0">
-                <span className="text-secondary text-[10px] uppercase tracking-wider font-bold block">
-                  Stage 2 • Completed
-                </span>
-                <p className="text-xs font-bold text-on-surface truncate font-heading">Target Role &amp; Domain</p>
-                <span className="text-on-surface-variant text-[11px] block truncate">Backend SDE-2 • GCC</span>
-              </div>
-            </div>
-
-            {/* Step 3: Completed */}
-            <div className="flex items-start gap-3 p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/20">
-              <div className="w-7 h-7 rounded-full bg-secondary text-on-secondary flex items-center justify-center shrink-0">
-                <span className="material-symbols-outlined text-[16px]">check</span>
-              </div>
-              <div className="min-w-0">
-                <span className="text-secondary text-[10px] uppercase tracking-wider font-bold block">
-                  Stage 3 • Completed
-                </span>
-                <p className="text-xs font-bold text-on-surface truncate font-heading">Situation &amp; Artifacts</p>
-                <span className="text-on-surface-variant text-[11px] block truncate">Resume + GitHub synced</span>
-              </div>
-            </div>
-
-            {/* Step 4: Active Stage */}
-            <div className="flex items-start gap-3 p-3.5 rounded-xl bg-primary-container text-on-primary shadow-sm border border-primary">
-              <div className="w-7 h-7 rounded-full bg-surface-container-lowest text-primary flex items-center justify-center shrink-0 font-bold text-xs">
-                4
-              </div>
-              <div className="min-w-0">
-                <span className="text-on-primary-container text-[10px] uppercase tracking-wider font-bold block">
-                  Stage 4 • Active Step
-                </span>
-                <p className="text-xs font-bold text-on-primary truncate font-heading">8-Dimension Baseline</p>
-                <span className="text-on-primary-container text-[11px] block truncate">In Progress (8 of 8)</span>
-              </div>
-            </div>
-
-            {/* Step 5: Upcoming Stage */}
-            <div className="flex items-start gap-3 p-3.5 rounded-xl bg-surface-container-low/60 opacity-80 border border-outline-variant/10">
-              <div className="w-7 h-7 rounded-full bg-surface-container-highest text-on-surface-variant flex items-center justify-center shrink-0 font-bold text-xs">
-                5
-              </div>
-              <div className="min-w-0">
-                <span className="text-on-surface-variant text-[10px] uppercase tracking-wider block font-semibold">
-                  Stage 5 • Upcoming
-                </span>
-                <p className="text-xs font-bold text-on-surface truncate font-heading">Deterministic Roadmap</p>
-                <span className="text-on-surface-variant text-[11px] block truncate">Gap Discovery &amp; S01-S10</span>
-              </div>
-            </div>
-          </div>
+      {/* ========================================================= */}
+      {/* 2. HERO WELCOME SECTION                                   */}
+      {/* ========================================================= */}
+      <section className="pt-8 pb-6 px-4 sm:px-6 lg:px-8 text-center max-w-3xl mx-auto">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-50 border border-indigo-200 text-[#3828b5] text-xs font-bold mb-3 shadow-xs">
+          <Sparkles className="w-3.5 h-3.5 text-[#5145cd]" />
+          <span>Calibrated for Tier-1 GCCs &amp; Unicorn Trajectories</span>
         </div>
+        <h1 className="text-2xl sm:text-4xl font-extrabold text-[#1c1b1b] tracking-tight leading-tight">
+          Personalize Your Career Acceleration Path
+        </h1>
+        <p className="mt-2.5 text-xs sm:text-sm text-[#474554] max-w-2xl mx-auto leading-relaxed">
+          Tailor your diagnostic baseline, verified 1:1 Tier-1 mentor allocation, and compensation parameters to your exact transition goals.
+        </p>
       </section>
 
-      {/* Main Dual-Column Assessment Workspace */}
-      <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 py-8 pb-24">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          {/* Left Column: The 8 Diagnostic Dimensions (8 Cols) */}
-          <section className="lg:col-span-8 flex flex-col gap-6">
-            {/* Header & Segment Weight Banner */}
-            <div className="p-6 rounded-2xl bg-surface-container-lowest shadow-xs border border-outline-variant/30">
-              <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
-                <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold tracking-wide">
-                  Step 4 of 5 • Diagnostic Rubric Assessment
-                </span>
-                <div className="flex items-center gap-1.5 text-on-surface-variant text-xs">
-                  <span className="material-symbols-outlined text-[16px]">tune</span>
-                  <span className="font-semibold">Track: Early Career (0–2 YoE)</span>
-                </div>
-              </div>
-
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-on-surface tracking-tight font-heading mb-2">
-                8-Dimension Career Readiness Baseline
-              </h1>
-              <p className="text-on-surface-variant text-xs sm:text-sm leading-relaxed mb-4">
-                Establish your verifiable starting point across eight industry-defined competencies. Your self-evaluation maps deterministically to targeted sprint modules (S01–S10) without speculative black-box scoring. Private by default.
-              </p>
-
-              {/* Calibrated Weight Table Strip */}
-              <div className="p-4 rounded-xl bg-surface-container-low flex flex-col gap-2 border border-outline-variant/20">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs uppercase tracking-wider text-on-surface font-bold flex items-center gap-1.5">
-                    <span className="material-symbols-outlined text-[16px] text-primary">scale</span>
-                    <span>Segment Weight Calibration Matrix (PRD §8.2)</span>
-                  </span>
-                  <span className="text-xs text-secondary font-bold">Normalized to 100%</span>
-                </div>
-                <p className="text-on-surface-variant text-xs leading-relaxed">
-                  Technical Competence (15%) • Resume/ATS (15%) • Interview Acumen (15%) • Career Planning (20%) • Communication (10%) • LinkedIn (10%) • Confidence (10%) • Artifacts (5%).
-                </p>
-              </div>
-            </div>
-
-            {/* Rubric Explanation Legend */}
-            <div className="p-4 rounded-xl bg-surface-container-low/70 flex flex-wrap items-center justify-between gap-3 border border-outline-variant/20">
-              <span className="text-xs font-bold text-on-surface-variant uppercase tracking-wider font-mono">
-                Evaluation Anchors:
+      {/* ========================================================= */}
+      {/* 3. MAIN INTERACTIVE ONBOARDING CANVAS                     */}
+      {/* ========================================================= */}
+      <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 pb-20 space-y-8">
+        {/* ===================================================== */}
+        {/* SECTION 1: CAREER STAGE SELECTION                     */}
+        {/* ===================================================== */}
+        <div className="bg-white rounded-2xl border border-[#e7e7eb] p-6 sm:p-8 shadow-xs space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-[#f0eded]">
+            <div>
+              <span className="text-[11px] font-bold text-[#5145cd] uppercase tracking-wider block">
+                Step 1 — Baseline Status
               </span>
-              <div className="flex flex-wrap items-center gap-3 text-xs text-on-surface-variant">
-                <span className="flex items-center gap-1 font-medium">
-                  <span className="w-2 h-2 rounded-full bg-error" /> 1: Major Deficit
-                </span>
-                <span className="flex items-center gap-1 font-medium">
-                  <span className="w-2 h-2 rounded-full bg-outline" /> 2: Below Expected
-                </span>
-                <span className="flex items-center gap-1 font-medium">
-                  <span className="w-2 h-2 rounded-full bg-primary" /> 3: Foundation / Developing
-                </span>
-                <span className="flex items-center gap-1 font-medium">
-                  <span className="w-2 h-2 rounded-full bg-secondary" /> 4: Strong
-                </span>
-                <span className="flex items-center gap-1 font-medium">
-                  <span className="w-2 h-2 rounded-full bg-secondary" /> 5: Exemplary
-                </span>
-              </div>
+              <h2 className="text-lg sm:text-xl font-extrabold text-[#1c1b1b] tracking-tight">
+                Select Your Current Career Phase
+              </h2>
             </div>
+            <span className="self-start sm:self-auto px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold flex items-center gap-1">
+              <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Auto-Detected
+            </span>
+          </div>
 
-            {/* 8 DIMENSION CARDS */}
-            <div className="flex flex-col gap-5">
-              {INITIAL_DIMENSIONS.map((dim) => {
-                const currentRating = ratings[dim.id] || 3;
-                const isExempt = dim.id === 3 && isArtifactExempt;
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            {CAREER_STAGES.map((stage) => {
+              const Icon = stage.icon;
+              const isSelected = selectedStage === stage.id;
+              return (
+                <button
+                  key={stage.id}
+                  type="button"
+                  onClick={() => {
+                    setSelectedStage(stage.id);
+                    if (activeStep < 2) setActiveStep(2);
+                  }}
+                  className={`p-4 rounded-xl border-2 text-left transition-all relative overflow-hidden flex flex-col justify-between ${
+                    isSelected
+                      ? "border-[#5145cd] bg-indigo-50/40 shadow-xs"
+                      : "border-[#e7e7eb] hover:border-gray-300 bg-white"
+                  }`}
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <div
+                      className={`w-9 h-9 rounded-xl flex items-center justify-center ${
+                        isSelected ? "bg-[#5145cd] text-white" : "bg-gray-100 text-gray-600"
+                      }`}
+                    >
+                      <Icon className="w-4 h-4" />
+                    </div>
+                    <span
+                      className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                        isSelected ? "border-[#5145cd] bg-[#5145cd]" : "border-gray-300"
+                      }`}
+                    >
+                      {isSelected && <Check className="w-2.5 h-2.5 text-white stroke-[3]" />}
+                    </span>
+                  </div>
 
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-bold text-sm text-[#1c1b1b]">{stage.title}</h3>
+                      {isSelected && (
+                        <span className="px-1.5 py-0.5 rounded bg-[#5145cd] text-white text-[10px] font-bold">
+                          Active
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-[#66666f] mt-1 leading-normal">
+                      {stage.description}
+                    </p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* ===================================================== */}
+        {/* SECTION 2: TARGET ROLE & COMPENSATION                 */}
+        {/* ===================================================== */}
+        <div className="bg-white rounded-2xl border border-[#e7e7eb] p-6 sm:p-8 shadow-xs space-y-6">
+          <div className="pb-2 border-b border-[#f0eded]">
+            <span className="text-[11px] font-bold text-[#5145cd] uppercase tracking-wider block">
+              Step 2 — Trajectory &amp; Compensation
+            </span>
+            <h2 className="text-lg sm:text-xl font-extrabold text-[#1c1b1b] tracking-tight">
+              Target Specialization &amp; Organization Tier
+            </h2>
+          </div>
+
+          {/* Domain Pills */}
+          <div className="space-y-2.5">
+            <label className="block text-xs font-bold text-[#1c1b1b]">
+              Target Technical Domain
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {DOMAINS.map((domain) => {
+                const isSelected = selectedDomain === domain;
                 return (
-                  <article
-                    key={dim.id}
-                    id={`card-dim-${dim.id}`}
-                    className={`p-6 rounded-2xl bg-surface-container-lowest shadow-xs border transition-all hover:shadow-md relative overflow-hidden ${
-                      dim.isGap
-                        ? "border-error/40 ring-1 ring-error/20"
-                        : "border-outline-variant/30"
-                    } ${isExempt ? "opacity-60" : ""}`}
+                  <button
+                    key={domain}
+                    type="button"
+                    onClick={() => {
+                      setSelectedDomain(domain);
+                      if (activeStep < 3) setActiveStep(3);
+                    }}
+                    className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                      isSelected
+                        ? "bg-[#5145cd] text-white shadow-xs"
+                        : "bg-[#f0eded] hover:bg-gray-200 text-[#474554]"
+                    }`}
                   >
-                    {dim.isGap && <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-error" />}
-
-                    <div className="flex flex-wrap items-start justify-between gap-4 mb-3">
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm shrink-0 shadow-xs ${
-                            dim.isGap ? "bg-error/10 text-error" : "bg-primary/10 text-primary"
-                          }`}
-                        >
-                          <span className="material-symbols-outlined text-[22px]">{dim.icon}</span>
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <h2 className="text-base sm:text-lg font-bold text-on-surface font-heading">
-                              {dim.name}
-                            </h2>
-                            <span className="px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface text-[11px] font-bold">
-                              Weight: {dim.weight}% {dim.isGap ? "(Highest)" : ""}
-                            </span>
-                          </div>
-                          <span className="text-on-surface-variant text-xs">{dim.subtitle}</span>
-                        </div>
-                      </div>
-
-                      {/* Right Tag / Attached file / Exemption toggle */}
-                      <div className="flex items-center gap-2">
-                        {dim.attachedFile && (
-                          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-container-low text-on-surface text-xs font-semibold border border-outline-variant/20">
-                            <span className="material-symbols-outlined text-[16px] text-primary">attach_file</span>
-                            <span className="truncate max-w-[150px]">{dim.attachedFile}</span>
-                            <span className="text-on-surface-variant text-[11px]">({dim.attachedFileSize})</span>
-                          </div>
-                        )}
-
-                        {dim.id === 3 && (
-                          <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-on-surface-variant bg-surface-container px-3 py-1.5 rounded-lg select-none hover:bg-surface-container-high transition-colors">
-                            <input
-                              type="checkbox"
-                              checked={isArtifactExempt}
-                              onChange={(e) => setIsArtifactExempt(e.target.checked)}
-                              className="w-4 h-4 rounded text-primary focus:ring-0"
-                            />
-                            <span>Mark as Exempt (Redistribute 5%)</span>
-                          </label>
-                        )}
-
-                        {dim.tag && (
-                          <span
-                            className={`px-2.5 py-1 rounded-full text-xs font-bold flex items-center gap-1 ${
-                              dim.isGap
-                                ? "bg-error/10 text-error"
-                                : dim.tag === "Solid Strength"
-                                ? "bg-secondary/15 text-secondary"
-                                : "bg-surface-container text-on-surface"
-                            }`}
-                          >
-                            {dim.isGap && (
-                              <span className="material-symbols-outlined text-[14px]">priority_high</span>
-                            )}
-                            {dim.tag === "Solid Strength" && (
-                              <span className="material-symbols-outlined text-[14px]">trending_up</span>
-                            )}
-                            <span>{dim.tag}</span>
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Descriptive Anchor Context */}
-                    <div className="p-3.5 rounded-xl bg-surface-container mb-4 text-xs leading-relaxed">
-                      <p className="text-on-surface">
-                        <span
-                          className={`font-bold mr-1 ${
-                            dim.isGap
-                              ? "text-error"
-                              : currentRating >= 4
-                              ? "text-secondary"
-                              : "text-primary"
-                          }`}
-                        >
-                          Current Level ({currentRating} - {dim.levelBadge}):
-                        </span>
-                        {dim.currentLevel}
-                      </p>
-                      {dim.isGap && (
-                        <div className="mt-2 text-xs font-bold text-primary flex items-center gap-1.5">
-                          <span className="material-symbols-outlined text-[15px]">arrow_circle_right</span>
-                          <span>Maps directly to deterministic module S08 (Offer Negotiation Playbook).</span>
-                        </div>
-                      )}
-                      {dim.id === 3 && isArtifactExempt && (
-                        <span className="text-on-surface-variant text-[11px] mt-1 block">
-                          Exemption rule active: 5% weight redistributed proportionally across applicable dimensions per PRD §8.3.
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Score Button Radios (1-5) */}
-                    <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
-                      <span className="text-xs font-bold text-on-surface-variant uppercase tracking-wider font-mono">
-                        Self Assessment:
-                      </span>
-                      <div className="flex items-center gap-2">
-                        {[1, 2, 3, 4, 5].map((scoreVal) => {
-                          const isSelected = currentRating === scoreVal;
-                          return (
-                            <button
-                              key={scoreVal}
-                              type="button"
-                              onClick={() => setRatingFor(dim.id, scoreVal)}
-                              className={`w-10 h-10 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center transition-all cursor-pointer border ${
-                                isSelected
-                                  ? "bg-primary text-on-primary border-primary shadow-sm ring-2 ring-primary/20 scale-105"
-                                  : "bg-surface-container hover:bg-surface-container-high text-on-surface border-outline-variant/20"
-                              }`}
-                            >
-                              {scoreVal}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </article>
+                    {isSelected && <Check className="w-3.5 h-3.5" />}
+                    <span>{domain}</span>
+                  </button>
                 );
               })}
             </div>
-          </section>
+          </div>
 
-          {/* Right Column: Real-Time Dynamic Baseline Computation & Deterministic Next Action (4 Cols Sticky) */}
-          <aside className="lg:col-span-4 flex flex-col gap-6 lg:sticky lg:top-20">
-            {/* Score Overview Card */}
-            <div className="p-6 rounded-2xl bg-surface-container-lowest shadow-md border border-outline-variant/30">
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-xs uppercase tracking-wider text-on-surface-variant font-bold font-mono">
-                  Readiness Metric
+          {/* Target Company Archetype Multi-Select */}
+          <div className="space-y-2.5 pt-2">
+            <label className="block text-xs font-bold text-[#1c1b1b]">
+              Target Employer Archetypes (Multi-select)
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {COMPANY_TIERS.map((tier) => {
+                const Icon = tier.icon;
+                const isSelected = selectedTiers.includes(tier.id);
+                return (
+                  <button
+                    key={tier.id}
+                    type="button"
+                    onClick={() => toggleTier(tier.id)}
+                    className={`p-3.5 rounded-xl border-2 text-left transition-all flex items-center justify-between cursor-pointer ${
+                      isSelected
+                        ? "border-[#5145cd] bg-indigo-50/30"
+                        : "border-[#e7e7eb] hover:border-gray-300 bg-white"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <Icon className={`w-4 h-4 shrink-0 ${isSelected ? "text-[#5145cd]" : "text-gray-400"}`} />
+                      <div className="min-w-0">
+                        <div className="text-xs font-bold text-[#1c1b1b] truncate">{tier.title}</div>
+                        <div className="text-[11px] text-gray-500 truncate">{tier.examples}</div>
+                      </div>
+                    </div>
+                    <span
+                      className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ml-2 ${
+                        isSelected ? "border-[#5145cd] bg-[#5145cd] text-white" : "border-gray-300"
+                      }`}
+                    >
+                      {isSelected && <Check className="w-2.5 h-2.5" />}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Calibrated Target CTC Slider */}
+          <div className="p-4 sm:p-5 rounded-xl bg-[#f6f3f2] border border-[#e7e7eb] space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <span className="text-xs font-bold text-[#1c1b1b]">
+                  Calibrated Target CTC Compensation Band
                 </span>
-                <span className="px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-bold">
-                  {calculatedScore >= 75 ? "Proficient Band" : "Foundation Band"}
+                <p className="text-[11px] text-gray-500">
+                  Aligned with current Bangalore/Hyderabad verified offer benchmarks
+                </p>
+              </div>
+              <div className="px-3 py-1 rounded-lg bg-emerald-100 border border-emerald-300 text-emerald-900 font-extrabold text-xs self-start sm:self-auto font-mono">
+                ₹{targetCtc}L – ₹{targetCtc + 10}L CTC
+              </div>
+            </div>
+
+            <input
+              type="range"
+              min={14}
+              max={65}
+              step={2}
+              value={targetCtc}
+              onChange={(e) => setTargetCtc(Number(e.target.value))}
+              className="w-full accent-[#5145cd] cursor-pointer"
+            />
+
+            <div className="flex justify-between text-[11px] text-gray-500 font-mono font-medium">
+              <span>Campus Entry (₹14L)</span>
+              <span>Median Tier-1 SDE-2 (₹36L)</span>
+              <span>Principal / Unicorn (₹65L+)</span>
+            </div>
+          </div>
+        </div>
+
+        {/* ===================================================== */}
+        {/* SECTION 3: 8-DIMENSION BASELINE ASSESSMENT            */}
+        {/* ===================================================== */}
+        <div className="bg-white rounded-2xl border border-[#e7e7eb] p-6 sm:p-8 shadow-xs space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-[#f0eded]">
+            <div>
+              <span className="text-[11px] font-bold text-[#5145cd] uppercase tracking-wider block">
+                Step 3 — 8-Dimension Evaluation Model
+              </span>
+              <h2 className="text-lg sm:text-xl font-extrabold text-[#1c1b1b] tracking-tight">
+                Rate Your Current Competency Baseline
+              </h2>
+              <p className="text-xs text-[#66666f] mt-0.5">
+                Self-evaluation calibrates your roadmap and pairs with mentor diagnostic interviews.
+              </p>
+            </div>
+            <span className="px-2.5 py-1 rounded-full bg-indigo-50 border border-indigo-200 text-[#3828b5] text-xs font-bold self-start sm:self-auto">
+              Linear 1 → 5 Scale
+            </span>
+          </div>
+
+          {/* 8 Competency Cards Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+            {DIMENSIONS.map((dim) => {
+              const currentRating = ratings[dim.id] || 3;
+              const isPriorityGap = currentRating <= 2;
+              const isStrong = currentRating >= 4;
+
+              return (
+                <div
+                  key={dim.id}
+                  className={`p-3.5 rounded-xl border transition-all ${
+                    isPriorityGap
+                      ? "border-amber-300 bg-amber-50/30"
+                      : "border-[#e7e7eb] bg-[#fdfdfd]"
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-bold text-[#1c1b1b] truncate">
+                      {dim.name}
+                    </span>
+                    <span
+                      className={`text-[11px] font-bold shrink-0 ${
+                        isPriorityGap
+                          ? "text-amber-700"
+                          : isStrong
+                          ? "text-emerald-700"
+                          : "text-gray-600"
+                      }`}
+                    >
+                      {currentRating === 1
+                        ? "1 (Needs Work)"
+                        : currentRating === 2
+                        ? "2 (Developing)"
+                        : currentRating === 3
+                        ? "3 (Competent)"
+                        : currentRating === 4
+                        ? "4 (Strong)"
+                        : "5 (Tier-1 Ready)"}
+                    </span>
+                  </div>
+
+                  <p className="text-[11px] text-gray-500 leading-tight mb-2.5 line-clamp-1">
+                    {dim.subtitle}
+                  </p>
+
+                  {/* 1-5 Segmented Buttons */}
+                  <div className="grid grid-cols-5 gap-1 text-xs font-bold">
+                    {[1, 2, 3, 4, 5].map((lvl) => {
+                      const isActive = currentRating === lvl;
+                      return (
+                        <button
+                          key={lvl}
+                          type="button"
+                          onClick={() => setRating(dim.id, lvl)}
+                          className={`h-8 rounded-lg transition-all cursor-pointer flex items-center justify-center font-mono ${
+                            isActive
+                              ? lvl <= 2
+                                ? "bg-amber-600 text-white shadow-xs"
+                                : "bg-[#5145cd] text-white shadow-xs"
+                              : "bg-gray-100 hover:bg-gray-200 text-gray-700"
+                          }`}
+                        >
+                          {lvl}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Dynamic Priority Gap Banner */}
+          <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
+            <div className="text-xs text-amber-900 leading-relaxed">
+              <strong className="font-bold text-amber-950">
+                Identified Priority Sprint Vector:
+              </strong>{" "}
+              {lowestDimension.dim.name} (Rated {lowestDimension.score}/5). We will prioritize{" "}
+              <span className="font-bold underline decoration-amber-400">
+                {lowestDimension.dim.sprintModule}
+              </span>{" "}
+              and assign an accredited Principal Engineer mentor for your 1:1 drill.
+            </div>
+          </div>
+        </div>
+
+        {/* ===================================================== */}
+        {/* SECTION 4: RESUME & VERIFIED CREDENTIALS              */}
+        {/* ===================================================== */}
+        <div className="bg-white rounded-2xl border border-[#e7e7eb] p-6 sm:p-8 shadow-xs space-y-6">
+          <div className="pb-2 border-b border-[#f0eded]">
+            <span className="text-[11px] font-bold text-[#5145cd] uppercase tracking-wider block">
+              Step 4 — Verification Credentials
+            </span>
+            <h2 className="text-lg sm:text-xl font-extrabold text-[#1c1b1b] tracking-tight">
+              Verified Profile Data &amp; PDF Resume
+            </h2>
+            <p className="text-xs text-[#66666f] mt-0.5">
+              Used strictly for automated ATS score parsing and mentor pre-read materials under DPDP Act 2023.
+            </p>
+          </div>
+
+          {/* Resume Upload Box */}
+          <div className="p-4 rounded-xl bg-[#f6f3f2] border border-[#e7e7eb] flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              <div className="w-10 h-10 rounded-xl bg-red-100 text-red-700 flex items-center justify-center shrink-0">
+                <FileText className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-xs text-[#1c1b1b] truncate">
+                    {resumeFileName}
+                  </span>
+                  <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[10px] font-bold font-mono">
+                    ATS: 91%
+                  </span>
+                </div>
+                <p className="text-[11px] text-gray-500 mt-0.5">
+                  1.4 MB • Parsed 18 Technical Skills &amp; 3 Production Systems
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
+              <label className="px-3 py-1.5 rounded-lg bg-white border border-[#e7e7eb] hover:bg-gray-50 text-xs font-bold text-[#1c1b1b] cursor-pointer shadow-xs transition-colors">
+                <span>Replace File</span>
+                <input
+                  type="file"
+                  accept=".pdf"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setResumeFileName(file.name);
+                      setResumeUploaded(true);
+                    }
+                  }}
+                />
+              </label>
+              <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+            </div>
+          </div>
+
+          {/* Inputs: LinkedIn & GitHub */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold text-[#1c1b1b] flex items-center gap-1.5">
+                <svg className="w-3.5 h-3.5 fill-[#0a66c2]" viewBox="0 0 24 24">
+                  <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/>
+                </svg>
+                <span>LinkedIn Profile URL</span>
+              </label>
+              <div className="relative flex items-center">
+                <input
+                  type="text"
+                  value={linkedinUrl}
+                  onChange={(e) => setLinkedinUrl(e.target.value)}
+                  placeholder="https://linkedin.com/in/username"
+                  className="w-full h-10 px-3 pr-20 rounded-xl border border-[#e7e7eb] bg-white text-xs font-medium text-[#1c1b1b] focus:outline-none focus:ring-2 focus:ring-[#5145cd]"
+                />
+                <span className="absolute right-2 px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 text-[10px] font-bold flex items-center gap-1">
+                  <Check className="w-3 h-3" /> Synced
                 </span>
               </div>
+            </div>
 
-              {/* Large Score Figure & Ring */}
-              <div className="flex items-center justify-between gap-4 mb-6">
-                <div>
-                  <div className="text-4xl sm:text-5xl font-extrabold text-on-surface leading-none tracking-tight font-heading font-mono">
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold text-[#1c1b1b] flex items-center gap-1.5">
+                <svg className="w-3.5 h-3.5 fill-[#1c1b1b]" viewBox="0 0 24 24">
+                  <path d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.1-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2z"/>
+                </svg>
+                <span>GitHub Engineering Profile</span>
+              </label>
+              <div className="relative flex items-center">
+                <input
+                  type="text"
+                  value={githubUrl}
+                  onChange={(e) => setGithubUrl(e.target.value)}
+                  placeholder="https://github.com/username"
+                  className="w-full h-10 px-3 pr-20 rounded-xl border border-[#e7e7eb] bg-white text-xs font-medium text-[#1c1b1b] focus:outline-none focus:ring-2 focus:ring-[#5145cd]"
+                />
+                <span className="absolute right-2 px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 text-[10px] font-bold flex items-center gap-1">
+                  <Check className="w-3 h-3" /> 48 Repos
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ===================================================== */}
+        {/* SECTION 5: REAL-TIME CALIBRATED PREVIEW & UNLOCK      */}
+        {/* ===================================================== */}
+        <div className="bg-white rounded-2xl border border-[#e7e7eb] p-6 sm:p-8 shadow-md space-y-6">
+          <div className="flex items-center justify-between pb-2 border-b border-[#f0eded]">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-indigo-50 text-[#5145cd] flex items-center justify-center">
+                <Sliders className="w-4 h-4" />
+              </div>
+              <h2 className="text-lg sm:text-xl font-extrabold text-[#1c1b1b] tracking-tight">
+                Calibrated Diagnostic Baseline
+              </h2>
+            </div>
+            <span className="text-xs font-mono font-bold text-gray-500">
+              Readiness Index v4.1
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+            {/* Circular Gauge Card */}
+            <div className="p-6 rounded-xl bg-[#f6f3f2] border border-[#e7e7eb] flex flex-col items-center justify-center text-center space-y-2">
+              <div className="relative w-28 h-28 flex items-center justify-center">
+                <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                  {/* Background Track */}
+                  <path
+                    className="text-gray-200"
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="3.5"
+                  />
+                  {/* Foreground Animated Value */}
+                  <path
+                    className="text-[#5145cd] transition-all duration-700 ease-out"
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeDasharray={`${calculatedScore}, 100`}
+                    strokeLinecap="round"
+                    strokeWidth="3.5"
+                  />
+                </svg>
+                <div className="absolute flex flex-col items-center justify-center">
+                  <span className="text-2xl font-black text-[#1c1b1b] font-mono tracking-tight">
                     {calculatedScore}
-                    <span className="text-lg text-on-surface-variant font-normal">/100</span>
-                  </div>
-                  <p className="text-on-surface-variant text-xs mt-1 font-semibold">Weighted baseline index</p>
-                </div>
-
-                {/* Compact Radial Progress Chart */}
-                <div className="w-16 h-16 relative flex items-center justify-center shrink-0">
-                  <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
-                    <circle
-                      className="text-surface-container stroke-current"
-                      cx="18"
-                      cy="18"
-                      fill="none"
-                      r="15.5"
-                      strokeWidth="3"
-                    />
-                    <circle
-                      className="text-primary stroke-current transition-all duration-300"
-                      cx="18"
-                      cy="18"
-                      fill="none"
-                      r="15.5"
-                      strokeDasharray="97.38"
-                      strokeDashoffset={97.38 - (97.38 * calculatedScore) / 100}
-                      strokeLinecap="round"
-                      strokeWidth="3"
-                    />
-                  </svg>
-                  <span className="absolute text-xs font-bold text-on-surface font-mono">
-                    {calculatedScore}%
+                  </span>
+                  <span className="text-[10px] uppercase font-bold text-gray-500 font-mono">
+                    out of 100
                   </span>
                 </div>
               </div>
 
-              {/* Formula Box */}
-              <div className="p-3 rounded-xl bg-surface-container-low text-on-surface-variant text-xs mb-6 border border-outline-variant/20">
-                <div className="flex items-center gap-1.5 font-bold text-on-surface mb-0.5">
-                  <span className="material-symbols-outlined text-[15px] text-primary">function</span>
-                  <span>Deterministic Algorithm:</span>
-                </div>
-                <code className="text-[11px] font-mono text-primary font-bold">
-                  Baseline = Σ(Weight × Score / 5) × 100
-                </code>
-              </div>
-
-              {/* 8-Vector Mini Horizon Sparkline Breakdown */}
-              <div className="flex flex-col gap-2.5 mb-6">
-                <span className="text-xs font-bold text-on-surface uppercase tracking-wider font-mono">
-                  Dimension Breakdown
-                </span>
-
-                {[
-                  { name: "1. Resume & ATS", id: 1 },
-                  { name: "2. LinkedIn Profile", id: 2 },
-                  { name: "3. Artifacts / Code", id: 3 },
-                  { name: "4. STAR Behavioral", id: 4 },
-                  { name: "5. Tech / Sys Design", id: 5 },
-                  { name: "6. Whiteboard Acumen", id: 6 },
-                  { name: "7. Salary & Planning", id: 7, isGap: true },
-                  { name: "8. Confidence", id: 8 },
-                ].map((vec) => {
-                  const rating = ratings[vec.id] || 3;
-                  const pct = (rating / 5) * 100;
-                  return (
-                    <div key={vec.id} className="flex items-center justify-between text-xs">
-                      <span
-                        className={`truncate max-w-[170px] ${
-                          vec.isGap ? "text-error font-bold" : "text-on-surface-variant"
-                        }`}
-                      >
-                        {vec.name}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <div className="w-20 h-2 bg-surface-container rounded-full overflow-hidden">
-                          <div
-                            className={`h-full rounded-full transition-all duration-300 ${
-                              vec.isGap ? "bg-error" : rating >= 4 ? "bg-secondary" : "bg-primary"
-                            }`}
-                            style={{ width: `${pct}%` }}
-                          />
-                        </div>
-                        <span
-                          className={`font-mono text-[11px] w-6 text-right font-bold ${
-                            vec.isGap ? "text-error" : "text-on-surface"
-                          }`}
-                        >
-                          {rating}/5
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Deterministic Gap Callout Box */}
-              <div className="p-4 rounded-xl bg-error-container/40 border border-error/20 flex flex-col gap-2 mb-6">
-                <div className="flex items-center gap-2 text-on-error-container font-bold text-xs sm:text-sm">
-                  <span className="material-symbols-outlined text-[18px]">emergency</span>
-                  <span>Identified Growth Vector</span>
-                </div>
-                <p className="text-xs text-on-surface leading-relaxed">
-                  Dimension 7 (Career Planning &amp; Negotiation) represents your highest weighted deficit (20% weight, score {ratings[7] || 2}.0).
-                </p>
-                <div className="flex items-center gap-1.5 text-[11px] font-bold text-on-error-container">
-                  <span className="material-symbols-outlined text-[13px]">bolt</span>
-                  <span>Zero Speculative Hype: Algorithmic mapping is 100% deterministic per PRD §8.5.</span>
-                </div>
-              </div>
-
-              {/* Suggested Stage 5 Sprints */}
-              <div className="flex flex-col gap-3">
-                <span className="text-xs font-bold text-on-surface uppercase tracking-wider font-mono">
-                  Suggested Stage 5 Sprints
-                </span>
-
-                <Link
-                  href="/services/s08-salary-negotiation"
-                  className="p-3 rounded-xl bg-surface-container-low hover:bg-surface-container flex items-center justify-between gap-3 border border-outline-variant/20 transition-colors"
-                >
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <span className="px-1.5 py-0.5 rounded bg-primary text-on-primary font-mono text-[10px] font-bold">
-                        S08
-                      </span>
-                      <p className="text-xs font-bold text-on-surface truncate">Offer &amp; Salary Negotiation</p>
-                    </div>
-                    <span className="text-on-surface-variant text-[11px] block mt-0.5 truncate">
-                      Tier-1 GCC Compensation Benchmarks
-                    </span>
-                  </div>
-                  <span className="text-xs text-primary font-bold font-mono shrink-0">₹699</span>
-                </Link>
-
-                <Link
-                  href="/services/s06-technical-mock"
-                  className="p-3 rounded-xl bg-surface-container-low hover:bg-surface-container flex items-center justify-between gap-3 border border-outline-variant/20 transition-colors"
-                >
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <span className="px-1.5 py-0.5 rounded bg-surface-container-highest text-on-surface font-mono text-[10px] font-bold">
-                        S06
-                      </span>
-                      <p className="text-xs font-bold text-on-surface truncate">Backend System Mock</p>
-                    </div>
-                    <span className="text-on-surface-variant text-[11px] block mt-0.5 truncate">
-                      Distributed Locks &amp; Sharding Scenarios
-                    </span>
-                  </div>
-                  <span className="text-xs text-primary font-bold font-mono shrink-0">₹999</span>
-                </Link>
-              </div>
+              <span className="px-2.5 py-0.5 rounded-full bg-indigo-100 text-[#3828b5] font-bold text-xs">
+                {calculatedScore >= 80
+                  ? "Tier-1 Ready"
+                  : calculatedScore >= 65
+                  ? "Solid Foundation"
+                  : "Developing"}
+              </span>
+              <p className="text-[11px] text-gray-500 leading-snug">
+                Estimated 6–8 weeks to achieve 90+ readiness benchmark.
+              </p>
             </div>
 
-            {/* Tier-1 GCC Alignment Context */}
-            <div className="p-5 rounded-2xl bg-surface-container-lowest shadow-xs border border-outline-variant/30 flex items-start gap-3.5">
-              <div className="w-8 h-8 rounded-full bg-secondary-container/40 text-on-secondary-container flex items-center justify-center shrink-0">
-                <span className="material-symbols-outlined text-[18px]">verified</span>
+            {/* Diagnostic Details (2 Cols) */}
+            <div className="md:col-span-2 space-y-3">
+              <div className="p-3.5 rounded-xl bg-[#f6f3f2] border border-[#e7e7eb] flex items-start gap-3">
+                <Star className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+                <div>
+                  <div className="text-xs font-bold text-[#1c1b1b]">Top Calibrated Strength</div>
+                  <div className="text-xs text-gray-600 mt-0.5">
+                    {highestDimension.dim.name} (Rated {highestDimension.score}/5). High initial pass likelihood.
+                  </div>
+                </div>
               </div>
-              <div>
-                <h3 className="text-xs sm:text-sm font-bold text-on-surface font-heading">
-                  Tier-1 Calibration Target
-                </h3>
-                <p className="text-on-surface-variant text-xs mt-1 leading-relaxed">
-                  Rubrics match actual SDE-2 bar benchmarks observed at Walmart Global Tech, Goldman Sachs Hyderabad, and Swiggy backend teams.
-                </p>
+
+              <div className="p-3.5 rounded-xl bg-[#f6f3f2] border border-[#e7e7eb] flex items-start gap-3">
+                <Terminal className="w-5 h-5 text-[#5145cd] shrink-0 mt-0.5" />
+                <div>
+                  <div className="text-xs font-bold text-[#1c1b1b]">Automated Roadmap Assignment</div>
+                  <div className="text-xs text-gray-600 mt-0.5">
+                    Assigned to Primary Track:{" "}
+                    <strong className="text-[#1c1b1b]">{lowestDimension.dim.sprintModule}</strong>.
+                  </div>
+                </div>
               </div>
-            </div>
-          </aside>
-        </div>
 
-        {/* Bottom Fixed Actions & Privacy Strip */}
-        <div className="mt-12 pt-6">
-          <div className="p-6 rounded-2xl bg-surface-container-lowest shadow-md border border-outline-variant/30 flex flex-col md:flex-row items-center justify-between gap-6">
-            {/* Left: Back Action */}
-            <button
-              type="button"
-              onClick={() => router.push("/dashboard")}
-              className="px-5 py-2.5 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface text-xs sm:text-sm font-bold transition-colors flex items-center gap-2 cursor-pointer border border-outline-variant/30"
-            >
-              <span className="material-symbols-outlined text-[18px]">arrow_back</span>
-              <span>Back to Step 3 (Situation &amp; Artifacts)</span>
-            </button>
-
-            {/* Right: Primary Action CTAs */}
-            <div className="flex flex-wrap items-center gap-3">
-              <button
-                type="button"
-                onClick={handleSkip}
-                className="px-4 py-2.5 rounded-xl bg-transparent hover:bg-surface-container text-on-surface-variant hover:text-on-surface text-xs sm:text-sm font-semibold transition-colors cursor-pointer"
-              >
-                Skip Baseline (Set to 0 / Unassessed)
-              </button>
-              <button
-                type="button"
-                disabled={isSaving}
-                onClick={handleSaveAndLock}
-                className="px-6 py-2.5 rounded-xl bg-primary text-on-primary hover:bg-primary-container hover:text-on-primary-container text-xs sm:text-sm font-bold shadow-md transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
-              >
-                <span>{isSaving ? "Calibrating & Locking..." : "Save & Lock Baseline Assessment"}</span>
-                <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
-              </button>
+              <div className="p-3.5 rounded-xl bg-[#f6f3f2] border border-[#e7e7eb] flex items-start gap-3">
+                <BadgeCheck className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+                <div>
+                  <div className="text-xs font-bold text-[#1c1b1b]">Mentor Pool Availability</div>
+                  <div className="text-xs text-gray-600 mt-0.5">
+                    <strong className="text-emerald-700">14 Tier-1 Verified Mentors</strong> (Google, Microsoft, Swiggy) available for immediate onboarding session dispatch.
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Explicit Privacy / Zero-Exploitation Guarantee Footnote */}
-          <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-center text-on-surface-variant text-xs">
-            <span className="material-symbols-outlined text-[16px] text-secondary">lock</span>
-            <span>
-              Readiness vectors are 100% private by default under DreamX Candidate Trust Shield. Baseline self-assessments are never shared with prospective employers or recruiters without explicit opt-in verification.
-            </span>
+          {/* Primary Action Button */}
+          <div className="pt-4 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-[#f0eded]">
+            <Link
+              href="/dashboard"
+              className="text-xs font-bold text-gray-500 hover:text-gray-900 transition-colors"
+            >
+              ← Skip to Dashboard (Use Defaults)
+            </Link>
+
+            <button
+              type="button"
+              disabled={isSaving}
+              onClick={handleCompleteOnboarding}
+              className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-gradient-to-r from-[#3828b5] to-[#5145cd] hover:from-[#2e2096] hover:to-[#4337b9] text-white text-sm font-bold shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+            >
+              {isSaving ? (
+                <>
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <span>Calibrating &amp; Provisioning Dashboard...</span>
+                </>
+              ) : saveSuccess ? (
+                <>
+                  <CheckCircle2 className="w-4 h-4 text-emerald-300" />
+                  <span>Baseline Locked! Entering Portal...</span>
+                </>
+              ) : (
+                <>
+                  <span>Complete Setup &amp; Unlock Dashboard</span>
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
+            </button>
+          </div>
+
+          <div className="text-center pt-1">
+            <p className="text-[11px] text-gray-400 font-medium flex items-center justify-center gap-1.5">
+              <Lock className="w-3 h-3" />
+              <span>
+                Auto-saved securely • 100% compliant with Indian DPDP Act 2023 • Guaranteed zero resume broker distribution
+              </span>
+            </p>
+          </div>
+        </div>
+
+        {/* ===================================================== */}
+        {/* TRUST & SECURITY FOOTER CARDS                         */}
+        {/* ===================================================== */}
+        <div className="rounded-2xl bg-white border border-[#e7e7eb] p-6 shadow-xs">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+            <div className="space-y-1">
+              <ShieldCheck className="w-5 h-5 text-emerald-600 mx-auto" />
+              <div className="text-xs font-bold text-[#1c1b1b]">256-Bit SSL Shield</div>
+              <div className="text-[10px] text-gray-500">End-to-end encrypted telemetry</div>
+            </div>
+            <div className="space-y-1">
+              <Lock className="w-5 h-5 text-[#5145cd] mx-auto" />
+              <div className="text-xs font-bold text-[#1c1b1b]">RBI Escrow Safeguard</div>
+              <div className="text-[10px] text-gray-500">Nodal account protected</div>
+            </div>
+            <div className="space-y-1">
+              <BadgeCheck className="w-5 h-5 text-emerald-600 mx-auto" />
+              <div className="text-xs font-bold text-[#1c1b1b]">DPDP Act 2023</div>
+              <div className="text-[10px] text-gray-500">Zero data selling guarantee</div>
+            </div>
+            <div className="space-y-1">
+              <RefreshCw className="w-5 h-5 text-indigo-600 mx-auto" />
+              <div className="text-xs font-bold text-[#1c1b1b]">1-Hour Free Cancel</div>
+              <div className="text-[10px] text-gray-500">100% instant refund SLA</div>
+            </div>
           </div>
         </div>
       </main>
-
-      {/* Confirmation Modal */}
-      {isSavedModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-surface-container-lowest rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-outline-variant/30 space-y-6">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-secondary-container/40 text-secondary flex items-center justify-center shrink-0">
-                <span className="material-symbols-outlined text-[24px]">verified</span>
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-on-surface font-heading">Baseline Assessment Locked!</h3>
-                <span className="text-xs text-on-surface-variant font-mono">Score: {calculatedScore}/100 Calculated</span>
-              </div>
-            </div>
-
-            <p className="text-xs sm:text-sm text-on-surface-variant leading-relaxed">
-              Your 8-dimension readiness starting point has been calibrated and recorded to your candidate ledger under Pipeline ID <code className="font-mono text-xs font-bold text-primary">DX-2025-IND-8941</code>.
-            </p>
-
-            <div className="p-3.5 bg-surface-container-low rounded-xl text-xs space-y-1.5 border border-outline-variant/20">
-              <div className="font-bold text-on-surface">Recommended Next Action:</div>
-              <div className="text-on-surface-variant">
-                Address Dimension 7 with <strong>S08: Offer &amp; Salary Negotiation</strong> or book a technical simulation drill.
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3 pt-2">
-              <button
-                type="button"
-                onClick={() => router.push("/dashboard")}
-                className="flex-1 py-3 rounded-xl bg-primary text-on-primary hover:bg-primary-container hover:text-on-primary-container text-xs sm:text-sm font-bold shadow-md transition-all cursor-pointer flex items-center justify-center gap-1.5"
-              >
-                <span>Return to Dashboard</span>
-                <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Footer Strip */}
-      <footer className="w-full bg-surface-container-low py-6 border-t border-outline-variant/20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
-          <div className="flex items-center gap-2 text-on-surface-variant text-xs">
-            <span className="material-symbols-outlined text-[16px] text-secondary">lock</span>
-            <span>256-bit Encrypted Candidate Onboarding • Verified Evaluation Pipeline</span>
-          </div>
-          <div className="text-on-surface-variant text-xs">
-            © 2025 DreamX Career Acceleration Ecosystem. All rights reserved.
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }
