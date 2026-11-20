@@ -46,6 +46,8 @@ export interface Database {
           segment: CandidateSegment | null;
           target_role: string | null;
           target_company_tier: string | null;
+          linkedin_url?: string | null;
+          github_url?: string | null;
           experience_years: number;
           bio: string | null;
           admin_subrole?: AdminSubrole | null;
@@ -63,6 +65,8 @@ export interface Database {
           segment?: CandidateSegment | null;
           target_role?: string | null;
           target_company_tier?: string | null;
+          linkedin_url?: string | null;
+          github_url?: string | null;
           experience_years?: number;
           bio?: string | null;
           admin_subrole?: AdminSubrole | null;
@@ -80,6 +84,8 @@ export interface Database {
           segment?: CandidateSegment | null;
           target_role?: string | null;
           target_company_tier?: string | null;
+          linkedin_url?: string | null;
+          github_url?: string | null;
           experience_years?: number;
           bio?: string | null;
           admin_subrole?: AdminSubrole | null;

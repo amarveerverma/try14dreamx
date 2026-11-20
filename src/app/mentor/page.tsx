@@ -702,25 +702,6 @@ export default function MentorPortalPage() {
             <span>48h SLA Policy</span>
           </button>
 
-          {/* Role Simulator Pill */}
-          <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-indigo-950/40 border border-indigo-500/20 text-xs">
-            <span className="text-[10px] text-indigo-300 font-mono">SIM:</span>
-            <select
-              value={simulatedTier}
-              onChange={(e) => {
-                const val = e.target.value as "tier1" | "tier2" | "tier3";
-                setSimulatedTier(val);
-                setIsApplicantMode(val === "tier3");
-                addToast(`Simulating ${val.toUpperCase()} Tier profile and price bands`, "info");
-              }}
-              className="bg-transparent text-white font-bold text-xs focus:outline-none cursor-pointer"
-            >
-              <option value="tier1" className="bg-[#12141f]">Tier 1 (FAANG / Ex-Google)</option>
-              <option value="tier2" className="bg-[#12141f]">Tier 2 (High-Growth Tech)</option>
-              <option value="tier3" className="bg-[#12141f]">Tier 3 (Enterprise IT)</option>
-            </select>
-          </div>
-
           {/* Notifications Trigger */}
           <div className="relative">
             <button

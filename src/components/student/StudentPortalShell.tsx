@@ -817,27 +817,6 @@ export function StudentPortalShell({
                 </p>
               </div>
             </button>
-
-            {/* Role Switcher Pill */}
-            <div
-              role="group"
-              aria-label="Switch DreamX portal workspace"
-              className="hidden md:inline-flex items-center rounded-xl border border-zinc-200/90 bg-zinc-100/90 p-0.5 text-[11px] font-semibold"
-            >
-              <span className="rounded-lg bg-white text-[#4035b3] px-2.5 py-1 shadow-2xs">
-                Student
-              </span>
-              <button
-                type="button"
-                onClick={() => {
-                  if (onSwitchToMentorPortal) onSwitchToMentorPortal();
-                  else router.push("/mentor");
-                }}
-                className="rounded-lg px-2.5 py-1 text-zinc-600 hover:text-zinc-900 transition-colors"
-              >
-                Mentor
-              </button>
-            </div>
           </div>
 
           {/* Search Trigger */}
@@ -1031,23 +1010,6 @@ export function StudentPortalShell({
                   >
                     Profile & Privacy Settings
                   </button>
-                  <div className="pt-2 border-t border-zinc-100">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setProfileDropdownOpen(false);
-                        if (onSwitchToMentorPortal) onSwitchToMentorPortal();
-                        else router.push("/mentor");
-                      }}
-                      className="w-full flex items-center justify-between rounded-xl bg-indigo-50 border border-indigo-200 px-3 py-2 text-xs font-semibold text-[#4035b3] hover:bg-indigo-100"
-                    >
-                      <span className="flex items-center gap-1.5">
-                        <UserCheck className="h-3.5 w-3.5" />
-                        Switch to Mentor Portal
-                      </span>
-                      <span>→</span>
-                    </button>
-                  </div>
                 </div>
               )}
             </div>
@@ -1462,21 +1424,6 @@ export function StudentPortalShell({
                   );
                 })}
               </nav>
-            </div>
-
-            <div className="pt-3 border-t border-zinc-200 space-y-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  if (onSwitchToMentorPortal) onSwitchToMentorPortal();
-                  else router.push("/mentor");
-                }}
-                className="w-full flex items-center justify-between rounded-xl bg-indigo-50 border border-indigo-200 px-3 py-2 text-xs font-semibold text-[#4035b3]"
-              >
-                <span>Switch to Mentor Portal</span>
-                <span>→</span>
-              </button>
             </div>
           </div>
         </div>

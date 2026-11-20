@@ -192,10 +192,11 @@ export default function CandidateOnboardingPage() {
   const [selectedDomain, setSelectedDomain] = React.useState<string>("Backend & Distributed Systems");
   const [selectedTiers, setSelectedTiers] = React.useState<string[]>(["tier1_gcc", "unicorns"]);
   const [targetCtc, setTargetCtc] = React.useState<number>(36); // in Lakhs
-  const [linkedinUrl, setLinkedinUrl] = React.useState<string>("https://linkedin.com/in/");
-  const [githubUrl, setGithubUrl] = React.useState<string>("https://github.com/");
-  const [resumeFileName, setResumeFileName] = React.useState<string>("Resume_Draft_2025.pdf");
-  const [resumeUploaded, setResumeUploaded] = React.useState<boolean>(true);
+  const [linkedinUrl, setLinkedinUrl] = React.useState<string>("");
+  const [githubUrl, setGithubUrl] = React.useState<string>("");
+  const [resumeFileName, setResumeFileName] = React.useState<string>("");
+  const [resumeFileSize, setResumeFileSize] = React.useState<string>("");
+  const [resumeUploaded, setResumeUploaded] = React.useState<boolean>(false);
 
   // Ratings 1-5 for each of the 8 dimensions
   const [ratings, setRatings] = React.useState<Record<number, number>>(() => {
@@ -294,6 +295,8 @@ export default function CandidateOnboardingPage() {
             segment: mappedSegment,
             target_role: selectedDomain,
             target_company_tier: selectedTiers.join(", "),
+            linkedin_url: linkedinUrl.trim() || null,
+            github_url: githubUrl.trim() || null,
             updated_at: new Date().toISOString(),
           })
           .eq("id", targetUserId);
@@ -790,29 +793,65 @@ export default function CandidateOnboardingPage() {
           </div>
 
           {/* Resume Upload Box */}
-          <div className="p-4 rounded-xl bg-[#f6f3f2] border border-[#e7e7eb] flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-3 w-full sm:w-auto">
-              <div className="w-10 h-10 rounded-xl bg-red-100 text-red-700 flex items-center justify-center shrink-0">
-                <FileText className="w-5 h-5" />
-              </div>
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="font-bold text-xs text-[#1c1b1b] truncate">
-                    {resumeFileName}
-                  </span>
-                  <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[10px] font-bold font-mono">
-                    ATS: 91%
-                  </span>
+          {resumeUploaded && resumeFileName ? (
+            <div className="p-4 rounded-xl bg-emerald-50/60 border border-emerald-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-3 w-full sm:w-auto">
+                <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                  <FileText className="w-5 h-5" />
                 </div>
-                <p className="text-[11px] text-gray-500 mt-0.5">
-                  1.4 MB • Parsed 18 Technical Skills &amp; 3 Production Systems
-                </p>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-xs text-[#1c1b1b] truncate max-w-xs">
+                      {resumeFileName}
+                    </span>
+                    <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[10px] font-bold">
+                      Attached
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-gray-500 mt-0.5">
+                    {resumeFileSize || "PDF Document"} • Verified for mentor pre-read &amp; ATS evaluation
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
+                <label className="px-3 py-1.5 rounded-lg bg-white border border-[#e7e7eb] hover:bg-gray-50 text-xs font-bold text-[#1c1b1b] cursor-pointer shadow-xs transition-colors">
+                  <span>Change File</span>
+                  <input
+                    type="file"
+                    accept=".pdf"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setResumeFileName(file.name);
+                        setResumeFileSize((file.size / (1024 * 1024)).toFixed(1) + " MB");
+                        setResumeUploaded(true);
+                      }
+                    }}
+                  />
+                </label>
+                <CheckCircle2 className="w-5 h-5 text-emerald-600" />
               </div>
             </div>
+          ) : (
+            <div className="p-5 rounded-xl bg-[#f6f3f2] border-2 border-dashed border-[#e7e7eb] flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-3 w-full sm:w-auto">
+                <div className="w-10 h-10 rounded-xl bg-white border border-[#e7e7eb] text-gray-500 flex items-center justify-center shrink-0">
+                  <UploadCloud className="w-5 h-5 text-[#5145cd]" />
+                </div>
+                <div>
+                  <div className="font-bold text-xs text-[#1c1b1b]">
+                    Attach Engineering Resume (PDF)
+                  </div>
+                  <p className="text-[11px] text-gray-500 mt-0.5">
+                    Required for 1:1 mentor diagnostic evaluation and ATS keyword matching
+                  </p>
+                </div>
+              </div>
 
-            <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
-              <label className="px-3 py-1.5 rounded-lg bg-white border border-[#e7e7eb] hover:bg-gray-50 text-xs font-bold text-[#1c1b1b] cursor-pointer shadow-xs transition-colors">
-                <span>Replace File</span>
+              <label className="px-4 py-2 rounded-lg bg-[#5145cd] hover:bg-[#4035b3] text-xs font-bold text-white cursor-pointer shadow-xs transition-colors shrink-0">
+                <span>Upload PDF</span>
                 <input
                   type="file"
                   accept=".pdf"
@@ -821,14 +860,14 @@ export default function CandidateOnboardingPage() {
                     const file = e.target.files?.[0];
                     if (file) {
                       setResumeFileName(file.name);
+                      setResumeFileSize((file.size / (1024 * 1024)).toFixed(1) + " MB");
                       setResumeUploaded(true);
                     }
                   }}
                 />
               </label>
-              <CheckCircle2 className="w-5 h-5 text-emerald-600" />
             </div>
-          </div>
+          )}
 
           {/* Inputs: LinkedIn & GitHub */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -841,15 +880,17 @@ export default function CandidateOnboardingPage() {
               </label>
               <div className="relative flex items-center">
                 <input
-                  type="text"
+                  type="url"
                   value={linkedinUrl}
                   onChange={(e) => setLinkedinUrl(e.target.value)}
                   placeholder="https://linkedin.com/in/username"
-                  className="w-full h-10 px-3 pr-20 rounded-xl border border-[#e7e7eb] bg-white text-xs font-medium text-[#1c1b1b] focus:outline-none focus:ring-2 focus:ring-[#5145cd]"
+                  className="w-full h-10 px-3 pr-24 rounded-xl border border-[#e7e7eb] bg-white text-xs font-medium text-[#1c1b1b] focus:outline-none focus:ring-2 focus:ring-[#5145cd]"
                 />
-                <span className="absolute right-2 px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 text-[10px] font-bold flex items-center gap-1">
-                  <Check className="w-3 h-3" /> Synced
-                </span>
+                {linkedinUrl.trim().length > 10 && linkedinUrl.includes("linkedin.com") && (
+                  <span className="absolute right-2 px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 text-[10px] font-bold flex items-center gap-1">
+                    <Check className="w-3 h-3" /> Valid Link
+                  </span>
+                )}
               </div>
             </div>
 
@@ -862,15 +903,17 @@ export default function CandidateOnboardingPage() {
               </label>
               <div className="relative flex items-center">
                 <input
-                  type="text"
+                  type="url"
                   value={githubUrl}
                   onChange={(e) => setGithubUrl(e.target.value)}
                   placeholder="https://github.com/username"
-                  className="w-full h-10 px-3 pr-20 rounded-xl border border-[#e7e7eb] bg-white text-xs font-medium text-[#1c1b1b] focus:outline-none focus:ring-2 focus:ring-[#5145cd]"
+                  className="w-full h-10 px-3 pr-24 rounded-xl border border-[#e7e7eb] bg-white text-xs font-medium text-[#1c1b1b] focus:outline-none focus:ring-2 focus:ring-[#5145cd]"
                 />
-                <span className="absolute right-2 px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 text-[10px] font-bold flex items-center gap-1">
-                  <Check className="w-3 h-3" /> 48 Repos
-                </span>
+                {githubUrl.trim().length > 10 && githubUrl.includes("github.com") && (
+                  <span className="absolute right-2 px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 text-[10px] font-bold flex items-center gap-1">
+                    <Check className="w-3 h-3" /> Valid Link
+                  </span>
+                )}
               </div>
             </div>
           </div>

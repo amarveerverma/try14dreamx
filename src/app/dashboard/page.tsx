@@ -5,13 +5,7 @@ import { useRouter } from "next/navigation";
 import { StudentPortalShell } from "@/components/student/StudentPortalShell";
 
 function DashboardContent() {
-  const router = useRouter();
-
-  return (
-    <StudentPortalShell
-      onSwitchToMentorPortal={() => router.push("/mentor")}
-    />
-  );
+  return <StudentPortalShell />;
 }
 
 export default function StudentDashboardPage() {
