@@ -175,7 +175,7 @@ export default function MentorLoginPage() {
             {/* Email Field */}
             <div className="space-y-1.5">
               <label className="block text-xs font-bold text-gray-300" htmlFor="email">
-                Mentor Registered Work Email
+                Mentor Registered Email Address
               </label>
               <div className="relative flex items-center">
                 <Mail className="w-4 h-4 text-gray-500 absolute left-3 pointer-events-none" />
@@ -186,7 +186,7 @@ export default function MentorLoginPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@company.com or mentor@dreamx.in"
+                  placeholder="name@gmail.com, personal, or work email"
                   className="w-full h-11 pl-10 pr-3 rounded-xl border border-white/10 bg-white/5 text-xs text-white placeholder:text-gray-500 focus:outline-none focus:border-[#5145cd] focus:ring-1 focus:ring-[#5145cd] transition-all"
                 />
               </div>

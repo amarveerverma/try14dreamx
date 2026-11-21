@@ -263,16 +263,21 @@ export default function SignUpPage() {
             <div className="space-y-1.5 text-xs">
               <label className="font-bold text-[#1c1b1b] flex items-center gap-1.5">
                 <Mail className="w-3.5 h-3.5 text-gray-400" />
-                <span>{role === "mentor" ? "Corporate Work Email" : "Email Address"}</span>
+                <span>{role === "mentor" ? "Personal Email Address" : "Email Address"}</span>
               </label>
               <input
                 type="email"
-                placeholder={role === "mentor" ? "name@company.com (For employer audit)" : "name@college.edu or name@gmail.com"}
+                placeholder={role === "mentor" ? "name@gmail.com or personal email" : "name@college.edu or name@gmail.com"}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 className="w-full px-3.5 py-2.5 bg-[#f6f3f2] border border-[#e7e7eb] rounded-lg text-xs text-[#1c1b1b] placeholder:text-gray-400 focus:outline-none focus:border-[#3828b5] focus:bg-white transition-all font-medium"
               />
+              {role === "mentor" && (
+                <p className="text-[11px] text-gray-500">
+                  Use your personal email for login. Corporate work email verification is handled in the next step.
+                </p>
+              )}
             </div>
 
             {/* Mobile Phone */}
