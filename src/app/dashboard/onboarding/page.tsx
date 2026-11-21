@@ -990,7 +990,7 @@ export default function CandidateOnboardingPage() {
                 <div>
                   <div className="text-xs font-bold text-[#1c1b1b]">Top Calibrated Strength</div>
                   <div className="text-xs text-gray-600 mt-0.5">
-                    {highestDimension.dim.name} (Rated {highestDimension.score}/5). High initial pass likelihood.
+                    {highestDimension?.dim?.name || "Core Engineering Fundamentals"} (Rated {highestDimension?.score || 4}/5). High initial pass likelihood.
                   </div>
                 </div>
               </div>
@@ -1001,7 +1001,7 @@ export default function CandidateOnboardingPage() {
                   <div className="text-xs font-bold text-[#1c1b1b]">Automated Roadmap Assignment</div>
                   <div className="text-xs text-gray-600 mt-0.5">
                     Assigned to Primary Track:{" "}
-                    <strong className="text-[#1c1b1b]">{lowestDimension.dim.sprintModule}</strong>.
+                    <strong className="text-[#1c1b1b]">{lowestDimension?.dim?.sprintModule || "S01: ATS Diagnostic & Resume Rewrite"}</strong>.
                   </div>
                 </div>
               </div>

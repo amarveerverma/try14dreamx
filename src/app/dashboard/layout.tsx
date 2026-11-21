@@ -23,8 +23,10 @@ export default function StudentDashboardLayout({
     if (!isLoading) {
       if (!user) {
         router.replace(`/login?redirect=${encodeURIComponent(pathname)}`);
-      } else if (user.role === "mentor" && pathname === "/dashboard") {
+      } else if (user.role === "mentor") {
         router.replace("/mentor");
+      } else if (user.role === "admin") {
+        router.replace("/admin");
       } else if (!user.onboarding_completed && pathname !== "/dashboard/onboarding") {
         router.replace("/dashboard/onboarding");
       }

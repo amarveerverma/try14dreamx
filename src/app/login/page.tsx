@@ -18,14 +18,7 @@ import {
 
 export default function LoginPage() {
   const router = useRouter();
-  const { user, isLoading: authLoading, signInWithEmail, signInWithGoogle } = useAuth();
-  const [role, setRole] = React.useState<"seeker" | "mentor">(() => {
-    if (typeof window !== "undefined") {
-      const p = new URLSearchParams(window.location.search).get("role");
-      if (p === "mentor") return "mentor";
-    }
-    return "seeker";
-  });
+  const { user, isLoading: authLoading, signInWithEmail, signInWithGoogle, logout } = useAuth();
   const [email, setEmail] = React.useState(() => {
     if (typeof window !== "undefined") {
       return new URLSearchParams(window.location.search).get("email") || "";
@@ -37,8 +30,9 @@ export default function LoginPage() {
   const [rememberDevice, setRememberDevice] = React.useState(true);
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [roleRedirectUrl, setRoleRedirectUrl] = React.useState<{ url: string; label: string } | null>(null);
 
-  // Auto-redirect if user already has an active session
+  // Auto-redirect if candidate already has an active session
   React.useEffect(() => {
     if (!authLoading && user) {
       const redirectParam = typeof window !== "undefined"
@@ -51,7 +45,7 @@ export default function LoginPage() {
       if (user.role === "admin") {
         router.replace("/admin");
       } else if (user.role === "mentor") {
-        router.replace(user.onboarding_completed ? "/mentor" : "/mentor/onboarding");
+        router.replace("/mentor");
       } else {
         router.replace(user.onboarding_completed ? "/dashboard" : "/dashboard/onboarding");
       }
@@ -62,6 +56,7 @@ export default function LoginPage() {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
+    setRoleRedirectUrl(null);
 
     if (!email || !password) {
       setError("Please enter your registered email and password.");
@@ -78,31 +73,38 @@ export default function LoginPage() {
       return;
     }
 
+    // STRICT CANDIDATE ROLE ENFORCEMENT
+    if (res.role === "mentor") {
+      await logout();
+      setError("Access Restricted: This login is exclusively for candidates. Mentor accounts must sign in through the Mentor Portal.");
+      setRoleRedirectUrl({ url: "/mentor/login", label: "Go to Mentor Portal Sign In →" });
+      return;
+    }
+
+    if (res.role === "admin") {
+      await logout();
+      setError("Access Restricted: Administrator accounts must sign in via the Admin Console.");
+      setRoleRedirectUrl({ url: "/admin/login", label: "Go to Admin Console →" });
+      return;
+    }
+
     const redirectParam = typeof window !== "undefined"
       ? new URLSearchParams(window.location.search).get("redirect")
       : null;
 
-    // If user was in the middle of booking a specific service or custom checkout, preserve it
     if (
       redirectParam &&
       redirectParam.startsWith("/") &&
       redirectParam !== "/dashboard" &&
-      redirectParam !== "/mentor"
+      redirectParam !== "/mentor" &&
+      redirectParam !== "/login"
     ) {
       router.push(redirectParam);
       return;
     }
 
-    const effectiveRole = res.role || (role === "mentor" ? "mentor" : "student");
     const isOnboarded = res.onboarding_completed ?? false;
-
-    if (effectiveRole === "admin") {
-      router.push("/admin");
-    } else if (effectiveRole === "mentor") {
-      router.push(isOnboarded ? "/mentor" : "/mentor/onboarding");
-    } else {
-      router.push(isOnboarded ? "/dashboard" : "/dashboard/onboarding");
-    }
+    router.push(isOnboarded ? "/dashboard" : "/dashboard/onboarding");
   };
 
   return (
@@ -150,40 +152,32 @@ export default function LoginPage() {
               DX
             </div>
             <h1 className="text-2xl font-extrabold text-[#1c1b1b] tracking-tight">
-              Sign in to DreamX
+              Candidate Sign In
             </h1>
             <p className="text-xs text-[#474554] max-w-sm mx-auto leading-relaxed">
-              Access outcome-accountable career acceleration, verified rubric scorecards, and escrow-governed 1:1 sessions.
+              Sign in to access your 8-dimension readiness assessments, 1:1 mentor bookings, and escrow-governed career roadmap.
             </p>
           </div>
 
-          {/* Role Segmented Switcher (Candidate / Mentor) */}
-          <div className="grid grid-cols-2 p-1 rounded-xl bg-[#f0eded] border border-[#e7e7eb] text-xs font-bold">
-            <button
-              type="button"
-              onClick={() => setRole("seeker")}
-              className={`py-2 px-2 rounded-lg transition-all flex items-center justify-center gap-1.5 ${
-                role === "seeker"
-                  ? "bg-white text-[#3828b5] shadow-xs font-bold"
-                  : "text-gray-600 hover:text-[#1c1b1b]"
-              }`}
-            >
-              <GraduationCap className="w-3.5 h-3.5" />
-              <span>Candidate</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setRole("mentor")}
-              className={`py-2 px-2 rounded-lg transition-all flex items-center justify-center gap-1.5 ${
-                role === "mentor"
-                  ? "bg-white text-[#3828b5] shadow-xs font-bold"
-                  : "text-gray-600 hover:text-[#1c1b1b]"
-              }`}
-            >
-              <Briefcase className="w-3.5 h-3.5" />
-              <span>Mentor</span>
-            </button>
-          </div>
+          {/* Error Banner with Role Redirection Button */}
+          {error && (
+            <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700 space-y-2.5 animate-in fade-in">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+                <span className="leading-relaxed font-medium">{error}</span>
+              </div>
+              {roleRedirectUrl && (
+                <div className="pt-2 border-t border-red-200">
+                  <Link
+                    href={roleRedirectUrl.url}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#3828b5] hover:bg-[#2e2195] text-white font-bold text-xs transition-colors shadow-xs"
+                  >
+                    <span>{roleRedirectUrl.label}</span>
+                  </Link>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Social Google OAuth Button */}
           <div>
@@ -211,12 +205,6 @@ export default function LoginPage() {
 
           {/* Sign In Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700 flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 shrink-0" />
-                <span>{error}</span>
-              </div>
-            )}
 
             <div className="space-y-1.5 text-xs">
               <label className="font-bold text-[#1c1b1b] flex items-center gap-1.5">
@@ -288,9 +276,9 @@ export default function LoginPage() {
           </form>
 
           {/* Registration Footer */}
-          <div className="text-center pt-2 border-t border-gray-100 text-xs text-gray-600 space-y-1">
+          <div className="text-center pt-3 border-t border-gray-100 text-xs text-gray-600 space-y-2">
             <p>
-              Don&apos;t have an account yet?{" "}
+              Don&apos;t have a candidate account yet?{" "}
               <Link
                 href={
                   typeof window !== "undefined" && new URLSearchParams(window.location.search).get("redirect")
@@ -299,15 +287,18 @@ export default function LoginPage() {
                 }
                 className="font-bold text-[#3828b5] hover:underline"
               >
-                Sign up for DreamX
+                Sign up as Candidate
               </Link>
             </p>
-            <p className="text-[11px] text-gray-400">
-              Want to mentor?{" "}
-              <Link href="/mentor/onboarding" className="font-semibold text-gray-700 hover:underline">
-                Apply as Verified Bar Raiser
+            <div className="pt-2 border-t border-gray-50 flex flex-col sm:flex-row items-center justify-center gap-3 text-[11px] text-gray-500">
+              <Link href="/mentor/login" className="font-bold text-[#3828b5] hover:underline">
+                Mentor Portal Sign In →
               </Link>
-            </p>
+              <span className="hidden sm:inline text-gray-300">•</span>
+              <Link href="/admin/login" className="text-gray-500 hover:text-gray-700 hover:underline">
+                Admin Console Gateway
+              </Link>
+            </div>
           </div>
         </div>
       </div>

@@ -218,7 +218,14 @@ export function Header() {
                   href="/login"
                   className="hidden md:inline-flex text-xs font-bold text-on-surface-variant hover:text-on-surface transition-colors px-2.5 py-2"
                 >
-                  Sign In
+                  Candidate Sign In
+                </Link>
+
+                <Link
+                  href="/mentor/login"
+                  className="hidden lg:inline-flex text-xs font-bold text-[#5145cd] hover:text-[#3828b5] transition-colors px-2.5 py-2"
+                >
+                  Mentor Sign In
                 </Link>
 
                 <Link
@@ -367,14 +374,21 @@ export function Header() {
                     onClick={() => setMobileMenuOpen(false)}
                     className="w-full block py-2.5 text-center text-xs font-bold text-on-surface bg-surface-container hover:bg-surface-container-high rounded-lg transition-colors"
                   >
-                    Sign In
+                    Candidate Sign In
+                  </Link>
+                  <Link
+                    href="/mentor/login"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="w-full block py-2.5 text-center text-xs font-bold text-[#5145cd] bg-surface-container hover:bg-surface-container-high rounded-lg transition-colors"
+                  >
+                    Mentor Sign In
                   </Link>
                   <Link
                     href="/signup"
                     onClick={() => setMobileMenuOpen(false)}
                     className="w-full block py-2.5 text-center text-xs font-bold text-on-primary bg-primary hover:bg-primary-container rounded-lg transition-colors shadow-xs"
                   >
-                    Get Started — Free Check
+                    Get Started — Candidate
                   </Link>
                 </>
               )}
