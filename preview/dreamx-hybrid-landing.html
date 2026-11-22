@@ -1,0 +1,1689 @@
+<!DOCTYPE html>
+<html lang="en" class="dark scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DreamX — Outcome-Accountable Career Acceleration &amp; Institutional Mentorship</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            heading: ['Plus Jakarta Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            brand: {
+              DEFAULT: '#5145cd',
+              light: '#6366f1',
+              dark: '#4336b8',
+              surface: 'rgba(81, 69, 205, 0.08)',
+              glow: 'rgba(81, 69, 205, 0.35)',
+            },
+            carbon: {
+              950: '#07080b',
+              900: '#0c0e14',
+              850: '#11131c',
+              800: '#171926',
+              700: '#222638',
+              border: 'rgba(255, 255, 255, 0.08)',
+              hover: 'rgba(255, 255, 255, 0.04)',
+            }
+          },
+          boxShadow: {
+            'glow-sm': '0 0 20px -5px rgba(81, 69, 205, 0.3)',
+            'glow-md': '0 0 35px -5px rgba(81, 69, 205, 0.4)',
+            'glow-lg': '0 0 50px -10px rgba(81, 69, 205, 0.5)',
+            'glass': '0 8px 32px 0 rgba(0, 0, 0, 0.36)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #0c0e14; }
+    ::-webkit-scrollbar-thumb { background: #222638; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #5145cd; }
+
+    /* Frosted Glass Utilities */
+    .glass-card {
+      background: rgba(17, 19, 28, 0.72);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+    }
+    .light .glass-card {
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      box-shadow: 0 4px 24px -2px rgba(0, 0, 0, 0.06);
+    }
+
+    .glass-nav {
+      background: rgba(12, 14, 20, 0.82);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    }
+    .light .glass-nav {
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+    }
+
+    /* Gradient Text */
+    .gradient-text-carbon {
+      background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 50%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .gradient-text-brand {
+      background: linear-gradient(135deg, #a5b4fc 0%, #818cf8 40%, #c084fc 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* Ambient Canvas Fixed Behind */
+    #ambient-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Smooth Transition for Theme */
+    body {
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+  </style>
+</head>
+
+<body class="bg-[#07080b] text-zinc-100 font-sans antialiased relative selection:bg-[#5145cd] selection:text-white min-h-screen">
+
+  <!-- Ambient Dynamic Canvas (Interactive Mesh Shader) -->
+  <canvas id="ambient-canvas"></canvas>
+
+  <!-- Ambient Gradient Glow Overlays -->
+  <div class="fixed top-0 left-1/4 w-[600px] h-[600px] bg-[#5145cd]/15 rounded-full blur-[140px] pointer-events-none -z-10"></div>
+  <div class="fixed bottom-0 right-1/4 w-[500px] h-[500px] bg-violet-600/10 rounded-full blur-[140px] pointer-events-none -z-10"></div>
+
+  <!-- Content Wrapper -->
+  <div class="relative z-10 flex flex-col min-h-screen">
+
+    <!-- ========================================== -->
+    <!-- 1. Top Glass Navigation Bar               -->
+    <!-- ========================================== -->
+    <header class="sticky top-0 z-50 glass-nav transition-all duration-300">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between gap-4">
+        
+        <!-- Logo & Brand Badge -->
+        <div class="flex items-center gap-3.5">
+          <a href="#" class="flex items-center gap-2.5 group">
+            <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#5145cd] via-indigo-600 to-violet-500 flex items-center justify-center font-heading font-extrabold text-white text-base shadow-glow-sm group-hover:shadow-glow-md transition-all">
+              DX
+            </div>
+            <div class="flex flex-col">
+              <span class="font-heading font-extrabold text-base tracking-tight text-white flex items-center gap-1.5">
+                DreamX
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-[#5145cd]/20 text-indigo-300 border border-[#5145cd]/30">V3.0</span>
+              </span>
+              <span class="text-[10px] text-zinc-400 font-mono tracking-wide hidden sm:inline">Career Acceleration Platform</span>
+            </div>
+          </a>
+
+          <!-- Role Switcher Toggle Pill (From Figma) -->
+          <div class="hidden md:flex items-center p-1 rounded-full bg-zinc-900/80 border border-zinc-800 text-xs">
+            <button id="role-student-btn" onclick="setRoleView('student')" class="px-3 py-1 rounded-full font-semibold transition-all bg-[#5145cd] text-white shadow-xs flex items-center gap-1.5">
+              <span>🎓 Candidate</span>
+            </button>
+            <button id="role-mentor-btn" onclick="setRoleView('mentor')" class="px-3 py-1 rounded-full font-semibold transition-all text-zinc-400 hover:text-white flex items-center gap-1.5">
+              <span>💼 Mentor</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Center Nav Links -->
+        <nav class="hidden lg:flex items-center gap-6 text-xs font-semibold text-zinc-300">
+          <a href="#pillars" class="hover:text-indigo-400 transition-colors">Four Pillars</a>
+          <a href="#readiness-model" class="hover:text-indigo-400 transition-colors">8D Matrix</a>
+          <a href="#services" class="hover:text-indigo-400 transition-colors">Services (S01–S10)</a>
+          <a href="#bundle-calculator" class="hover:text-indigo-400 transition-colors">Bundle Calculator</a>
+          <a href="#mentors" class="hover:text-indigo-400 transition-colors">Verified Mentors</a>
+          <a href="#comparison" class="hover:text-indigo-400 transition-colors">Pledge vs ISAs</a>
+          <a href="#faq" class="hover:text-indigo-400 transition-colors">FAQ</a>
+        </nav>
+
+        <!-- Right Controls: Canvas Mode, Theme & Portal CTA -->
+        <div class="flex items-center gap-3">
+          
+          <!-- Canvas Shader Mode Pill -->
+          <div class="hidden sm:flex items-center gap-1 p-1 rounded-xl bg-zinc-900/90 border border-zinc-800 text-[11px] font-mono">
+            <span class="text-zinc-500 px-1.5">Mode:</span>
+            <button onclick="setCanvasMode('carbon')" id="mode-carbon" class="px-2 py-0.5 rounded-lg bg-[#5145cd] text-white font-bold transition-all">Carbon</button>
+            <button onclick="setCanvasMode('vibrant')" id="mode-vibrant" class="px-2 py-0.5 rounded-lg text-zinc-400 hover:text-white transition-all">Vibrant</button>
+            <button onclick="setCanvasMode('soft')" id="mode-soft" class="px-2 py-0.5 rounded-lg text-zinc-400 hover:text-white transition-all">Soft</button>
+          </div>
+
+          <!-- Theme Toggle (Dark Carbon / Light Glass) -->
+          <button onclick="toggleTheme()" class="p-2 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white hover:border-zinc-700 transition-all text-xs" title="Toggle Theme">
+            <span id="theme-icon">🌙</span>
+          </button>
+
+          <!-- Action Button -->
+          <a href="#readiness-model" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-[#5145cd] to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-heading font-bold text-xs shadow-glow-sm hover:shadow-glow-md transition-all">
+            <span>Free 8D Check</span>
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <!-- ========================================== -->
+    <!-- 2. Hero Section (Gemini Carbon Max)        -->
+    <!-- ========================================== -->
+    <section class="relative pt-12 pb-20 sm:pt-20 sm:pb-28 overflow-hidden">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          
+          <!-- Left Column: High-Impact Typography & Trust Proof -->
+          <div class="lg:col-span-7 space-y-6">
+            
+            <!-- Trust Badge Pill -->
+            <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-zinc-900/90 border border-zinc-700/80 text-[11px] font-mono shadow-xs backdrop-blur-md">
+              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span class="text-zinc-300 font-semibold uppercase tracking-wider">India's Outcome-Accountable Career Network</span>
+              <span class="text-zinc-600">•</span>
+              <span class="text-indigo-400 font-bold">DPDP Act 2023 Shield</span>
+            </div>
+
+            <!-- Headline -->
+            <h1 class="text-3xl sm:text-5xl lg:text-6xl font-heading font-extrabold tracking-tight leading-[1.12]">
+              Outcome-Accountable <br>
+              <span class="gradient-text-brand">Career Acceleration</span> <br>
+              <span class="gradient-text-carbon">for Ambitious Builders.</span>
+            </h1>
+
+            <!-- Subtitle -->
+            <p class="text-sm sm:text-base text-zinc-300 max-w-2xl leading-relaxed">
+              Moving beyond unstructured friendly advice and predatory 15% Income Share Agreements. Objective 8-dimension diagnostic evaluations, verified senior mentors from top firms, and strict 48-hour deliverable SLAs.
+            </p>
+
+            <!-- Dual Primary CTAs -->
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 pt-2">
+              <a href="#readiness-model" class="inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl bg-gradient-to-r from-[#5145cd] via-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-heading font-bold text-sm shadow-glow-md hover:shadow-glow-lg transition-all">
+                <span>Take Free 8-Dimension Check</span>
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+              </a>
+
+              <a href="#services" class="inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border border-zinc-700 font-heading font-semibold text-sm transition-all">
+                <span>Browse Services (S01–S10)</span>
+              </a>
+            </div>
+
+            <!-- 4-Stat Metric Strip -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-6 border-t border-zinc-800/80">
+              <div class="space-y-1">
+                <span class="text-2xl font-heading font-extrabold text-white">₹0</span>
+                <p class="text-[11px] text-zinc-400 font-mono">Lifetime Free 8D Diagnostic</p>
+              </div>
+              <div class="space-y-1">
+                <span class="text-2xl font-heading font-extrabold text-indigo-400">48h SLA</span>
+                <p class="text-[11px] text-zinc-400 font-mono">Report Delivery or 100% Refund</p>
+              </div>
+              <div class="space-y-1">
+                <span class="text-2xl font-heading font-extrabold text-emerald-400">80 / 20</span>
+                <p class="text-[11px] text-zinc-400 font-mono">Nodal Escrow Split Protection</p>
+              </div>
+              <div class="space-y-1">
+                <span class="text-2xl font-heading font-extrabold text-violet-400">100%</span>
+                <p class="text-[11px] text-zinc-400 font-mono">DigiLocker &amp; Work Email Verified</p>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Right Column: Interactive Hero Widget (Figma Live Component Deck) -->
+          <div class="lg:col-span-5 relative">
+            
+            <div class="relative mx-auto max-w-md space-y-4">
+              
+              <!-- Floating Pill: Live Escrow Telemetry -->
+              <div class="flex items-center justify-between px-4 py-2 rounded-xl glass-card text-xs font-mono">
+                <div class="flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                  <span class="text-zinc-300">Escrow Gateway: Active</span>
+                </div>
+                <span class="text-indigo-400 font-bold">100% Nodal Secured</span>
+              </div>
+
+              <!-- Card A: Candidate Command Center Preview -->
+              <div class="p-6 rounded-2xl glass-card space-y-5 border border-white/10 shadow-glass">
+                
+                <!-- Candidate Header -->
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-3">
+                    <div class="w-11 h-11 rounded-xl bg-gradient-to-tr from-indigo-500 to-violet-500 p-0.5">
+                      <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80" alt="Avatar" class="w-full h-full object-cover rounded-[10px]">
+                    </div>
+                    <div>
+                      <h4 class="font-heading font-bold text-sm text-white">Priya Nair</h4>
+                      <p class="text-xs text-zinc-400 font-mono">Backend SDE-2 Track</p>
+                    </div>
+                  </div>
+                  <span class="px-2.5 py-1 rounded-full text-[11px] font-mono font-bold bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">
+                    Pro Member
+                  </span>
+                </div>
+
+                <!-- Readiness Gauge Breakdown -->
+                <div class="p-4 rounded-xl bg-zinc-950/60 border border-zinc-800/80 space-y-3">
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs text-zinc-400 font-mono">8D Composite Readiness:</span>
+                    <span class="text-sm font-heading font-extrabold text-white">68 / 100</span>
+                  </div>
+                  
+                  <!-- Segmented Progress Bar -->
+                  <div class="w-full h-2 rounded-full bg-zinc-800 overflow-hidden flex">
+                    <div class="h-full bg-emerald-500" style="width: 20%" title="Resume 20%"></div>
+                    <div class="h-full bg-indigo-500" style="width: 15%" title="LinkedIn 15%"></div>
+                    <div class="h-full bg-violet-500" style="width: 20%" title="Tech Skills 20%"></div>
+                    <div class="h-full bg-purple-500" style="width: 13%" title="Communication 13%"></div>
+                  </div>
+
+                  <div class="flex items-center justify-between text-[11px] text-zinc-400 font-mono">
+                    <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Level 3.4 Baseline</span>
+                    <span class="text-indigo-400 font-bold">+14 pts this week</span>
+                  </div>
+                </div>
+
+                <!-- Scheduled Session Vault Card -->
+                <div class="p-4 rounded-xl bg-gradient-to-r from-indigo-950/40 to-violet-950/40 border border-indigo-500/30 space-y-3">
+                  <div class="flex items-center justify-between">
+                    <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                      ● Vault Room Open
+                    </span>
+                    <span class="text-xs text-zinc-400 font-mono">Today, 20:00 IST</span>
+                  </div>
+
+                  <div>
+                    <h5 class="font-heading font-bold text-sm text-white">S06 Technical Mock Interview (60m)</h5>
+                    <p class="text-xs text-zinc-400">Mentor: Arjun Mehta · Staff SWE (Fintech Unicorn)</p>
+                  </div>
+
+                  <button class="w-full py-2.5 rounded-lg bg-[#5145cd] hover:bg-indigo-600 text-white text-xs font-heading font-bold shadow-glow-sm transition-all flex items-center justify-center gap-2">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                    <span>Authorize &amp; Join Room</span>
+                  </button>
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 3. Four Pillars of Accountability         -->
+    <!-- ========================================== -->
+    <section id="pillars" class="py-16 sm:py-24 border-t border-zinc-800/60 bg-zinc-950/50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+        
+        <div class="text-center max-w-3xl mx-auto space-y-3">
+          <span class="text-xs font-mono uppercase tracking-widest text-indigo-400 font-bold">Institutional Rigor</span>
+          <h2 class="text-2xl sm:text-4xl font-heading font-bold text-white tracking-tight">
+            Four Pillars of Deliberate Career Progression
+          </h2>
+          <p class="text-sm text-zinc-400 leading-relaxed">
+            Replacing unstructured friendly chats with institutional diagnostic rubrics, strict deliverables, and financial escrow accountability.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          
+          <!-- Pillar 1 -->
+          <div class="p-6 rounded-2xl glass-card space-y-4 hover:border-indigo-500/40 transition-all group">
+            <div class="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center text-xl font-mono group-hover:scale-105 transition-transform">
+              01
+            </div>
+            <h3 class="font-heading font-bold text-lg text-white">Dual Booking Marketplace</h3>
+            <p class="text-xs text-zinc-400 leading-relaxed">
+              Handpick your mentor manually by domain, or use our algorithmic Smart Match with automated 30-minute Wave 2 re-dispatch for urgent interviews.
+            </p>
+            <div class="pt-2 text-[11px] font-mono text-indigo-400 font-semibold flex items-center gap-1">
+              <span>Direct Slot &amp; Smart Match</span> →
+            </div>
+          </div>
+
+          <!-- Pillar 2 -->
+          <div class="p-6 rounded-2xl glass-card space-y-4 hover:border-indigo-500/40 transition-all group">
+            <div class="w-12 h-12 rounded-xl bg-violet-500/10 border border-violet-500/20 text-violet-400 flex items-center justify-center text-xl font-mono group-hover:scale-105 transition-transform">
+              02
+            </div>
+            <h3 class="font-heading font-bold text-lg text-white">8-Dimension Rubrics</h3>
+            <p class="text-xs text-zinc-400 leading-relaxed">
+              No generic opinions. Every evaluation measures concrete, observable signals across 8 axes on an objective 0 to 5 scale benchmarked against tier-1 hiring panels.
+            </p>
+            <div class="pt-2 text-[11px] font-mono text-violet-400 font-semibold flex items-center gap-1">
+              <span>Objective 0–5 Standards</span> →
+            </div>
+          </div>
+
+          <!-- Pillar 3 -->
+          <div class="p-6 rounded-2xl glass-card space-y-4 hover:border-indigo-500/40 transition-all group">
+            <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl font-mono group-hover:scale-105 transition-transform">
+              03
+            </div>
+            <h3 class="font-heading font-bold text-lg text-white">Strict 48h Deliverable SLA</h3>
+            <p class="text-xs text-zinc-400 leading-relaxed">
+              Mentors must deliver a structured 11-section report and 30/60/90-day action plan within 48 hours, or the system triggers an automated full refund.
+            </p>
+            <div class="pt-2 text-[11px] font-mono text-emerald-400 font-semibold flex items-center gap-1">
+              <span>Auditable Report Vault</span> →
+            </div>
+          </div>
+
+          <!-- Pillar 4 -->
+          <div class="p-6 rounded-2xl glass-card space-y-4 hover:border-indigo-500/40 transition-all group">
+            <div class="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center text-xl font-mono group-hover:scale-105 transition-transform">
+              04
+            </div>
+            <h3 class="font-heading font-bold text-lg text-white">Razorpay Nodal Escrow</h3>
+            <p class="text-xs text-zinc-400 leading-relaxed">
+              100% of candidate payments sit in a regulated nodal account. The 80% mentor settlement releases only after session completion and candidate review.
+            </p>
+            <div class="pt-2 text-[11px] font-mono text-amber-400 font-semibold flex items-center gap-1">
+              <span>Zero-Risk Guarantee</span> →
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 4. Interactive 8D Readiness Model Explorer -->
+    <!-- ========================================== -->
+    <section id="readiness-model" class="py-16 sm:py-24 border-t border-zinc-800/60">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+        
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div class="max-w-2xl space-y-2">
+            <span class="text-xs font-mono uppercase tracking-widest text-indigo-400 font-bold">Diagnostic Framework</span>
+            <h2 class="text-2xl sm:text-4xl font-heading font-bold text-white tracking-tight">
+              The 8-Dimension Readiness Model
+            </h2>
+            <p class="text-sm text-zinc-400">
+              Select an axis below to inspect the exact observable criteria used by our hiring panel mentors.
+            </p>
+          </div>
+
+          <div class="px-3.5 py-1.5 rounded-xl glass-card font-mono text-xs text-zinc-300 self-start md:self-auto flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-[#5145cd]"></span>
+            <span>PRD §6.0 Standardized Rubric Engine</span>
+          </div>
+        </div>
+
+        <!-- Dimension Selector Tabs -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
+          
+            <button onclick="selectDimension('resume')" id="dim-tab-resume" class="dim-tab p-3 rounded-xl border text-left transition-all bg-[#5145cd] text-white border-[#5145cd] shadow-glow-sm">
+              <span class="text-[10px] font-mono block opacity-75">20% Weight</span>
+              <span class="font-heading font-bold text-xs block truncate mt-1">Resume Quality</span>
+            </button>
+          
+            <button onclick="selectDimension('linkedin')" id="dim-tab-linkedin" class="dim-tab p-3 rounded-xl border text-left transition-all glass-card text-zinc-400 border-zinc-800 hover:text-white hover:border-zinc-700">
+              <span class="text-[10px] font-mono block opacity-75">10% Weight</span>
+              <span class="font-heading font-bold text-xs block truncate mt-1">LinkedIn Signal</span>
+            </button>
+          
+            <button onclick="selectDimension('portfolio')" id="dim-tab-portfolio" class="dim-tab p-3 rounded-xl border text-left transition-all glass-card text-zinc-400 border-zinc-800 hover:text-white hover:border-zinc-700">
+              <span class="text-[10px] font-mono block opacity-75">15% Weight</span>
+              <span class="font-heading font-bold text-xs block truncate mt-1">Proof of Work</span>
+            </button>
+          
+            <button onclick="selectDimension('communication')" id="dim-tab-communication" class="dim-tab p-3 rounded-xl border text-left transition-all glass-card text-zinc-400 border-zinc-800 hover:text-white hover:border-zinc-700">
+              <span class="text-[10px] font-mono block opacity-75">10% Weight</span>
+              <span class="font-heading font-bold text-xs block truncate mt-1">Communication</span>
+            </button>
+          
+            <button onclick="selectDimension('technical')" id="dim-tab-technical" class="dim-tab p-3 rounded-xl border text-left transition-all glass-card text-zinc-400 border-zinc-800 hover:text-white hover:border-zinc-700">
+              <span class="text-[10px] font-mono block opacity-75">20% Weight</span>
+              <span class="font-heading font-bold text-xs block truncate mt-1">Technical Skills</span>
+            </button>
+          
+            <button onclick="selectDimension('system_design')" id="dim-tab-system_design" class="dim-tab p-3 rounded-xl border text-left transition-all glass-card text-zinc-400 border-zinc-800 hover:text-white hover:border-zinc-700">
+              <span class="text-[10px] font-mono block opacity-75">15% Weight</span>
+              <span class="font-heading font-bold text-xs block truncate mt-1">System Design</span>
+            </button>
+          
+            <button onclick="selectDimension('career_planning')" id="dim-tab-career_planning" class="dim-tab p-3 rounded-xl border text-left transition-all glass-card text-zinc-400 border-zinc-800 hover:text-white hover:border-zinc-700">
+              <span class="text-[10px] font-mono block opacity-75">10% Weight</span>
+              <span class="font-heading font-bold text-xs block truncate mt-1">Career Strategy</span>
+            </button>
+          
+            <button onclick="selectDimension('confidence')" id="dim-tab-confidence" class="dim-tab p-3 rounded-xl border text-left transition-all glass-card text-zinc-400 border-zinc-800 hover:text-white hover:border-zinc-700">
+              <span class="text-[10px] font-mono block opacity-75">5% Weight</span>
+              <span class="font-heading font-bold text-xs block truncate mt-1">Executive Confidence</span>
+            </button>
+          
+        </div>
+
+        <!-- Active Dimension Detail Card -->
+        <div id="dimension-detail" class="p-6 sm:p-8 rounded-2xl glass-card border border-white/10 space-y-6">
+          <!-- Dynamically Populated by JavaScript -->
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 5. Complete S01–S10 Service Catalogue      -->
+    <!-- ========================================== -->
+    <section id="services" class="py-16 sm:py-24 border-t border-zinc-800/60 bg-zinc-950/40">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+        
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div class="max-w-2xl space-y-2">
+            <span class="text-xs font-mono uppercase tracking-widest text-indigo-400 font-bold">Standardized Catalogue</span>
+            <h2 class="text-2xl sm:text-4xl font-heading font-bold text-white tracking-tight">
+              Modular 1:1 Preparation Modules (S01–S10)
+            </h2>
+            <p class="text-sm text-zinc-400">
+              Clear scope, fixed durations, and guaranteed deliverables. Book standalone or select any 3 to unlock bundle discounts.
+            </p>
+          </div>
+
+          <!-- Category Filter Buttons -->
+          <div class="flex items-center gap-2 p-1 rounded-xl bg-zinc-900 border border-zinc-800 text-xs font-mono self-start md:self-auto overflow-x-auto max-w-full">
+            <button onclick="filterServices('all')" id="svc-flt-all" class="svc-flt px-3 py-1.5 rounded-lg bg-[#5145cd] text-white font-bold transition-all">All (10)</button>
+            <button onclick="filterServices('Profile & Assets')" id="svc-flt-profile" class="svc-flt px-3 py-1.5 rounded-lg text-zinc-400 hover:text-white transition-all">Profile &amp; Assets (4)</button>
+            <button onclick="filterServices('Interviews')" id="svc-flt-interviews" class="svc-flt px-3 py-1.5 rounded-lg text-zinc-400 hover:text-white transition-all">Interviews (3)</button>
+            <button onclick="filterServices('Career Direction')" id="svc-flt-career" class="svc-flt px-3 py-1.5 rounded-lg text-zinc-400 hover:text-white transition-all">Career (3)</button>
+          </div>
+        </div>
+
+        <!-- Services Grid -->
+        <div id="services-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          
+            <div class="svc-card p-6 rounded-2xl glass-card border border-white/10 flex flex-col justify-between hover:border-indigo-500/40 transition-all space-y-5" data-category="Profile & Assets">
+              <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                  <span class="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-[#5145cd]/20 text-indigo-300 border border-[#5145cd]/30">
+                    S01 · Profile & Assets
+                  </span>
+                  <span class="text-xs font-mono text-zinc-400 flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    45 min
+                  </span>
+                </div>
+
+                <h3 class="font-heading font-bold text-lg text-white">Resume Review</h3>
+                <p class="text-xs text-zinc-400 leading-relaxed">Identifies ATS parsing traps and rewrites bullet points into high-signal X-Y-Z impact statements.</p>
+                
+                <div class="p-3 rounded-xl bg-zinc-950/60 border border-zinc-800 text-[11px] space-y-1">
+                  <span class="text-zinc-500 font-mono block">Deliverable within 48h:</span>
+                  <span class="font-semibold text-zinc-200 block">Single-column ATS PDF + Detailed Diagnostic Report</span>
+                </div>
+              </div>
+
+              <div class="pt-4 border-t border-zinc-800/80 flex items-center justify-between">
+                <div>
+                  <span class="text-xl font-heading font-extrabold text-white">₹599</span>
+                  <span class="text-[10px] text-zinc-500 font-mono block">Listed Single Session</span>
+                </div>
+
+                <label class="inline-flex items-center gap-2 cursor-pointer select-none">
+                  <input type="checkbox" onchange="toggleBundleService('S01')" id="chk-S01" class="w-4 h-4 rounded text-[#5145cd] focus:ring-[#5145cd] bg-zinc-900 border-zinc-700">
+                  <span class="text-xs font-mono text-indigo-400 font-semibold">Add to Bundle</span>
+                </label>
+              </div>
+            </div>
+          
+            <div class="svc-card p-6 rounded-2xl glass-card border border-white/10 flex flex-col justify-between hover:border-indigo-500/40 transition-all space-y-5" data-category="Profile & Assets">
+              <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                  <span class="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-[#5145cd]/20 text-indigo-300 border border-[#5145cd]/30">
+                    S02 · Profile & Assets
+                  </span>
+                  <span class="text-xs font-mono text-zinc-400 flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    45 min
+                  </span>
+                </div>
+
+                <h3 class="font-heading font-bold text-lg text-white">ATS Resume Optimization</h3>
+                <p class="text-xs text-zinc-400 leading-relaxed">Customizes resume keywords, format, and section weight for specific tier-1 job descriptions.</p>
+                
+                <div class="p-3 rounded-xl bg-zinc-950/60 border border-zinc-800 text-[11px] space-y-1">
+                  <span class="text-zinc-500 font-mono block">Deliverable within 48h:</span>
+                  <span class="font-semibold text-zinc-200 block">Targeted ATS Resumes + Role Keyword Map</span>
+                </div>
+              </div>
+
+              <div class="pt-4 border-t border-zinc-800/80 flex items-center justify-between">
+                <div>
+                  <span class="text-xl font-heading font-extrabold text-white">₹799</span>
+                  <span class="text-[10px] text-zinc-500 font-mono block">Listed Single Session</span>
+                </div>
+
+                <label class="inline-flex items-center gap-2 cursor-pointer select-none">
+                  <input type="checkbox" onchange="toggleBundleService('S02')" id="chk-S02" class="w-4 h-4 rounded text-[#5145cd] focus:ring-[#5145cd] bg-zinc-900 border-zinc-700">
+                  <span class="text-xs font-mono text-indigo-400 font-semibold">Add to Bundle</span>
+                </label>
+              </div>
+            </div>
+          
+            <div class="svc-card p-6 rounded-2xl glass-card border border-white/10 flex flex-col justify-between hover:border-indigo-500/40 transition-all space-y-5" data-category="Profile & Assets">
+              <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                  <span class="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-[#5145cd]/20 text-indigo-300 border border-[#5145cd]/30">
+                    S03 · Profile & Assets
+                  </span>
+                  <span class="text-xs font-mono text-zinc-400 flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    30 min
+                  </span>
+                </div>
+
+                <h3 class="font-heading font-bold text-lg text-white">LinkedIn Profile Review</h3>
+                <p class="text-xs text-zinc-400 leading-relaxed">Re-engineers your headline, experience framing, and featured media for maximum recruiter inbound search.</p>
+                
+                <div class="p-3 rounded-xl bg-zinc-950/60 border border-zinc-800 text-[11px] space-y-1">
+                  <span class="text-zinc-500 font-mono block">Deliverable within 48h:</span>
+                  <span class="font-semibold text-zinc-200 block">LinkedIn Optimization Checklist + Inbound Search Guide</span>
+                </div>
+              </div>
+
+              <div class="pt-4 border-t border-zinc-800/80 flex items-center justify-between">
+                <div>
+                  <span class="text-xl font-heading font-extrabold text-white">₹499</span>
+                  <span class="text-[10px] text-zinc-500 font-mono block">Listed Single Session</span>
+                </div>
+
+                <label class="inline-flex items-center gap-2 cursor-pointer select-none">
+                  <input type="checkbox" onchange="toggleBundleService('S03')" id="chk-S03" class="w-4 h-4 rounded text-[#5145cd] focus:ring-[#5145cd] bg-zinc-900 border-zinc-700">
+                  <span class="text-xs font-mono text-indigo-400 font-semibold">Add to Bundle</span>
+                </label>
+              </div>
+            </div>
+          
+            <div class="svc-card p-6 rounded-2xl glass-card border border-white/10 flex flex-col justify-between hover:border-indigo-500/40 transition-all space-y-5" data-category="Profile & Assets">
+              <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                  <span class="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-[#5145cd]/20 text-indigo-300 border border-[#5145cd]/30">
+                    S04 · Profile & Assets
+                  </span>
+                  <span class="text-xs font-mono text-zinc-400 flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    45 min
+                  </span>
+                </div>
+
+                <h3 class="font-heading font-bold text-lg text-white">Portfolio Review</h3>
+                <p class="text-xs text-zinc-400 leading-relaxed">Evaluates GitHub capstones, system diagrams, and live production links to showcase genuine proof of work.</p>
+                
+                <div class="p-3 rounded-xl bg-zinc-950/60 border border-zinc-800 text-[11px] space-y-1">
+                  <span class="text-zinc-500 font-mono block">Deliverable within 48h:</span>
+                  <span class="font-semibold text-zinc-200 block">Project Architecture & Proof-of-Work Audit</span>
+                </div>
+              </div>
+
+              <div class="pt-4 border-t border-zinc-800/80 flex items-center justify-between">
+                <div>
+                  <span class="text-xl font-heading font-extrabold text-white">₹599</span>
+                  <span class="text-[10px] text-zinc-500 font-mono block">Listed Single Session</span>
+                </div>
+
+                <label class="inline-flex items-center gap-2 cursor-pointer select-none">
+                  <input type="checkbox" onchange="toggleBundleService('S04')" id="chk-S04" class="w-4 h-4 rounded text-[#5145cd] focus:ring-[#5145cd] bg-zinc-900 border-zinc-700">
+                  <span class="text-xs font-mono text-indigo-400 font-semibold">Add to Bundle</span>
+                </label>
+              </div>
+            </div>
+          
+            <div class="svc-card p-6 rounded-2xl glass-card border border-white/10 flex flex-col justify-between hover:border-indigo-500/40 transition-all space-y-5" data-category="Interviews">
+              <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                  <span class="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-[#5145cd]/20 text-indigo-300 border border-[#5145cd]/30">
+                    S05 · Interviews
+                  </span>
+                  <span class="text-xs font-mono text-zinc-400 flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    60 min
+                  </span>
+                </div>
+
+                <h3 class="font-heading font-bold text-lg text-white">Behavioral Mock Interview</h3>
+                <p class="text-xs text-zinc-400 leading-relaxed">Calibrates leadership, conflict resolution, and behavioral ownership stories under simulated interview pressure.</p>
+                
+                <div class="p-3 rounded-xl bg-zinc-950/60 border border-zinc-800 text-[11px] space-y-1">
+                  <span class="text-zinc-500 font-mono block">Deliverable within 48h:</span>
+                  <span class="font-semibold text-zinc-200 block">STAR Rubric Scorecard + Story Bank Framework</span>
+                </div>
+              </div>
+
+              <div class="pt-4 border-t border-zinc-800/80 flex items-center justify-between">
+                <div>
+                  <span class="text-xl font-heading font-extrabold text-white">₹799</span>
+                  <span class="text-[10px] text-zinc-500 font-mono block">Listed Single Session</span>
+                </div>
+
+                <label class="inline-flex items-center gap-2 cursor-pointer select-none">
+                  <input type="checkbox" onchange="toggleBundleService('S05')" id="chk-S05" class="w-4 h-4 rounded text-[#5145cd] focus:ring-[#5145cd] bg-zinc-900 border-zinc-700">
+                  <span class="text-xs font-mono text-indigo-400 font-semibold">Add to Bundle</span>
+                </label>
+              </div>
+            </div>
+          
+            <div class="svc-card p-6 rounded-2xl glass-card border border-white/10 flex flex-col justify-between hover:border-indigo-500/40 transition-all space-y-5" data-category="Interviews">
+              <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                  <span class="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-[#5145cd]/20 text-indigo-300 border border-[#5145cd]/30">
+                    S06 · Interviews
+                  </span>
+                  <span class="text-xs font-mono text-zinc-400 flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    60 min
+                  </span>
+                </div>
+
+                <h3 class="font-heading font-bold text-lg text-white">Technical Mock Interview</h3>
+                <p class="text-xs text-zinc-400 leading-relaxed">Simulates a full 60-minute technical loop with live problem decomposition, dry-run rigor, and complexity trade-offs.</p>
+                
+                <div class="p-3 rounded-xl bg-zinc-950/60 border border-zinc-800 text-[11px] space-y-1">
+                  <span class="text-zinc-500 font-mono block">Deliverable within 48h:</span>
+                  <span class="font-semibold text-zinc-200 block">DSA / System Architecture Diagnostic Scorecard</span>
+                </div>
+              </div>
+
+              <div class="pt-4 border-t border-zinc-800/80 flex items-center justify-between">
+                <div>
+                  <span class="text-xl font-heading font-extrabold text-white">₹999</span>
+                  <span class="text-[10px] text-zinc-500 font-mono block">Listed Single Session</span>
+                </div>
+
+                <label class="inline-flex items-center gap-2 cursor-pointer select-none">
+                  <input type="checkbox" onchange="toggleBundleService('S06')" id="chk-S06" class="w-4 h-4 rounded text-[#5145cd] focus:ring-[#5145cd] bg-zinc-900 border-zinc-700">
+                  <span class="text-xs font-mono text-indigo-400 font-semibold">Add to Bundle</span>
+                </label>
+              </div>
+            </div>
+          
+            <div class="svc-card p-6 rounded-2xl glass-card border border-white/10 flex flex-col justify-between hover:border-indigo-500/40 transition-all space-y-5" data-category="Career Direction">
+              <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                  <span class="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-[#5145cd]/20 text-indigo-300 border border-[#5145cd]/30">
+                    S07 · Career Direction
+                  </span>
+                  <span class="text-xs font-mono text-zinc-400 flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    30 min
+                  </span>
+                </div>
+
+                <h3 class="font-heading font-bold text-lg text-white">Career Consultation</h3>
+                <p class="text-xs text-zinc-400 leading-relaxed">Clarifies target roles, domain pivots, and realistic interview timelines based on current market hiring bars.</p>
+                
+                <div class="p-3 rounded-xl bg-zinc-950/60 border border-zinc-800 text-[11px] space-y-1">
+                  <span class="text-zinc-500 font-mono block">Deliverable within 48h:</span>
+                  <span class="font-semibold text-zinc-200 block">Career Strategy Action Plan & Target Company Roadmap</span>
+                </div>
+              </div>
+
+              <div class="pt-4 border-t border-zinc-800/80 flex items-center justify-between">
+                <div>
+                  <span class="text-xl font-heading font-extrabold text-white">₹499</span>
+                  <span class="text-[10px] text-zinc-500 font-mono block">Listed Single Session</span>
+                </div>
+
+                <label class="inline-flex items-center gap-2 cursor-pointer select-none">
+                  <input type="checkbox" onchange="toggleBundleService('S07')" id="chk-S07" class="w-4 h-4 rounded text-[#5145cd] focus:ring-[#5145cd] bg-zinc-900 border-zinc-700">
+                  <span class="text-xs font-mono text-indigo-400 font-semibold">Add to Bundle</span>
+                </label>
+              </div>
+            </div>
+          
+            <div class="svc-card p-6 rounded-2xl glass-card border border-white/10 flex flex-col justify-between hover:border-indigo-500/40 transition-all space-y-5" data-category="Career Direction">
+              <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                  <span class="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-[#5145cd]/20 text-indigo-300 border border-[#5145cd]/30">
+                    S08 · Career Direction
+                  </span>
+                  <span class="text-xs font-mono text-zinc-400 flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    30 min
+                  </span>
+                </div>
+
+                <h3 class="font-heading font-bold text-lg text-white">Salary Negotiation</h3>
+                <p class="text-xs text-zinc-400 leading-relaxed">Breaks down base vs ESOPS vs joining bonuses and scripts confident, collaborative compensation counter-offers.</p>
+                
+                <div class="p-3 rounded-xl bg-zinc-950/60 border border-zinc-800 text-[11px] space-y-1">
+                  <span class="text-zinc-500 font-mono block">Deliverable within 48h:</span>
+                  <span class="font-semibold text-zinc-200 block">Offer Analysis & Counter-Offer Negotiation Script</span>
+                </div>
+              </div>
+
+              <div class="pt-4 border-t border-zinc-800/80 flex items-center justify-between">
+                <div>
+                  <span class="text-xl font-heading font-extrabold text-white">₹699</span>
+                  <span class="text-[10px] text-zinc-500 font-mono block">Listed Single Session</span>
+                </div>
+
+                <label class="inline-flex items-center gap-2 cursor-pointer select-none">
+                  <input type="checkbox" onchange="toggleBundleService('S08')" id="chk-S08" class="w-4 h-4 rounded text-[#5145cd] focus:ring-[#5145cd] bg-zinc-900 border-zinc-700">
+                  <span class="text-xs font-mono text-indigo-400 font-semibold">Add to Bundle</span>
+                </label>
+              </div>
+            </div>
+          
+            <div class="svc-card p-6 rounded-2xl glass-card border border-white/10 flex flex-col justify-between hover:border-indigo-500/40 transition-all space-y-5" data-category="Career Direction">
+              <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                  <span class="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-[#5145cd]/20 text-indigo-300 border border-[#5145cd]/30">
+                    S09 · Career Direction
+                  </span>
+                  <span class="text-xs font-mono text-zinc-400 flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    60 min
+                  </span>
+                </div>
+
+                <h3 class="font-heading font-bold text-lg text-white">Career Roadmap Session</h3>
+                <p class="text-xs text-zinc-400 leading-relaxed">Maps out a weekly step-by-step technical and portfolio roadmap to transition from service to product tier-1 firms.</p>
+                
+                <div class="p-3 rounded-xl bg-zinc-950/60 border border-zinc-800 text-[11px] space-y-1">
+                  <span class="text-zinc-500 font-mono block">Deliverable within 48h:</span>
+                  <span class="font-semibold text-zinc-200 block">Comprehensive 90-Day Skill & Execution Blueprint</span>
+                </div>
+              </div>
+
+              <div class="pt-4 border-t border-zinc-800/80 flex items-center justify-between">
+                <div>
+                  <span class="text-xl font-heading font-extrabold text-white">₹799</span>
+                  <span class="text-[10px] text-zinc-500 font-mono block">Listed Single Session</span>
+                </div>
+
+                <label class="inline-flex items-center gap-2 cursor-pointer select-none">
+                  <input type="checkbox" onchange="toggleBundleService('S09')" id="chk-S09" class="w-4 h-4 rounded text-[#5145cd] focus:ring-[#5145cd] bg-zinc-900 border-zinc-700">
+                  <span class="text-xs font-mono text-indigo-400 font-semibold">Add to Bundle</span>
+                </label>
+              </div>
+            </div>
+          
+            <div class="svc-card p-6 rounded-2xl glass-card border border-white/10 flex flex-col justify-between hover:border-indigo-500/40 transition-all space-y-5" data-category="Interviews">
+              <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                  <span class="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-[#5145cd]/20 text-indigo-300 border border-[#5145cd]/30">
+                    S10 · Interviews
+                  </span>
+                  <span class="text-xs font-mono text-zinc-400 flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    60 min
+                  </span>
+                </div>
+
+                <h3 class="font-heading font-bold text-lg text-white">Coding Interview Preparation</h3>
+                <p class="text-xs text-zinc-400 leading-relaxed">Focused drills on high-frequency algorithmic patterns (graphs, dynamic programming, sliding windows) with clean code idioms.</p>
+                
+                <div class="p-3 rounded-xl bg-zinc-950/60 border border-zinc-800 text-[11px] space-y-1">
+                  <span class="text-zinc-500 font-mono block">Deliverable within 48h:</span>
+                  <span class="font-semibold text-zinc-200 block">Problem Pattern Recognition Matrix & Code Review</span>
+                </div>
+              </div>
+
+              <div class="pt-4 border-t border-zinc-800/80 flex items-center justify-between">
+                <div>
+                  <span class="text-xl font-heading font-extrabold text-white">₹999</span>
+                  <span class="text-[10px] text-zinc-500 font-mono block">Listed Single Session</span>
+                </div>
+
+                <label class="inline-flex items-center gap-2 cursor-pointer select-none">
+                  <input type="checkbox" onchange="toggleBundleService('S10')" id="chk-S10" class="w-4 h-4 rounded text-[#5145cd] focus:ring-[#5145cd] bg-zinc-900 border-zinc-700">
+                  <span class="text-xs font-mono text-indigo-400 font-semibold">Add to Bundle</span>
+                </label>
+              </div>
+            </div>
+          
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 6. Bundle & Membership Savings Engine     -->
+    <!-- ========================================== -->
+    <section id="bundle-calculator" class="py-16 sm:py-24 border-t border-zinc-800/60">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+        
+        <div class="text-center max-w-3xl mx-auto space-y-3">
+          <span class="text-xs font-mono uppercase tracking-widest text-indigo-400 font-bold">Transparent Economics</span>
+          <h2 class="text-2xl sm:text-4xl font-heading font-bold text-white tracking-tight">
+            Interactive Bundle Calculator &amp; Membership
+          </h2>
+          <p class="text-sm text-zinc-400">
+            Select any 3 services above to see real-time bundle math. Discounts do not stack per PRD §7.4 to protect mentor earnings.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          
+          <!-- Left: Live Interactive Calculator -->
+          <div class="lg:col-span-6 p-6 sm:p-8 rounded-2xl glass-card border border-white/10 space-y-6">
+            <div class="flex items-center justify-between border-b border-zinc-800 pb-4">
+              <h3 class="font-heading font-bold text-lg text-white">Custom 3-Service Bundle</h3>
+              <span id="bundle-count-badge" class="px-2.5 py-0.5 rounded-full text-xs font-mono bg-zinc-800 text-zinc-300">
+                0 of 3 Selected
+              </span>
+            </div>
+
+            <!-- Selected Services Pills -->
+            <div id="bundle-selected-pills" class="min-h-14 p-3 rounded-xl bg-zinc-950/70 border border-zinc-800 flex flex-wrap gap-2 items-center text-xs text-zinc-500">
+              <span>Check 3 services from the catalogue above to activate the bundle discount...</span>
+            </div>
+
+            <!-- Price Breakdown Calculation -->
+            <div class="space-y-3 font-mono text-xs pt-2">
+              <div class="flex items-center justify-between text-zinc-400">
+                <span>Catalogue Subtotal:</span>
+                <span id="bundle-subtotal" class="font-bold text-white">₹0</span>
+              </div>
+              <div class="flex items-center justify-between text-emerald-400">
+                <span id="bundle-discount-label">Applied Discount:</span>
+                <span id="bundle-discount-val">-₹0</span>
+              </div>
+              <div class="flex items-center justify-between text-base font-heading font-bold text-white border-t border-zinc-800 pt-3">
+                <span>Total Payable:</span>
+                <span id="bundle-payable" class="text-2xl text-indigo-400">₹0</span>
+              </div>
+              <p id="bundle-rule-note" class="text-[11px] text-zinc-500 pt-1">
+                Single-best discount rule: 5% bundle discount applied across 3 modules (funded by DreamX).
+              </p>
+            </div>
+
+            <button class="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#5145cd] to-violet-600 text-white font-heading font-bold text-xs shadow-glow-sm hover:shadow-glow-md transition-all flex items-center justify-center gap-2">
+              <span>Lock Bundle into Escrow →</span>
+            </button>
+          </div>
+
+          <!-- Right: Membership Tiers (Free, Pro, Elite) -->
+          <div class="lg:col-span-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            
+            <!-- Pro Tier Card -->
+            <div class="p-6 rounded-2xl glass-card border border-indigo-500/40 relative space-y-4">
+              <span class="absolute -top-3 right-4 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#5145cd] text-white shadow-xs">
+                Most Popular
+              </span>
+              <div>
+                <span class="text-xs text-indigo-400 font-mono uppercase font-bold">Accelerated Tier</span>
+                <h4 class="text-xl font-heading font-bold text-white mt-1">DreamX Pro</h4>
+                <div class="flex items-baseline gap-1 mt-2">
+                  <span class="text-3xl font-heading font-extrabold text-white">₹199</span>
+                  <span class="text-xs text-zinc-400 font-mono">/ month</span>
+                </div>
+              </div>
+
+              <ul class="space-y-2 text-xs text-zinc-300">
+                <li class="flex items-center gap-2"><span class="text-emerald-400 font-bold">✓</span> 5% Discount on all S01–S10 services</li>
+                <li class="flex items-center gap-2"><span class="text-emerald-400 font-bold">✓</span> Priority 24h SLA review queue</li>
+                <li class="flex items-center gap-2"><span class="text-emerald-400 font-bold">✓</span> Verified Candidate Profile Badge</li>
+                <li class="flex items-center gap-2"><span class="text-emerald-400 font-bold">✓</span> Unlimited 8D Assessment History</li>
+              </ul>
+            </div>
+
+            <!-- Elite Tier Card -->
+            <div class="p-6 rounded-2xl glass-card border border-violet-500/30 space-y-4">
+              <div>
+                <span class="text-xs text-violet-400 font-mono uppercase font-bold">Maximum Trajectory</span>
+                <h4 class="text-xl font-heading font-bold text-white mt-1">DreamX Elite</h4>
+                <div class="flex items-baseline gap-1 mt-2">
+                  <span class="text-3xl font-heading font-extrabold text-white">₹399</span>
+                  <span class="text-xs text-zinc-400 font-mono">/ month</span>
+                </div>
+              </div>
+
+              <ul class="space-y-2 text-xs text-zinc-300">
+                <li class="flex items-center gap-2"><span class="text-emerald-400 font-bold">✓</span> 10% Discount on all S01–S10 services</li>
+                <li class="flex items-center gap-2"><span class="text-emerald-400 font-bold">✓</span> Priority Wave-1 Smart Match allocation</li>
+                <li class="flex items-center gap-2"><span class="text-emerald-400 font-bold">✓</span> Confidential Salary Negotiation Debriefs</li>
+                <li class="flex items-center gap-2"><span class="text-emerald-400 font-bold">✓</span> Private mock recording analysis</li>
+              </ul>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 7. Verified Mentor Network Showcase       -->
+    <!-- ========================================== -->
+    <section id="mentors" class="py-16 sm:py-24 border-t border-zinc-800/60 bg-zinc-950/40">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+        
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div class="max-w-2xl space-y-2">
+            <span class="text-xs font-mono uppercase tracking-widest text-indigo-400 font-bold">Verified Network</span>
+            <h2 class="text-2xl sm:text-4xl font-heading font-bold text-white tracking-tight">
+              Verified Senior Engineers &amp; Product Leaders
+            </h2>
+            <p class="text-sm text-zinc-400">
+              Identity verified via DigiLocker and active corporate email. No anonymous tutors or student peers.
+            </p>
+          </div>
+
+          <div class="px-3.5 py-1.5 rounded-xl glass-card font-mono text-xs text-zinc-300 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            <span>Zero Employer Endorsement Implied</span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          
+            <div class="p-6 rounded-2xl glass-card border border-white/10 space-y-4 hover:border-indigo-500/40 transition-all flex flex-col justify-between">
+              <div class="space-y-4">
+                <div class="flex items-center gap-3.5">
+                  <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80" alt="Arjun Mehta" class="w-13 h-13 rounded-xl object-cover border-2 border-indigo-500/30">
+                  <div>
+                    <h4 class="font-heading font-bold text-base text-white">Arjun Mehta</h4>
+                    <p class="text-xs text-zinc-400">Staff Backend Engineer</p>
+                    <span class="text-[11px] font-mono text-indigo-400">Fintech Unicorn</span>
+                  </div>
+                </div>
+
+                <div class="flex flex-wrap gap-1.5">
+                  
+                    <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-zinc-900 border border-zinc-800 text-zinc-300">Distributed Systems</span>
+                  
+                    <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-zinc-900 border border-zinc-800 text-zinc-300">Payment Rails</span>
+                  
+                    <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-zinc-900 border border-zinc-800 text-zinc-300">System Design</span>
+                  
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 text-[11px] font-mono p-3 rounded-xl bg-zinc-950/70 border border-zinc-800/80">
+                  <div>
+                    <span class="text-zinc-500 block">Experience:</span>
+                    <span class="font-bold text-white">8+ Years</span>
+                  </div>
+                  <div>
+                    <span class="text-zinc-500 block">Rating:</span>
+                    <span class="font-bold text-amber-400">★ 4.96 (142)</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="pt-3 border-t border-zinc-800/80">
+                <button class="w-full py-2.5 rounded-xl bg-zinc-900 hover:bg-[#5145cd] text-zinc-200 hover:text-white font-heading font-bold text-xs border border-zinc-700 hover:border-[#5145cd] transition-all">
+                  View Available Slots →
+                </button>
+              </div>
+            </div>
+          
+            <div class="p-6 rounded-2xl glass-card border border-white/10 space-y-4 hover:border-indigo-500/40 transition-all flex flex-col justify-between">
+              <div class="space-y-4">
+                <div class="flex items-center gap-3.5">
+                  <img src="https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=200&q=80" alt="Kavya Subramanian" class="w-13 h-13 rounded-xl object-cover border-2 border-indigo-500/30">
+                  <div>
+                    <h4 class="font-heading font-bold text-base text-white">Kavya Subramanian</h4>
+                    <p class="text-xs text-zinc-400">Principal Product Manager</p>
+                    <span class="text-[11px] font-mono text-indigo-400">Enterprise B2B SaaS</span>
+                  </div>
+                </div>
+
+                <div class="flex flex-wrap gap-1.5">
+                  
+                    <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-zinc-900 border border-zinc-800 text-zinc-300">Product Strategy</span>
+                  
+                    <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-zinc-900 border border-zinc-800 text-zinc-300">STAR Behavioral</span>
+                  
+                    <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-zinc-900 border border-zinc-800 text-zinc-300">PRD Case Studies</span>
+                  
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 text-[11px] font-mono p-3 rounded-xl bg-zinc-950/70 border border-zinc-800/80">
+                  <div>
+                    <span class="text-zinc-500 block">Experience:</span>
+                    <span class="font-bold text-white">9+ Years</span>
+                  </div>
+                  <div>
+                    <span class="text-zinc-500 block">Rating:</span>
+                    <span class="font-bold text-amber-400">★ 4.98 (98)</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="pt-3 border-t border-zinc-800/80">
+                <button class="w-full py-2.5 rounded-xl bg-zinc-900 hover:bg-[#5145cd] text-zinc-200 hover:text-white font-heading font-bold text-xs border border-zinc-700 hover:border-[#5145cd] transition-all">
+                  View Available Slots →
+                </button>
+              </div>
+            </div>
+          
+            <div class="p-6 rounded-2xl glass-card border border-white/10 space-y-4 hover:border-indigo-500/40 transition-all flex flex-col justify-between">
+              <div class="space-y-4">
+                <div class="flex items-center gap-3.5">
+                  <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80" alt="Rishi Deshmukh" class="w-13 h-13 rounded-xl object-cover border-2 border-indigo-500/30">
+                  <div>
+                    <h4 class="font-heading font-bold text-base text-white">Rishi Deshmukh</h4>
+                    <p class="text-xs text-zinc-400">Senior Applied Data Scientist</p>
+                    <span class="text-[11px] font-mono text-indigo-400">Marketplace AI Platforms</span>
+                  </div>
+                </div>
+
+                <div class="flex flex-wrap gap-1.5">
+                  
+                    <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-zinc-900 border border-zinc-800 text-zinc-300">ML Systems</span>
+                  
+                    <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-zinc-900 border border-zinc-800 text-zinc-300">NLP Pipelines</span>
+                  
+                    <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-zinc-900 border border-zinc-800 text-zinc-300">AI Portfolios</span>
+                  
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 text-[11px] font-mono p-3 rounded-xl bg-zinc-950/70 border border-zinc-800/80">
+                  <div>
+                    <span class="text-zinc-500 block">Experience:</span>
+                    <span class="font-bold text-white">7+ Years</span>
+                  </div>
+                  <div>
+                    <span class="text-zinc-500 block">Rating:</span>
+                    <span class="font-bold text-amber-400">★ 4.94 (86)</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="pt-3 border-t border-zinc-800/80">
+                <button class="w-full py-2.5 rounded-xl bg-zinc-900 hover:bg-[#5145cd] text-zinc-200 hover:text-white font-heading font-bold text-xs border border-zinc-700 hover:border-[#5145cd] transition-all">
+                  View Available Slots →
+                </button>
+              </div>
+            </div>
+          
+            <div class="p-6 rounded-2xl glass-card border border-white/10 space-y-4 hover:border-indigo-500/40 transition-all flex flex-col justify-between">
+              <div class="space-y-4">
+                <div class="flex items-center gap-3.5">
+                  <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=200&q=80" alt="Neha Sharma" class="w-13 h-13 rounded-xl object-cover border-2 border-indigo-500/30">
+                  <div>
+                    <h4 class="font-heading font-bold text-base text-white">Neha Sharma</h4>
+                    <p class="text-xs text-zinc-400">Engineering Manager</p>
+                    <span class="text-[11px] font-mono text-indigo-400">Consumer Tech</span>
+                  </div>
+                </div>
+
+                <div class="flex flex-wrap gap-1.5">
+                  
+                    <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-zinc-900 border border-zinc-800 text-zinc-300">Hiring Committee Debriefs</span>
+                  
+                    <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-zinc-900 border border-zinc-800 text-zinc-300">Behavioral Loops</span>
+                  
+                    <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-zinc-900 border border-zinc-800 text-zinc-300">Offer Negotiation</span>
+                  
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 text-[11px] font-mono p-3 rounded-xl bg-zinc-950/70 border border-zinc-800/80">
+                  <div>
+                    <span class="text-zinc-500 block">Experience:</span>
+                    <span class="font-bold text-white">10+ Years</span>
+                  </div>
+                  <div>
+                    <span class="text-zinc-500 block">Rating:</span>
+                    <span class="font-bold text-amber-400">★ 4.97 (174)</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="pt-3 border-t border-zinc-800/80">
+                <button class="w-full py-2.5 rounded-xl bg-zinc-900 hover:bg-[#5145cd] text-zinc-200 hover:text-white font-heading font-bold text-xs border border-zinc-700 hover:border-[#5145cd] transition-all">
+                  View Available Slots →
+                </button>
+              </div>
+            </div>
+          
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 8. Founder Pledge vs Predatory ISAs       -->
+    <!-- ========================================== -->
+    <section id="comparison" class="py-16 sm:py-24 border-t border-zinc-800/60">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+        
+        <div class="text-center max-w-3xl mx-auto space-y-3">
+          <span class="text-xs font-mono uppercase tracking-widest text-indigo-400 font-bold">Institutional Ethics</span>
+          <h2 class="text-2xl sm:text-4xl font-heading font-bold text-white tracking-tight">
+            The DreamX Transparency Guarantee
+          </h2>
+          <p class="text-sm text-zinc-400">
+            How we fundamentally differ from aggressive bootcamps, hidden Income Share Agreements (ISAs), and unregulated open marketplaces.
+          </p>
+        </div>
+
+        <!-- Comparison Table Card -->
+        <div class="overflow-x-auto rounded-2xl glass-card border border-white/10 p-2 sm:p-6">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="border-b border-zinc-800 text-zinc-400 font-mono">
+                <th class="py-4 px-4 font-semibold">Evaluation Criteria</th>
+                <th class="py-4 px-4 font-bold text-indigo-400 text-sm">DreamX Platform</th>
+                <th class="py-4 px-4 font-semibold">Predatory Bootcamps / ISAs</th>
+                <th class="py-4 px-4 font-semibold">Unregulated Freelance Sites</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-zinc-800/60">
+              <tr>
+                <td class="py-4 px-4 font-medium text-white">Pricing Model</td>
+                <td class="py-4 px-4 font-bold text-emerald-400">Fixed ₹499–₹999 fee per session</td>
+                <td class="py-4 px-4 text-red-400">15–20% of your salary for 36 months</td>
+                <td class="py-4 px-4 text-zinc-400">Arbitrary high hourly rates</td>
+              </tr>
+              <tr>
+                <td class="py-4 px-4 font-medium text-white">Mentor Verification</td>
+                <td class="py-4 px-4 font-bold text-emerald-400">DigiLocker + Corporate Email (@google, etc.)</td>
+                <td class="py-4 px-4 text-zinc-400">Internal junior batch graduates</td>
+                <td class="py-4 px-4 text-zinc-400">Self-reported LinkedIn claims</td>
+              </tr>
+              <tr>
+                <td class="py-4 px-4 font-medium text-white">Deliverable &amp; Rubric</td>
+                <td class="py-4 px-4 font-bold text-emerald-400">Standardized 11-section 8D PDF report</td>
+                <td class="py-4 px-4 text-zinc-400">Vague verbal advice in group calls</td>
+                <td class="py-4 px-4 text-zinc-400">No standardized deliverables</td>
+              </tr>
+              <tr>
+                <td class="py-4 px-4 font-medium text-white">Escrow &amp; Refund SLA</td>
+                <td class="py-4 px-4 font-bold text-emerald-400">100% refund on &ge;1h cancel or SLA miss</td>
+                <td class="py-4 px-4 text-red-400">Strict non-refundable legal contracts</td>
+                <td class="py-4 px-4 text-zinc-400">Cumbersome dispute mediation</td>
+              </tr>
+              <tr>
+                <td class="py-4 px-4 font-medium text-white">Data Privacy</td>
+                <td class="py-4 px-4 font-bold text-emerald-400">Strict DPDP Act 2023 with 1-click erasure</td>
+                <td class="py-4 px-4 text-zinc-400">Resold to third-party loan NBFCs</td>
+                <td class="py-4 px-4 text-zinc-400">Public profile indexing</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Founder Statement Banner -->
+        <div class="p-6 sm:p-8 rounded-2xl bg-gradient-to-r from-indigo-950/40 via-zinc-900/60 to-violet-950/40 border border-indigo-500/20 space-y-4">
+          <p class="text-xs sm:text-sm text-zinc-300 italic leading-relaxed">
+            &ldquo;Indian graduates deserve honest diagnostic evaluations, not predatory placement promises. Most programs trap candidates in aggressive Income Share Agreements or make unbacked claims of 100% placement guarantees. At DreamX, we provide strictly verified mentors, an objective rubric, and high-fidelity actionable reports. If your report isn't delivered within 48 hours, your funds are refunded automatically.&rdquo;
+          </p>
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-full bg-[#5145cd] flex items-center justify-center font-bold text-white text-xs">DX</div>
+            <div>
+              <span class="text-xs font-bold text-white block">Founding Team</span>
+              <span class="text-[11px] text-zinc-500 font-mono">DreamX Technologies India</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 9. Comprehensive FAQ Accordion            -->
+    <!-- ========================================== -->
+    <section id="faq" class="py-16 sm:py-24 border-t border-zinc-800/60 bg-zinc-950/40">
+      <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+        
+        <div class="text-center space-y-3">
+          <span class="text-xs font-mono uppercase tracking-widest text-indigo-400 font-bold">Frequently Asked Questions</span>
+          <h2 class="text-2xl sm:text-4xl font-heading font-bold text-white tracking-tight">
+            Everything You Need to Know
+          </h2>
+        </div>
+
+        <div class="space-y-3">
+          
+            <div class="rounded-2xl glass-card border border-white/10 overflow-hidden transition-all">
+              <button onclick="toggleFaq(0)" class="w-full p-5 sm:p-6 text-left flex items-center justify-between gap-4">
+                <span class="font-heading font-bold text-sm sm:text-base text-white">How does the 100% Escrow & Refund Guarantee work?</span>
+                <span id="faq-chevron-0" class="text-indigo-400 text-lg transition-transform font-mono">+</span>
+              </button>
+              <div id="faq-ans-0" class="hidden px-5 pb-5 sm:px-6 sm:pb-6 text-xs sm:text-sm text-zinc-400 leading-relaxed border-t border-zinc-800/60 pt-4">
+                Every rupee you pay for a DreamX session is locked safely in our RBI-regulated Razorpay Nodal Escrow Account. The mentor is only paid after you receive your verified 11-section Diagnostic Report. If you need to cancel, you receive an automated 100% refund with zero questions asked as long as you give at least 1 hour notice before the scheduled start time.
+              </div>
+            </div>
+          
+            <div class="rounded-2xl glass-card border border-white/10 overflow-hidden transition-all">
+              <button onclick="toggleFaq(1)" class="w-full p-5 sm:p-6 text-left flex items-center justify-between gap-4">
+                <span class="font-heading font-bold text-sm sm:text-base text-white">How is DreamX different from bootcamps with 100% placement guarantees?</span>
+                <span id="faq-chevron-1" class="text-indigo-400 text-lg transition-transform font-mono">+</span>
+              </button>
+              <div id="faq-ans-1" class="hidden px-5 pb-5 sm:px-6 sm:pb-6 text-xs sm:text-sm text-zinc-400 leading-relaxed border-t border-zinc-800/60 pt-4">
+                We do not sell deceptive '100% job guarantees' or trap students in aggressive Income Share Agreements (ISAs). Bootcamps often take 15-20% of your future salary for years. At DreamX, you pay transparent, low fixed fees (starting at ₹499) for objective, rubric-scored diagnostics from verified senior engineers who actually interview candidates at top firms.
+              </div>
+            </div>
+          
+            <div class="rounded-2xl glass-card border border-white/10 overflow-hidden transition-all">
+              <button onclick="toggleFaq(2)" class="w-full p-5 sm:p-6 text-left flex items-center justify-between gap-4">
+                <span class="font-heading font-bold text-sm sm:text-base text-white">What is the 48-Hour SLA on Deliverables?</span>
+                <span id="faq-chevron-2" class="text-indigo-400 text-lg transition-transform font-mono">+</span>
+              </button>
+              <div id="faq-ans-2" class="hidden px-5 pb-5 sm:px-6 sm:pb-6 text-xs sm:text-sm text-zinc-400 leading-relaxed border-t border-zinc-800/60 pt-4">
+                Within 48 hours of completing any 1:1 session (such as a Resume Review or Mock Interview), your mentor is contractually required to submit a comprehensive, structured rubric report with concrete strengths, priority gaps, and an actionable 30/60/90-day trajectory. If the SLA is violated, our escrow system triggers an automated review and refund.
+              </div>
+            </div>
+          
+            <div class="rounded-2xl glass-card border border-white/10 overflow-hidden transition-all">
+              <button onclick="toggleFaq(3)" class="w-full p-5 sm:p-6 text-left flex items-center justify-between gap-4">
+                <span class="font-heading font-bold text-sm sm:text-base text-white">How are DreamX mentors verified?</span>
+                <span id="faq-chevron-3" class="text-indigo-400 text-lg transition-transform font-mono">+</span>
+              </button>
+              <div id="faq-ans-3" class="hidden px-5 pb-5 sm:px-6 sm:pb-6 text-xs sm:text-sm text-zinc-400 leading-relaxed border-t border-zinc-800/60 pt-4">
+                Every mentor undergoes a strict 3-tier verification pipeline: Government ID verification via DigiLocker, corporate email authentication (@google.com, @microsoft.com, @razorpay.com, etc.), and past employment proof. No student or unverified professional is ever permitted to take sessions.
+              </div>
+            </div>
+          
+            <div class="rounded-2xl glass-card border border-white/10 overflow-hidden transition-all">
+              <button onclick="toggleFaq(4)" class="w-full p-5 sm:p-6 text-left flex items-center justify-between gap-4">
+                <span class="font-heading font-bold text-sm sm:text-base text-white">Can I choose my mentor directly or use Smart Match?</span>
+                <span id="faq-chevron-4" class="text-indigo-400 text-lg transition-transform font-mono">+</span>
+              </button>
+              <div id="faq-ans-4" class="hidden px-5 pb-5 sm:px-6 sm:pb-6 text-xs sm:text-sm text-zinc-400 leading-relaxed border-t border-zinc-800/60 pt-4">
+                Both! You can browse the verified mentor directory and hand-pick any mentor whose background matches your target company. Alternatively, you can use Smart Match, where our algorithmic dispatch pairs you with an optimal available mentor matching your target role and preferred time window within 30 minutes.
+              </div>
+            </div>
+          
+            <div class="rounded-2xl glass-card border border-white/10 overflow-hidden transition-all">
+              <button onclick="toggleFaq(5)" class="w-full p-5 sm:p-6 text-left flex items-center justify-between gap-4">
+                <span class="font-heading font-bold text-sm sm:text-base text-white">How does the 3-Service Bundle discount work?</span>
+                <span id="faq-chevron-5" class="text-indigo-400 text-lg transition-transform font-mono">+</span>
+              </button>
+              <div id="faq-ans-5" class="hidden px-5 pb-5 sm:px-6 sm:pb-6 text-xs sm:text-sm text-zinc-400 leading-relaxed border-t border-zinc-800/60 pt-4">
+                When you select any 3 services in one transaction, DreamX automatically applies a 5% bundle discount funded by the platform. If you hold a Pro (5%) or Elite (10%) membership, our pricing engine automatically selects the single best discount for you per PRD §7.4 (discounts do not stack, ensuring fair mentor payouts).
+              </div>
+            </div>
+          
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 10. Final Conversion & Institutional CTA  -->
+    <!-- ========================================== -->
+    <section class="py-16 sm:py-24 border-t border-zinc-800/60 relative overflow-hidden">
+      <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <div class="p-8 sm:p-14 rounded-3xl bg-gradient-to-tr from-[#5145cd] via-indigo-600 to-violet-700 text-white text-center space-y-6 shadow-glow-lg relative">
+          <span class="px-3.5 py-1.5 rounded-full bg-white/15 text-xs font-mono font-bold tracking-wider uppercase backdrop-blur-md">
+            Start With Objective Evidence
+          </span>
+
+          <h2 class="text-2xl sm:text-4xl lg:text-5xl font-heading font-extrabold tracking-tight">
+            Know exactly where you stand <br> before your next interview loop.
+          </h2>
+
+          <p class="text-xs sm:text-sm text-indigo-100 max-w-xl mx-auto leading-relaxed">
+            Take the 5-minute self-diagnostic test and benchmark your career readiness across all 8 dimensions with zero financial commitment.
+          </p>
+
+          <div class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
+            <a href="#readiness-model" class="px-8 py-4 rounded-xl bg-white text-[#5145cd] hover:bg-zinc-100 font-heading font-bold text-sm shadow-md transition-all">
+              Take Free 8D Diagnostic Check
+            </a>
+            <a href="#services" class="px-8 py-4 rounded-xl bg-indigo-900/40 hover:bg-indigo-900/60 text-white border border-white/20 font-heading font-semibold text-sm transition-all">
+              Browse S01–S10 Modules
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 11. Institutional Statutory Footer         -->
+    <!-- ========================================== -->
+    <footer class="py-12 border-t border-zinc-800/80 bg-[#050608] text-xs text-zinc-500">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+        
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div class="space-y-2">
+            <div class="flex items-center gap-2">
+              <div class="w-6 h-6 rounded-lg bg-[#5145cd] flex items-center justify-center font-bold text-white text-xs">DX</div>
+              <span class="font-heading font-bold text-sm text-white">DreamX Technologies India</span>
+            </div>
+            <p class="text-[11px] text-zinc-500 max-w-md">
+              India's outcome-accountable career acceleration network. Governed by objective rubrics, nodal escrow safeguards, and DPDP Act 2023 statutory protection.
+            </p>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-6 font-mono text-[11px]">
+            <a href="#pillars" class="hover:text-white transition-colors">Four Pillars</a>
+            <a href="#readiness-model" class="hover:text-white transition-colors">8D Rubric</a>
+            <a href="#services" class="hover:text-white transition-colors">Service Modules</a>
+            <a href="#bundle-calculator" class="hover:text-white transition-colors">Pricing &amp; Bundles</a>
+            <a href="#faq" class="hover:text-white transition-colors">FAQ</a>
+          </div>
+        </div>
+
+        <div class="pt-6 border-t border-zinc-800/60 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] font-mono">
+          <p>© 2026 DreamX Technologies India Pvt. Ltd. All rights reserved.</p>
+          <div class="flex items-center gap-4 text-zinc-400">
+            <span>Razorpay Nodal Protected</span>
+            <span>•</span>
+            <span>256-Bit SSL Encrypted</span>
+            <span>•</span>
+            <span>Asia/Kolkata Support SLA</span>
+          </div>
+        </div>
+
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- ========================================== -->
+  <!-- Interactive Script Logic                   -->
+  <!-- ========================================== -->
+  <script>
+    const dimensionsData = [{"id":"resume","name":"Resume Quality","weight":"20%","subtitle":"ATS formatting, impact metrics & X-Y-Z formula","level01":"Generic descriptions, heavy visual styling that breaks ATS parsers, no measurable impact metrics or verified links.","level23":"Single-column clean format, standard action verbs, but lacks clear CAR framing; vague impact numbers or team context.","level45":"X-Y-Z formula across every bullet, verified production links with scale metrics, tailored keywords passing ATS with 95%+ confidence.","service":"S01 / S02"},{"id":"linkedin","name":"LinkedIn Signal","weight":"10%","subtitle":"Discoverability, inbound recruiter ranking & social proof","level01":"Unsearchable, generic 'Aspiring Developer' headline, dormant activity, zero technical posts or recommendations.","level23":"Accurate work dates, technical skills listed, but lacks detailed project artifacts, social proof, or high-intent recruiter search keywords.","level45":"Optimized for top recruiter search filters, featured section with live capstones, consistent technical commentary and verified recommendations.","service":"S03"},{"id":"portfolio","name":"Proof of Work","weight":"15%","subtitle":"Production capstones, GitHub commits & system architecture","level01":"Tutorial clones (todo lists, calculator apps) without real backend, no custom database schema, sparse commit log.","level23":"Functional full-stack app with authentication and CRUD endpoints, but lacks tests, load management, or clean API contracts.","level45":"Monitored microservices or solid modular monolith, unit & integration tests, CI/CD pipeline, live users and architectural decision records (ADRs).","service":"S04"},{"id":"communication","name":"Communication","weight":"10%","subtitle":"STAR framework, concise articulation & active listening","level01":"Vague and rambling, struggles to explain technical trade-offs, defensive under probing questions.","level23":"Explains standard solutions adequately, but lacks structured executive summary; sometimes over-explains trivial details.","level45":"Crisp STAR structure, proactive framing of trade-offs, explains complex distributed concepts with clear analogies and composure.","service":"S05"},{"id":"technical","name":"Technical Skills","weight":"20%","subtitle":"Data structures, algorithms & core CS problem solving","level01":"Struggles with basic data structures, writes syntax-heavy unoptimized code, cannot analyze Big-O complexity accurately.","level23":"Solves standard medium problems with hints, but struggles with optimal dry runs or edge cases (empty inputs, integer overflow).","level45":"Identifies underlying algorithmic patterns instantly, writes bug-free modular code with clear invariant proofs and optimal time/space complexity.","service":"S06 / S10"},{"id":"system_design","name":"System Design","weight":"15%","subtitle":"Distributed systems, scale, databases & availability","level01":"Treats systems as single server apps, unaware of caching layers, database bottlenecks, or CAP theorem implications.","level23":"Designs basic 3-tier architecture, uses Redis and load balancers, but struggles with data partitioning, consistency trade-offs, or failure modes.","level45":"Designs resilient multi-region architectures, calculates capacity estimations calmly, reasons about replication lag, backpressure, and rate limiting.","service":"S06"},{"id":"career_planning","name":"Career Strategy","weight":"10%","subtitle":"Realistic role targeting, level calibration & offer strategy","level01":"Blunt spray-and-pray applications, unaware of market salary benchmarks or tier-specific hiring expectations.","level23":"Applies to relevant roles, understands standard compensation, but lacks structured pipeline management or negotiation leverage.","level45":"Laser-focused target company pipeline, deep understanding of leveling (SDE-1 vs SDE-2), confident collaborative negotiation scripts.","service":"S07 / S08 / S09"},{"id":"confidence","name":"Executive Confidence","weight":"5%","subtitle":"Composure, ownership demeanor & psychological readiness","level01":"Visible anxiety, apologetic language, freezes when facing unfamiliar technical problems.","level23":"Shows moderate confidence on familiar topics, but hesitates when challenged by senior interviewers.","level45":"Calm, collaborative peer demeanor. Treats the interview as a collaborative engineering brainstorm, embraces feedback seamlessly.","service":"S05 / S06"}];
+    const servicesData = [{"id":"S01","name":"Resume Review","category":"Profile & Assets","durationMinutes":45,"listPricePaise":59900,"deliverableName":"Single-column ATS PDF + Detailed Diagnostic Report","shortOutcome":"Identifies ATS parsing traps and rewrites bullet points into high-signal X-Y-Z impact statements."},{"id":"S02","name":"ATS Resume Optimization","category":"Profile & Assets","durationMinutes":45,"listPricePaise":79900,"deliverableName":"Targeted ATS Resumes + Role Keyword Map","shortOutcome":"Customizes resume keywords, format, and section weight for specific tier-1 job descriptions."},{"id":"S03","name":"LinkedIn Profile Review","category":"Profile & Assets","durationMinutes":30,"listPricePaise":49900,"deliverableName":"LinkedIn Optimization Checklist + Inbound Search Guide","shortOutcome":"Re-engineers your headline, experience framing, and featured media for maximum recruiter inbound search."},{"id":"S04","name":"Portfolio Review","category":"Profile & Assets","durationMinutes":45,"listPricePaise":59900,"deliverableName":"Project Architecture & Proof-of-Work Audit","shortOutcome":"Evaluates GitHub capstones, system diagrams, and live production links to showcase genuine proof of work."},{"id":"S05","name":"Behavioral Mock Interview","category":"Interviews","durationMinutes":60,"listPricePaise":79900,"deliverableName":"STAR Rubric Scorecard + Story Bank Framework","shortOutcome":"Calibrates leadership, conflict resolution, and behavioral ownership stories under simulated interview pressure."},{"id":"S06","name":"Technical Mock Interview","category":"Interviews","durationMinutes":60,"listPricePaise":99900,"deliverableName":"DSA / System Architecture Diagnostic Scorecard","shortOutcome":"Simulates a full 60-minute technical loop with live problem decomposition, dry-run rigor, and complexity trade-offs."},{"id":"S07","name":"Career Consultation","category":"Career Direction","durationMinutes":30,"listPricePaise":49900,"deliverableName":"Career Strategy Action Plan & Target Company Roadmap","shortOutcome":"Clarifies target roles, domain pivots, and realistic interview timelines based on current market hiring bars."},{"id":"S08","name":"Salary Negotiation","category":"Career Direction","durationMinutes":30,"listPricePaise":69900,"deliverableName":"Offer Analysis & Counter-Offer Negotiation Script","shortOutcome":"Breaks down base vs ESOPS vs joining bonuses and scripts confident, collaborative compensation counter-offers."},{"id":"S09","name":"Career Roadmap Session","category":"Career Direction","durationMinutes":60,"listPricePaise":79900,"deliverableName":"Comprehensive 90-Day Skill & Execution Blueprint","shortOutcome":"Maps out a weekly step-by-step technical and portfolio roadmap to transition from service to product tier-1 firms."},{"id":"S10","name":"Coding Interview Preparation","category":"Interviews","durationMinutes":60,"listPricePaise":99900,"deliverableName":"Problem Pattern Recognition Matrix & Code Review","shortOutcome":"Focused drills on high-frequency algorithmic patterns (graphs, dynamic programming, sliding windows) with clean code idioms."}];
+
+    let activeDimId = 'resume';
+    let selectedBundleServices = new Set();
+    let currentCanvasMode = 'carbon';
+
+    // 1. Initialize Dimension View
+    function selectDimension(dimId) {
+      activeDimId = dimId;
+      const dim = dimensionsData.find(d => d.id === dimId);
+      if (!dim) return;
+
+      // Update tabs styling
+      document.querySelectorAll('.dim-tab').forEach(tab => {
+        tab.classList.remove('bg-[#5145cd]', 'text-white', 'border-[#5145cd]', 'shadow-glow-sm');
+        tab.classList.add('glass-card', 'text-zinc-400', 'border-zinc-800');
+      });
+      const activeTab = document.getElementById('dim-tab-' + dimId);
+      if (activeTab) {
+        activeTab.classList.add('bg-[#5145cd]', 'text-white', 'border-[#5145cd]', 'shadow-glow-sm');
+        activeTab.classList.remove('glass-card', 'text-zinc-400', 'border-zinc-800');
+      }
+
+      // Render detail view
+      const detailEl = document.getElementById('dimension-detail');
+      detailEl.innerHTML = `
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-800 pb-4">
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="font-heading font-extrabold text-xl text-white">${dim.name}</h3>
+              <span class="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-[#5145cd]/20 text-indigo-300 border border-[#5145cd]/30">${dim.weight} Assessment Weight</span>
+            </div>
+            <p class="text-xs text-zinc-400 font-mono mt-1">${dim.subtitle}</p>
+          </div>
+          <span class="text-xs font-mono text-indigo-400 font-semibold">Mapped Modules: ${dim.service}</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <!-- Level 0-1 -->
+          <div class="p-4 rounded-xl bg-red-950/30 border border-red-500/20 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-mono font-bold text-red-400">Score 0 – 1</span>
+              <span class="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-red-500/10 text-red-300">Gaps Blocking</span>
+            </div>
+            <p class="text-xs text-zinc-300 leading-relaxed">${dim.level01}</p>
+          </div>
+
+          <!-- Level 2-3 -->
+          <div class="p-4 rounded-xl bg-amber-950/30 border border-amber-500/20 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-mono font-bold text-amber-400">Score 2 – 3</span>
+              <span class="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-amber-500/10 text-amber-300">Market Standard</span>
+            </div>
+            <p class="text-xs text-zinc-300 leading-relaxed">${dim.level23}</p>
+          </div>
+
+          <!-- Level 4-5 -->
+          <div class="p-4 rounded-xl bg-emerald-950/30 border border-emerald-500/20 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-mono font-bold text-emerald-400">Score 4 – 5</span>
+              <span class="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300">Tier-1 Unicorn Ready</span>
+            </div>
+            <p class="text-xs text-zinc-300 leading-relaxed">${dim.level45}</p>
+          </div>
+        </div>
+      `;
+    }
+
+    // 2. Filter Services Catalogue
+    function filterServices(category) {
+      document.querySelectorAll('.svc-flt').forEach(b => {
+        b.classList.remove('bg-[#5145cd]', 'text-white', 'font-bold');
+        b.classList.add('text-zinc-400');
+      });
+      if (category === 'all') document.getElementById('svc-flt-all').classList.add('bg-[#5145cd]', 'text-white', 'font-bold');
+      if (category === 'Profile & Assets') document.getElementById('svc-flt-profile').classList.add('bg-[#5145cd]', 'text-white', 'font-bold');
+      if (category === 'Interviews') document.getElementById('svc-flt-interviews').classList.add('bg-[#5145cd]', 'text-white', 'font-bold');
+      if (category === 'Career Direction') document.getElementById('svc-flt-career').classList.add('bg-[#5145cd]', 'text-white', 'font-bold');
+
+      document.querySelectorAll('.svc-card').forEach(card => {
+        if (category === 'all' || card.getAttribute('data-category') === category) {
+          card.style.display = 'flex';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+
+    // 3. Interactive 3-Service Bundle Logic
+    function toggleBundleService(svcId) {
+      if (selectedBundleServices.has(svcId)) {
+        selectedBundleServices.delete(svcId);
+      } else {
+        selectedBundleServices.add(svcId);
+      }
+      updateBundleUI();
+    }
+
+    function updateBundleUI() {
+      const selected = Array.from(selectedBundleServices);
+      const count = selected.length;
+
+      // Update badge
+      document.getElementById('bundle-count-badge').textContent = `${count} of 3 Selected`;
+      document.getElementById('bundle-count-badge').className = count === 3
+        ? 'px-2.5 py-0.5 rounded-full text-xs font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+        : 'px-2.5 py-0.5 rounded-full text-xs font-mono bg-zinc-800 text-zinc-300';
+
+      // Update pills
+      const pillsContainer = document.getElementById('bundle-selected-pills');
+      if (count === 0) {
+        pillsContainer.innerHTML = '<span>Check 3 services from the catalogue above to activate the bundle discount...</span>';
+      } else {
+        pillsContainer.innerHTML = selected.map(id => {
+          const s = servicesData.find(x => x.id === id);
+          return `<span class="px-2.5 py-1 rounded-lg bg-indigo-500/20 border border-indigo-500/40 text-indigo-300 font-mono font-bold text-xs flex items-center gap-1.5">
+            ${s.id} · ${s.name} (₹${s.listPricePaise/100})
+            <button onclick="toggleBundleService('${s.id}'); document.getElementById('chk-${s.id}').checked = false;" class="text-zinc-400 hover:text-white">&times;</button>
+          </span>`;
+        }).join('');
+      }
+
+      // Calculate totals
+      let subtotalPaise = 0;
+      selected.forEach(id => {
+        const s = servicesData.find(x => x.id === id);
+        if (s) subtotalPaise += s.listPricePaise;
+      });
+
+      const isBundle = count === 3;
+      const discountPercent = isBundle ? 5 : 0;
+      const discountPaise = Math.round((subtotalPaise * discountPercent) / 100);
+      const payablePaise = subtotalPaise - discountPaise;
+
+      document.getElementById('bundle-subtotal').textContent = '₹' + (subtotalPaise / 100);
+      document.getElementById('bundle-discount-val').textContent = '-₹' + (discountPaise / 100);
+      document.getElementById('bundle-payable').textContent = '₹' + (payablePaise / 100);
+      document.getElementById('bundle-discount-label').textContent = isBundle ? 'Custom 3-Service Bundle (5%):' : 'Applied Discount:';
+    }
+
+    // 4. Role Switcher Preview
+    function setRoleView(role) {
+      const studentBtn = document.getElementById('role-student-btn');
+      const mentorBtn = document.getElementById('role-mentor-btn');
+      if (role === 'student') {
+        studentBtn.className = 'px-3 py-1 rounded-full font-semibold transition-all bg-[#5145cd] text-white shadow-xs flex items-center gap-1.5';
+        mentorBtn.className = 'px-3 py-1 rounded-full font-semibold transition-all text-zinc-400 hover:text-white flex items-center gap-1.5';
+      } else {
+        mentorBtn.className = 'px-3 py-1 rounded-full font-semibold transition-all bg-[#5145cd] text-white shadow-xs flex items-center gap-1.5';
+        studentBtn.className = 'px-3 py-1 rounded-full font-semibold transition-all text-zinc-400 hover:text-white flex items-center gap-1.5';
+      }
+    }
+
+    // 5. FAQ Accordion Toggle
+    function toggleFaq(index) {
+      const ans = document.getElementById('faq-ans-' + index);
+      const chevron = document.getElementById('faq-chevron-' + index);
+      if (ans.classList.contains('hidden')) {
+        ans.classList.remove('hidden');
+        chevron.textContent = '−';
+      } else {
+        ans.classList.add('hidden');
+        chevron.textContent = '+';
+      }
+    }
+
+    // 6. Theme Toggle
+    function toggleTheme() {
+      const html = document.documentElement;
+      const icon = document.getElementById('theme-icon');
+      if (html.classList.contains('dark')) {
+        html.classList.remove('dark');
+        html.classList.add('light');
+        icon.textContent = '☀️';
+      } else {
+        html.classList.remove('light');
+        html.classList.add('dark');
+        icon.textContent = '🌙';
+      }
+    }
+
+    // 7. Canvas Mode Switcher
+    function setCanvasMode(mode) {
+      currentCanvasMode = mode;
+      document.getElementById('mode-carbon').className = mode === 'carbon' ? 'px-2 py-0.5 rounded-lg bg-[#5145cd] text-white font-bold transition-all' : 'px-2 py-0.5 rounded-lg text-zinc-400 hover:text-white transition-all';
+      document.getElementById('mode-vibrant').className = mode === 'vibrant' ? 'px-2 py-0.5 rounded-lg bg-[#5145cd] text-white font-bold transition-all' : 'px-2 py-0.5 rounded-lg text-zinc-400 hover:text-white transition-all';
+      document.getElementById('mode-soft').className = mode === 'soft' ? 'px-2 py-0.5 rounded-lg bg-[#5145cd] text-white font-bold transition-all' : 'px-2 py-0.5 rounded-lg text-zinc-400 hover:text-white transition-all';
+    }
+
+    // 8. Dynamic Flowing Canvas Shader (Procedural Math from evict-wasp Figma prototype)
+    (function initCanvasShader() {
+      const canvas = document.getElementById('ambient-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      const downsample = 0.35;
+      let width = 320;
+      let height = 240;
+
+      function resize() {
+        width = Math.max(320, Math.floor(window.innerWidth * downsample));
+        height = Math.max(240, Math.floor(window.innerHeight * downsample));
+        canvas.width = width;
+        canvas.height = height;
+      }
+      resize();
+      window.addEventListener('resize', resize, { passive: true });
+
+      const mouse = { curX: 0.35, curY: 0.3, targetX: 0.35, targetY: 0.3 };
+      window.addEventListener('pointermove', (e) => {
+        mouse.targetX = e.clientX / window.innerWidth;
+        mouse.targetY = e.clientY / window.innerHeight;
+      }, { passive: true });
+
+      function lerp(a, b, t) { return a + (b - a) * t; }
+
+      let startTime = performance.now();
+      function animate(time) {
+        requestAnimationFrame(animate);
+        const elapsed = (time - startTime) * 0.0006;
+        mouse.curX = lerp(mouse.curX, mouse.targetX, 0.06);
+        mouse.curY = lerp(mouse.curY, mouse.targetY, 0.06);
+
+        const isCarbon = currentCanvasMode === 'carbon';
+        const isVibrant = currentCanvasMode === 'vibrant';
+        const isSoft = currentCanvasMode === 'soft';
+
+        const h1 = (240 + mouse.curX * 100 + Math.sin(elapsed) * 15 + 360) % 360;
+        const h2 = (195 + mouse.curX * 80 + Math.cos(elapsed * 0.8) * 15 + 360) % 360;
+        const h3 = (280 + mouse.curY * 60 + 360) % 360;
+
+        // Base gradient
+        const baseGrad = ctx.createLinearGradient(0, 0, width, height);
+        if (isCarbon) {
+          baseGrad.addColorStop(0, '#06070a');
+          baseGrad.addColorStop(0.5, '#0b0d14');
+          baseGrad.addColorStop(1, '#07080b');
+        } else if (isVibrant) {
+          baseGrad.addColorStop(0, `hsl(${h1}, 65%, 12%)`);
+          baseGrad.addColorStop(0.5, `hsl(${h2}, 60%, 15%)`);
+          baseGrad.addColorStop(1, '#08090e');
+        } else {
+          baseGrad.addColorStop(0, '#0a0c12');
+          baseGrad.addColorStop(1, '#06070a');
+        }
+
+        ctx.fillStyle = baseGrad;
+        ctx.fillRect(0, 0, width, height);
+
+        // Blobs
+        const maxDim = Math.max(width, height);
+        function drawBlob(x, y, r, h, sat, light, op) {
+          const rad = ctx.createRadialGradient(x, y, 0, x, y, r);
+          rad.addColorStop(0, `hsla(${h}, ${sat}%, ${light}%, ${op})`);
+          rad.addColorStop(0.5, `hsla(${(h+15)%360}, ${sat-10}%, ${light}%, ${op*0.45})`);
+          rad.addColorStop(1, `hsla(${h}, ${sat}%, ${light}%, 0)`);
+          ctx.fillStyle = rad;
+          ctx.fillRect(0, 0, width, height);
+        }
+
+        ctx.globalCompositeOperation = 'screen';
+        const alpha = isCarbon ? 0.32 : isVibrant ? 0.55 : 0.22;
+
+        drawBlob(mouse.curX * width, mouse.curY * height, maxDim * 0.55, h1, 85, 60, alpha);
+        drawBlob(width * 0.8, height * 0.7, maxDim * 0.5, h2, 80, 55, alpha * 0.85);
+        drawBlob(width * 0.2, height * 0.8, maxDim * 0.45, h3, 75, 52, alpha * 0.7);
+        ctx.globalCompositeOperation = 'source-over';
+      }
+      requestAnimationFrame(animate);
+    })();
+
+    // Initial setup on load
+    selectDimension('resume');
+  </script>
+</body>
+</html>

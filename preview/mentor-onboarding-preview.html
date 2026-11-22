@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DreamX — Mentor Onboarding & Accreditation (Dual-Track Pedigree Model)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            display: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#5145cd',
+              700: '#4035b3',
+              900: '#1e1b4b',
+            },
+            surface: {
+              DEFAULT: '#ffffff',
+              muted: '#f7f7f8',
+              dim: '#ebebed',
+            },
+            border: '#e7e7eb',
+            dxText: {
+              primary: '#171717',
+              secondary: '#66666f',
+              muted: '#8b8b95',
+            },
+            semantic: {
+              success: '#16834a',
+              'success-bg': '#ebf7ee',
+              warning: '#a7670b',
+              'warning-bg': '#fef6e7',
+              danger: '#c43b3b',
+              'danger-bg': '#fdf2f2',
+              info: '#2864c5',
+              'info-bg': '#eef4fd',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #fafafc;
+      color: #171717;
+      font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+      -webkit-font-smoothing: antialiased;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-[#fafafc] font-sans antialiased text-[#171717] pb-24">
+
+  <!-- TOP HEADER / NAVBAR (Clean white card matching fronted.md §6.2) -->
+  <header class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-2">
+    <div class="bg-white rounded-2xl border border-[#e7e7eb] px-6 py-3.5 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+      
+      <!-- Left: Logo & PRD Rule Status -->
+      <div class="flex items-center gap-4">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-[#5145cd] flex items-center justify-center text-white font-bold text-sm shadow-sm">
+            DX
+          </div>
+          <span class="text-lg font-bold tracking-tight text-[#171717]">DreamX</span>
+        </div>
+        
+        <div class="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#ebf7ee] text-[#16834a] text-xs font-semibold border border-[#d3ebd7]">
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+          Auto-Saved • PRD v3.0 Rule Engine
+        </div>
+      </div>
+
+      <!-- Center: Breadcrumbs -->
+      <nav class="hidden lg:flex items-center gap-6 text-xs font-medium">
+        <span class="text-[#66666f] hover:text-[#171717] cursor-pointer" onclick="scrollToStage(1)">1. Track & Role</span>
+        <span class="text-[#66666f] hover:text-[#171717] cursor-pointer" onclick="scrollToStage(2)">2. Service Scope</span>
+        <span class="text-[#5145cd] font-bold border-b-2 border-[#5145cd] pb-0.5 cursor-pointer" onclick="scrollToStage(3)">3. Pedigree Verification</span>
+        <span class="text-[#66666f] hover:text-[#171717] cursor-pointer" onclick="scrollToStage(4)">4. Availability & Escrow</span>
+        <span class="text-[#8b8b95] hover:text-[#171717] cursor-pointer">Save & Exit</span>
+      </nav>
+
+      <!-- Right: User Avatar / Session (Personal Email) -->
+      <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#f7f7f8] border border-[#e7e7eb] text-xs text-[#171717] font-medium">
+          <span class="w-2 h-2 rounded-full bg-[#16834a]"></span>
+          <span>vermaamarveer0@gmail.com (Personal Account)</span>
+        </div>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- SUBHEADER / PIPELINE TELEMETRY -->
+  <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#e7e7eb] pb-3">
+      <div>
+        <div class="text-[11px] font-bold tracking-wider text-[#5145cd] uppercase">
+          MENTOR DOSSIER ACCREDITATION • PIPELINE ID: DX-MTR-2025-9941
+        </div>
+        <p class="text-xs text-[#66666f] mt-0.5">
+          Strict 5+ YoE Bar • Dual-Track Pedigree (Active Work Email OTP or Alumni Documentary Proof) • RBI Nodal Escrow
+        </p>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-semibold bg-[#eef2ff] text-[#5145cd]">
+          PRD §9 Dual-Track Architecture
+        </span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4-STAGE STEPPER GRID -->
+  <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      
+      <!-- Stage 1 Card: Completed -->
+      <div class="bg-white rounded-xl border border-[#e7e7eb] p-4.5 shadow-sm hover:border-[#cbd5e1] transition cursor-pointer" onclick="scrollToStage(1)">
+        <div class="flex items-center gap-2 mb-2">
+          <span class="w-5 h-5 rounded-full bg-[#ebf7ee] text-[#16834a] flex items-center justify-center text-xs font-bold">✓</span>
+          <span class="text-[11px] font-bold text-[#16834a] tracking-wide uppercase">STAGE 1 • COMPLETED</span>
+        </div>
+        <h4 class="text-sm font-bold text-[#171717]">Career Track & YoE</h4>
+        <p class="text-xs text-[#66666f] mt-0.5">Staff SWE • 8–10 YoE</p>
+      </div>
+
+      <!-- Stage 2 Card: Completed -->
+      <div class="bg-white rounded-xl border border-[#e7e7eb] p-4.5 shadow-sm hover:border-[#cbd5e1] transition cursor-pointer" onclick="scrollToStage(2)">
+        <div class="flex items-center gap-2 mb-2">
+          <span class="w-5 h-5 rounded-full bg-[#ebf7ee] text-[#16834a] flex items-center justify-center text-xs font-bold">✓</span>
+          <span class="text-[11px] font-bold text-[#16834a] tracking-wide uppercase">STAGE 2 • COMPLETED</span>
+        </div>
+        <h4 class="text-sm font-bold text-[#171717]">Service Capabilities</h4>
+        <p class="text-xs text-[#66666f] mt-0.5">S01, S05, S06, S08 Approved</p>
+      </div>
+
+      <!-- Stage 3 Card: Active Purple Highlight (The Core Focus) -->
+      <div class="bg-[#5145cd] text-white rounded-xl p-4.5 shadow-md border border-[#4035b3] transition cursor-pointer" onclick="scrollToStage(3)">
+        <div class="flex items-center gap-2 mb-2">
+          <span class="w-5 h-5 rounded-full bg-white/25 text-white flex items-center justify-center text-xs font-bold">3</span>
+          <span class="text-[11px] font-bold text-white/90 tracking-wide uppercase">STAGE 3 • ACTIVE FOCUS</span>
+        </div>
+        <h4 class="text-sm font-bold text-white">Pedigree Verification</h4>
+        <p class="text-xs text-white/80 mt-0.5">Dual-Track (Active OTP / Alumni)</p>
+      </div>
+
+      <!-- Stage 4 Card: Upcoming -->
+      <div class="bg-white rounded-xl border border-[#e7e7eb] p-4.5 shadow-sm hover:border-[#cbd5e1] transition cursor-pointer" onclick="scrollToStage(4)">
+        <div class="flex items-center gap-2 mb-2">
+          <span class="w-5 h-5 rounded-full bg-[#f7f7f8] text-[#8b8b95] flex items-center justify-center text-xs font-medium">4</span>
+          <span class="text-[11px] font-medium text-[#8b8b95] tracking-wide uppercase">STAGE 4 • UPCOMING</span>
+        </div>
+        <h4 class="text-sm font-medium text-[#66666f]">Availability & Rails</h4>
+        <p class="text-xs text-[#8b8b95] mt-0.5">5 hrs/wk • Bank / UPI Payout</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- MAIN WORKFLOW AREA: FORM (LEFT) + TELEMETRY (RIGHT) -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      
+      <!-- LEFT COLUMN: All 4 PRD Stages (8 cols) -->
+      <div class="lg:col-span-8 space-y-6">
+
+        <!-- ============================================== -->
+        <!-- STAGE 3: DUAL-TRACK PEDIGREE VERIFICATION (ACTIVE FOCUS) -->
+        <!-- ============================================== -->
+        <div class="bg-white rounded-2xl border-2 border-[#5145cd]/30 p-6 sm:p-7 shadow-sm space-y-6 ring-1 ring-[#5145cd]/20" id="stage3-container">
+          <div class="border-b border-[#e7e7eb] pb-4">
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] font-bold text-[#5145cd] tracking-wide uppercase">STAGE 3 OF 4 • PRD §9.1 DUAL-TRACK VERIFICATION</span>
+              <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-[#eef2ff] text-[#5145cd]">Active Accreditation Step</span>
+            </div>
+            <h3 class="text-lg font-bold text-[#171717] mt-1">Engineering Pedigree & Status Verification</h3>
+            <p class="text-xs text-[#66666f] mt-1">
+              How would you like to verify your mentor status? Choose the path that matches your current employment situation. Your personal email (<span class="font-semibold text-[#171717]">vermaamarveer0@gmail.com</span>) remains your permanent account ID for all session bookings, messages, and bank payouts.
+            </p>
+          </div>
+
+          <!-- Dual-Track Selection Buttons / Cards -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            
+            <!-- Option 1: Currently Employed -->
+            <div id="option-work-card" class="p-5 rounded-xl border-2 border-[#5145cd] bg-[#eef2ff]/30 transition cursor-pointer relative" onclick="selectTrack('work')">
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-white border border-[#5145cd]/30 text-[#5145cd]">⚡ 30-SEC FAST TRACK</span>
+                <input type="radio" name="verification_track" id="radio-work" checked class="w-4 h-4 text-[#5145cd] accent-[#5145cd]">
+              </div>
+              <h4 class="text-sm font-bold text-[#171717]">Option 1: Currently Employed</h4>
+              <p class="text-xs text-[#66666f] mt-1">Verify active tech employment via a 1-time OTP sent to your corporate office inbox (@google.com, @uber.com, @microsoft.com).</p>
+              
+              <div class="mt-4 pt-3 border-t border-[#e7e7eb]/80 space-y-2">
+                <div class="flex items-center gap-1.5 text-xs text-[#66666f]">
+                  <span>Public Badge:</span>
+                  <span class="inline-flex items-center gap-1 text-[11px] font-bold text-[#16834a] bg-[#ebf7ee] px-2 py-0.5 rounded">
+                    ✓ Verified at Google
+                  </span>
+                </div>
+                <p class="text-[11px] text-[#8b8b95] leading-relaxed">
+                  🔒 Work email is used ONLY for OTP verification. Students, booking notifications, and payment receipts never touch your work inbox.
+                </p>
+              </div>
+            </div>
+
+            <!-- Option 2: Alumni / Ex-FAANG / Consultant / Founder -->
+            <div id="option-alumni-card" class="p-5 rounded-xl border border-[#e7e7eb] bg-white hover:border-[#5145cd]/50 transition cursor-pointer relative" onclick="selectTrack('alumni')">
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-[#f7f7f8] border border-[#e7e7eb] text-[#66666f]">📄 DOCUMENT PROOF</span>
+                <input type="radio" name="verification_track" id="radio-alumni" class="w-4 h-4 text-[#5145cd] accent-[#5145cd]">
+              </div>
+              <h4 class="text-sm font-bold text-[#171717]">Option 2: Alumni, Consultant or Founder</h4>
+              <p class="text-xs text-[#66666f] mt-1">Don't have an active corporate email? Verify your past seniority using your Relieving Letter, Form-16, MCA Company CIN, or old work ID.</p>
+              
+              <div class="mt-4 pt-3 border-t border-[#e7e7eb]/80 space-y-2">
+                <div class="flex items-center gap-1.5 text-xs text-[#66666f]">
+                  <span>Public Badge:</span>
+                  <span class="inline-flex items-center gap-1 text-[11px] font-bold text-[#5145cd] bg-[#eef2ff] px-2 py-0.5 rounded">
+                    Ex-Google Staff Engineer
+                  </span>
+                </div>
+                <p class="text-[11px] text-[#8b8b95] leading-relaxed">
+                  ✨ Never turned away. Perfect for founders, ex-FAANG engineers on break, and independent tech consultants.
+                </p>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Dynamic Verification Form Container based on selection -->
+          <div id="verification-action-container" class="p-5 rounded-xl border border-[#e7e7eb] bg-[#f7f7f8] space-y-4">
+            
+            <!-- Active State: Work Email OTP (Option 1) -->
+            <div id="view-work-email" class="space-y-3">
+              <div class="flex items-center justify-between">
+                <label class="text-xs font-semibold text-[#171717]">Corporate Work Email Address</label>
+                <span class="text-[11px] text-[#66666f]">Supports @google.com, @amazon.com, @uber.com, etc.</span>
+              </div>
+              <div class="flex flex-col sm:flex-row items-center gap-2">
+                <input type="email" id="work-email-input" value="vikram.rao@google.com" placeholder="name@company.com" class="w-full px-3.5 py-2.5 rounded-lg border border-[#e7e7eb] bg-white text-sm text-[#171717] focus:outline-none focus:border-[#5145cd] transition">
+                <button type="button" onclick="sendOtp()" id="send-otp-btn" class="w-full sm:w-auto px-5 py-2.5 rounded-lg bg-[#5145cd] hover:bg-[#4035b3] text-white text-xs font-bold transition whitespace-nowrap">
+                  Send OTP
+                </button>
+              </div>
+
+              <!-- OTP Verification Box -->
+              <div id="otp-entry-box" class="pt-2 flex items-center gap-2">
+                <input type="text" maxlength="6" value="849201" placeholder="Enter 6-digit OTP" class="w-44 px-3 py-2 rounded-lg border border-[#e7e7eb] bg-white text-sm tracking-widest font-mono text-center focus:outline-none focus:border-[#5145cd]">
+                <button type="button" class="px-4 py-2 rounded-lg bg-[#16834a] text-white text-xs font-semibold flex items-center gap-1.5">
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                  Verified
+                </button>
+                <span class="text-xs text-[#16834a] font-medium">Domain MX records cryptographically validated</span>
+              </div>
+            </div>
+
+            <!-- Inactive State: Document Upload (Option 2) -->
+            <div id="view-alumni-doc" class="hidden space-y-3">
+              <div class="flex items-center justify-between">
+                <label class="text-xs font-semibold text-[#171717]">Upload Relieving Letter, Form 16, or Employment Evidence</label>
+                <span class="text-[11px] text-[#66666f]">PDF, PNG, JPG up to 15MB</span>
+              </div>
+              
+              <div class="border-2 border-dashed border-[#cbd5e1] hover:border-[#5145cd] rounded-xl p-6 text-center bg-white cursor-pointer transition">
+                <svg class="w-8 h-8 mx-auto text-[#8b8b95]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                <p class="text-xs font-semibold text-[#171717] mt-2">Click to browse or drag and drop your document</p>
+                <p class="text-[11px] text-[#8b8b95] mt-0.5">Relieving Letter, Service Certificate, Form-16, or MCA CIN Certificate</p>
+              </div>
+
+              <div class="flex items-center justify-between p-3 rounded-lg bg-white border border-[#e7e7eb] text-xs">
+                <div class="flex items-center gap-2 text-[#171717] font-medium">
+                  <svg class="w-4 h-4 text-[#5145cd]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                  <span>Relieving_Letter_Google_Vikram_Rao.pdf (3.2 MB)</span>
+                </div>
+                <span class="text-[#16834a] font-semibold">Ready for Review</span>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- RBI KYC Box (Government ID / PAN for Nodal Escrow) -->
+          <div class="p-4.5 rounded-xl border border-[#e7e7eb] bg-[#f7f7f8] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="space-y-0.5">
+              <div class="text-xs font-bold text-[#171717]">RBI Nodal Escrow Identity Vault (Required for Payouts)</div>
+              <p class="text-xs text-[#66666f]">Upload Government ID or PAN card for RBI-regulated nodal bank account disbursal. Stored with 256-bit encryption under DPDP Act 2023.</p>
+            </div>
+            <button class="px-4 py-2 rounded-lg bg-white border border-[#e7e7eb] hover:border-[#5145cd] text-xs font-bold text-[#171717] hover:text-[#5145cd] transition whitespace-nowrap self-start sm:self-auto">
+              Upload PAN / ID
+            </button>
+          </div>
+        </div>
+
+        <!-- STAGE 1: Professional Track & Role (PRD §9.2) -->
+        <div class="bg-white rounded-2xl border border-[#e7e7eb] p-6 sm:p-7 shadow-sm space-y-5" id="stage1-container">
+          <div class="border-b border-[#e7e7eb] pb-4">
+            <span class="text-[11px] font-bold text-[#5145cd] tracking-wide uppercase">STAGE 1 OF 4 • PRD §9.2</span>
+            <h3 class="text-base font-bold text-[#171717] mt-0.5">Professional Background & Engineering Track</h3>
+            <p class="text-xs text-[#66666f] mt-1">Your verified engineering credentials for candidate discovery and Smart Match dispatch.</p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="space-y-1.5">
+              <label class="text-xs font-semibold text-[#171717]">Legal Full Name</label>
+              <input type="text" value="Vikramaditya Rao" class="w-full px-3.5 py-2.5 rounded-lg border border-[#e7e7eb] bg-[#f7f7f8] text-sm text-[#171717] focus:outline-none focus:border-[#5145cd] focus:bg-white transition" readonly>
+            </div>
+            <div class="space-y-1.5">
+              <label class="text-xs font-semibold text-[#171717]">Years of Experience (YoE)</label>
+              <input type="text" value="8–10 Years (Staff / Principal Engineer)" class="w-full px-3.5 py-2.5 rounded-lg border border-[#e7e7eb] bg-[#f7f7f8] text-sm text-[#171717] focus:outline-none focus:border-[#5145cd] focus:bg-white transition" readonly>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="space-y-1.5">
+              <label class="text-xs font-semibold text-[#171717]">Current / Most Relevant Employer</label>
+              <input type="text" value="Google India" class="w-full px-3.5 py-2.5 rounded-lg border border-[#e7e7eb] bg-[#f7f7f8] text-sm text-[#171717] focus:outline-none focus:border-[#5145cd] focus:bg-white transition" readonly>
+            </div>
+            <div class="space-y-1.5">
+              <label class="text-xs font-semibold text-[#171717]">Current Role / Level</label>
+              <input type="text" value="Staff Software Engineer (L6)" class="w-full px-3.5 py-2.5 rounded-lg border border-[#e7e7eb] bg-[#f7f7f8] text-sm text-[#171717] focus:outline-none focus:border-[#5145cd] focus:bg-white transition" readonly>
+            </div>
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="text-xs font-semibold text-[#171717]">Public Engineering Headline</label>
+            <input type="text" value="Staff SWE @ Google • Ex-Swiggy • Distributed Systems & Storage Specialist" class="w-full px-3.5 py-2.5 rounded-lg border border-[#e7e7eb] bg-[#f7f7f8] text-sm text-[#171717] focus:outline-none focus:border-[#5145cd] focus:bg-white transition" readonly>
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="text-xs font-semibold text-[#171717]">LinkedIn Profile URL</label>
+            <input type="text" value="https://linkedin.com/in/vikram-rao-eng" class="w-full px-3.5 py-2.5 rounded-lg border border-[#e7e7eb] bg-[#f7f7f8] text-sm text-[#171717] focus:outline-none focus:border-[#5145cd] focus:bg-white transition" readonly>
+          </div>
+        </div>
+
+        <!-- STAGE 2: Service-Specific Approval (PRD §9.1/§9.3) -->
+        <div class="bg-white rounded-2xl border border-[#e7e7eb] p-6 sm:p-7 shadow-sm space-y-5" id="stage2-container">
+          <div class="border-b border-[#e7e7eb] pb-4">
+            <span class="text-[11px] font-bold text-[#5145cd] tracking-wide uppercase">STAGE 2 OF 4 • PRD §9.1 & §9.3</span>
+            <h3 class="text-base font-bold text-[#171717] mt-0.5">Service-Specific Capability Approval (S01–S10)</h3>
+            <p class="text-xs text-[#66666f] mt-1">Mentors are approved service-by-service. Approval for S01 does not blanket-approve S06 System Design.</p>
+          </div>
+
+          <div class="space-y-3">
+            
+            <!-- S01 -->
+            <div class="flex items-center justify-between p-4 rounded-xl border border-[#e7e7eb] bg-[#f7f7f8] hover:border-[#cbd5e1] transition">
+              <div class="space-y-1">
+                <div class="flex items-center gap-2">
+                  <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-[#eef2ff] text-[#5145cd]">S01</span>
+                  <span class="text-sm font-semibold text-[#171717]">Resume Line-by-Line Teardown</span>
+                  <span class="text-[10px] font-medium px-1.5 py-0.5 rounded bg-white border border-[#e7e7eb] text-[#66666f]">45 MIN</span>
+                </div>
+                <p class="text-xs text-[#66666f]">Annotated PDF scorecard with quantified XYZ impact metrics and ATS keyword coverage.</p>
+              </div>
+              <div class="text-right pl-4">
+                <div class="text-base font-bold text-[#171717]">₹599</div>
+                <div class="text-[10px] text-[#8b8b95]">List Floor</div>
+              </div>
+            </div>
+
+            <!-- S05 -->
+            <div class="flex items-center justify-between p-4 rounded-xl border border-[#e7e7eb] bg-[#f7f7f8] hover:border-[#cbd5e1] transition">
+              <div class="space-y-1">
+                <div class="flex items-center gap-2">
+                  <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-[#eef2ff] text-[#5145cd]">S05</span>
+                  <span class="text-sm font-semibold text-[#171717]">Behavioral STAR & Leadership Mock</span>
+                  <span class="text-[10px] font-medium px-1.5 py-0.5 rounded bg-white border border-[#e7e7eb] text-[#66666f]">60 MIN</span>
+                </div>
+                <p class="text-xs text-[#66666f]">Amazon/Meta leadership principles rubric ratings, conflict resolution defense, and presence.</p>
+              </div>
+              <div class="text-right pl-4">
+                <div class="text-base font-bold text-[#171717]">₹799</div>
+                <div class="text-[10px] text-[#8b8b95]">List Floor</div>
+              </div>
+            </div>
+
+            <!-- S06 -->
+            <div class="flex items-center justify-between p-4 rounded-xl border border-[#5145cd]/30 bg-[#eef2ff]/30 hover:border-[#5145cd] transition">
+              <div class="space-y-1">
+                <div class="flex items-center gap-2">
+                  <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-[#5145cd] text-white">S06</span>
+                  <span class="text-sm font-semibold text-[#171717]">System Design & Technical Mock (Flagship)</span>
+                  <span class="text-[10px] font-medium px-1.5 py-0.5 rounded bg-white border border-[#e7e7eb] text-[#66666f]">60 MIN</span>
+                </div>
+                <p class="text-xs text-[#66666f]">High-throughput microservices, latency trade-offs, Excalidraw architecture transcript.</p>
+              </div>
+              <div class="text-right pl-4">
+                <div class="text-base font-bold text-[#171717]">₹1,499</div>
+                <div class="text-[10px] text-[#8b8b95]">List Floor</div>
+              </div>
+            </div>
+
+            <!-- S08 -->
+            <div class="flex items-center justify-between p-4 rounded-xl border border-[#e7e7eb] bg-[#f7f7f8] hover:border-[#cbd5e1] transition">
+              <div class="space-y-1">
+                <div class="flex items-center gap-2">
+                  <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-[#eef2ff] text-[#5145cd]">S08</span>
+                  <span class="text-sm font-semibold text-[#171717]">Offer & Salary Negotiation Advisory</span>
+                  <span class="text-[10px] font-medium px-1.5 py-0.5 rounded bg-white border border-[#e7e7eb] text-[#66666f]">45 MIN</span>
+                </div>
+                <p class="text-xs text-[#66666f]">Counter-offer script, ESOP/RSU tax modeling, and equity valuation benchmarks.</p>
+              </div>
+              <div class="text-right pl-4">
+                <div class="text-base font-bold text-[#171717]">₹999</div>
+                <div class="text-[10px] text-[#8b8b95]">List Floor</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- STAGE 4: Availability & Settlement Rails (PRD §10/§13) -->
+        <div class="bg-white rounded-2xl border border-[#e7e7eb] p-6 sm:p-7 shadow-sm space-y-6" id="stage4-container">
+          <div class="border-b border-[#e7e7eb] pb-4">
+            <span class="text-[11px] font-bold text-[#5145cd] tracking-wide uppercase">STAGE 4 OF 4 • PRD §10 & §13</span>
+            <h3 class="text-base font-bold text-[#171717] mt-0.5">Calendar Availability & Direct Settlement Rails</h3>
+            <p class="text-xs text-[#66666f] mt-1">Configure your weekly advisory capacity and designated settlement rails. Payouts are routed directly via RBI-governed nodal escrow with a 100% non-dilution guarantee.</p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="space-y-1.5">
+              <label class="text-xs font-semibold text-[#171717]">Weekly Capacity Commitment</label>
+              <input type="text" value="5–6 Hours / Week (Recommended)" class="w-full px-3.5 py-2.5 rounded-lg border border-[#e7e7eb] bg-[#f7f7f8] text-sm text-[#171717] focus:outline-none focus:border-[#5145cd] focus:bg-white transition" readonly>
+            </div>
+
+            <div class="space-y-1.5">
+              <label class="text-xs font-semibold text-[#171717]">UPI VPA / Bank IFSC</label>
+              <input type="text" value="vikram.rao@oksbi • SBIN0004123" class="w-full px-3.5 py-2.5 rounded-lg border border-[#e7e7eb] bg-[#f7f7f8] text-sm text-[#171717] focus:outline-none focus:border-[#5145cd] focus:bg-white transition" readonly>
+            </div>
+          </div>
+
+          <!-- SLA Commitment Box -->
+          <div class="p-4 rounded-xl bg-[#eef2ff] border border-[#c7d2fe] space-y-2.5 text-xs text-[#5145cd] font-semibold">
+            <div class="flex items-start gap-2">
+              <span class="text-[#5145cd] font-bold">✓</span>
+              <span>I commit to submitting structured rubric scorecards within 48:00:00 of session completion.</span>
+            </div>
+            <div class="flex items-start gap-2">
+              <span class="text-[#5145cd] font-bold">✓</span>
+              <span>I accept direct nodal escrow settlement with 100% non-dilution guarantee.</span>
+            </div>
+          </div>
+
+          <!-- Submit CTA Button -->
+          <button class="w-full py-4 px-6 rounded-xl bg-[#5145cd] hover:bg-[#4035b3] text-white font-bold text-sm shadow-md hover:shadow-lg transition flex items-center justify-center gap-2">
+            <span>Lock & Submit Mentor Dossier Accreditation Application</span>
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- RIGHT COLUMN: TELEMETRY & PROJECTIONS (4 cols) -->
+      <div class="lg:col-span-4 space-y-6">
+
+        <!-- Earning Potential Card (fronted.md light style) -->
+        <div class="bg-white rounded-2xl border border-[#e7e7eb] p-6 shadow-sm space-y-4">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-[#66666f] uppercase tracking-wider">MONTHLY EARNING POTENTIAL</span>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-[#ebf7ee] text-[#16834a]">NON-DILUTION</span>
+          </div>
+
+          <div class="text-3xl font-extrabold text-[#5145cd] tracking-tight">
+            ₹48,000 – ₹72,000
+          </div>
+
+          <p class="text-xs text-[#66666f] leading-relaxed">
+            Based on 5 hours/week commitment across S01, S05, S06 & S08 with verified 48-hour deliverable SLAs.
+          </p>
+
+          <div class="border-t border-[#e7e7eb] pt-4 space-y-2.5">
+            <div class="text-[11px] font-bold text-[#8b8b95] uppercase tracking-wider">DOSSIER CALIBRATION STATUS</div>
+            
+            <div class="flex items-center gap-2 text-xs text-[#171717] font-medium">
+              <span class="text-[#16834a] font-bold">✓</span>
+              <span>Account Owner: Personal Email Authenticated</span>
+            </div>
+            <div class="flex items-center gap-2 text-xs text-[#171717] font-medium">
+              <span class="text-[#16834a] font-bold">✓</span>
+              <span>Professional Track: Staff SWE @ Google</span>
+            </div>
+            <div class="flex items-center gap-2 text-xs text-[#171717] font-medium">
+              <span class="text-[#16834a] font-bold">✓</span>
+              <span>Service Capabilities: 4 Approved (S01, S05, S06, S08)</span>
+            </div>
+            <div class="flex items-center gap-2 text-xs text-[#171717] font-medium" id="status-track-label">
+              <span class="text-[#16834a] font-bold">✓</span>
+              <span>Pedigree Option: Active Work Email OTP (Option 1)</span>
+            </div>
+            <div class="flex items-center gap-2 text-xs text-[#171717] font-medium">
+              <span class="text-[#16834a] font-bold">✓</span>
+              <span>Nodal Escrow Rails: RBI Compliant Bank/UPI</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- PRD SLA & Escrow Governance Table -->
+        <div class="bg-white rounded-2xl border border-[#e7e7eb] p-6 shadow-sm space-y-4">
+          <div class="text-xs font-bold text-[#66666f] uppercase tracking-wider">PRD SLA & ESCROW GOVERNANCE</div>
+
+          <div class="space-y-3 divide-y divide-[#e7e7eb] text-xs">
+            <div class="flex items-center justify-between pt-1">
+              <span class="text-[#66666f]">Account Email</span>
+              <span class="font-bold text-[#5145cd]">Personal (Private)</span>
+            </div>
+            <div class="flex items-center justify-between pt-3">
+              <span class="text-[#66666f]">SLA Standard</span>
+              <span class="font-bold text-[#5145cd]">48:00:00 Max</span>
+            </div>
+            <div class="flex items-center justify-between pt-3">
+              <span class="text-[#66666f]">Settlement Model</span>
+              <span class="font-bold text-[#5145cd]">100% Non-Dilution</span>
+            </div>
+            <div class="flex items-center justify-between pt-3">
+              <span class="text-[#66666f]">Experience Bar</span>
+              <span class="font-bold text-[#5145cd]">5+ Years SWE/Arch</span>
+            </div>
+            <div class="flex items-center justify-between pt-3">
+              <span class="text-[#66666f]">Escrow Holding Rail</span>
+              <span class="font-bold text-[#5145cd]">RBI Nodal Direct</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    function selectTrack(track) {
+      const workCard = document.getElementById('option-work-card');
+      const alumniCard = document.getElementById('option-alumni-card');
+      const radioWork = document.getElementById('radio-work');
+      const radioAlumni = document.getElementById('radio-alumni');
+      const viewWork = document.getElementById('view-work-email');
+      const viewAlumni = document.getElementById('view-alumni-doc');
+      const statusTrack = document.getElementById('status-track-label');
+
+      if (track === 'work') {
+        workCard.className = "p-5 rounded-xl border-2 border-[#5145cd] bg-[#eef2ff]/30 transition cursor-pointer relative";
+        alumniCard.className = "p-5 rounded-xl border border-[#e7e7eb] bg-white hover:border-[#5145cd]/50 transition cursor-pointer relative";
+        radioWork.checked = true;
+        radioAlumni.checked = false;
+        viewWork.classList.remove('hidden');
+        viewAlumni.classList.add('hidden');
+        if (statusTrack) {
+          statusTrack.innerHTML = '<span class="text-[#16834a] font-bold">✓</span><span>Pedigree Option: Active Work Email OTP (Option 1)</span>';
+        }
+      } else {
+        alumniCard.className = "p-5 rounded-xl border-2 border-[#5145cd] bg-[#eef2ff]/30 transition cursor-pointer relative";
+        workCard.className = "p-5 rounded-xl border border-[#e7e7eb] bg-white hover:border-[#5145cd]/50 transition cursor-pointer relative";
+        radioAlumni.checked = true;
+        radioWork.checked = false;
+        viewAlumni.classList.remove('hidden');
+        viewWork.classList.add('hidden');
+        if (statusTrack) {
+          statusTrack.innerHTML = '<span class="text-[#16834a] font-bold">✓</span><span>Pedigree Option: Alumni Document Verification (Option 2)</span>';
+        }
+      }
+    }
+
+    function sendOtp() {
+      const btn = document.getElementById('send-otp-btn');
+      btn.innerText = 'OTP Sent!';
+      btn.classList.remove('bg-[#5145cd]');
+      btn.classList.add('bg-[#16834a]');
+      setTimeout(() => {
+        btn.innerText = 'Resend OTP';
+        btn.classList.add('bg-[#5145cd]');
+        btn.classList.remove('bg-[#16834a]');
+      }, 4000);
+    }
+
+    function scrollToStage(stageNum) {
+      const el = document.getElementById(`stage${stageNum}-container`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.classList.add('ring-2', 'ring-[#5145cd]');
+        setTimeout(() => el.classList.remove('ring-2', 'ring-[#5145cd]'), 1500);
+      }
+    }
+  </script>
+</body>
+</html>
