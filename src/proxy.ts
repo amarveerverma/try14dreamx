@@ -27,10 +27,10 @@ export function proxy(request: NextRequest) {
   }
 
   // 2. Mentor Delivery Console protection (/mentor, /mentor/earnings, /mentor/sessions, etc.)
-  if (pathname.startsWith("/mentor") && pathname !== "/mentor/onboarding") {
+  if (pathname.startsWith("/mentor") && pathname !== "/mentor/onboarding" && pathname !== "/mentor/login") {
     if (!hasAuthToken) {
       return NextResponse.redirect(
-        new URL(`/login?role=mentor&redirect=${encodeURIComponent(pathname)}`, request.url)
+        new URL(`/mentor/login?redirect=${encodeURIComponent(pathname)}`, request.url)
       );
     }
     if (role === "student") {
@@ -41,14 +41,18 @@ export function proxy(request: NextRequest) {
   }
 
   // 3. Mentor Onboarding (/mentor/onboarding)
-  // Allow direct access so candidates, mentors, and testers can review and complete the 4-stage accreditation flow
-  // Submissions are authenticated and verified at the database level.
+  // Direct access permitted for onboarding and interactive accreditation reviews.
 
   // 4. Candidate Dashboard protection (/dashboard, /dashboard/*)
   if (pathname.startsWith("/dashboard")) {
     if (!hasAuthToken) {
       return NextResponse.redirect(
         new URL(`/login?redirect=${encodeURIComponent(pathname)}`, request.url)
+      );
+    }
+    if (role === "mentor") {
+      return NextResponse.redirect(
+        new URL("/mentor?notice=mentor_dashboard_only", request.url)
       );
     }
   }
