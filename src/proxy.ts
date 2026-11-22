@@ -40,14 +40,9 @@ export function proxy(request: NextRequest) {
     }
   }
 
-  // 3. Mentor Onboarding protection (/mentor/onboarding)
-  if (pathname === "/mentor/onboarding") {
-    if (!hasAuthToken) {
-      return NextResponse.redirect(
-        new URL("/signup?role=mentor&redirect=/mentor/onboarding", request.url)
-      );
-    }
-  }
+  // 3. Mentor Onboarding (/mentor/onboarding)
+  // Allow direct access so candidates, mentors, and testers can review and complete the 4-stage accreditation flow
+  // Submissions are authenticated and verified at the database level.
 
   // 4. Candidate Dashboard protection (/dashboard, /dashboard/*)
   if (pathname.startsWith("/dashboard")) {

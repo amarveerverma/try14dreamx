@@ -173,6 +173,35 @@ export default function MentorOnboardingPage() {
 
   // 1. Initial State Sync & Pre-load from Supabase (Real Backend Connection)
   React.useEffect(() => {
+    // Check sessionStorage for any draft data entered during preview
+    if (typeof window !== "undefined") {
+      try {
+        const savedDraft = sessionStorage.getItem("dreamx_draft_mentor_onboarding");
+        if (savedDraft) {
+          const parsed = JSON.parse(savedDraft);
+          if (parsed.fullName) setFullName((prev) => prev || parsed.fullName);
+          if (parsed.email) setEmail((prev) => prev || parsed.email);
+          if (parsed.phone) setPhone((prev) => prev || parsed.phone);
+          if (parsed.currentEmployer) setCurrentEmployer((prev) => prev || parsed.currentEmployer);
+          if (parsed.jobTitle) setJobTitle((prev) => prev || parsed.jobTitle);
+          if (parsed.headline) setHeadline((prev) => prev || parsed.headline);
+          if (parsed.yearsOfExperience) setYearsOfExperience(Number(parsed.yearsOfExperience));
+          if (parsed.selectedDomains && parsed.selectedDomains.length > 0) setSelectedDomains(parsed.selectedDomains);
+          if (parsed.selectedServices && parsed.selectedServices.length > 0) setSelectedServices(parsed.selectedServices);
+          if (parsed.verificationTrack) setVerificationTrack(parsed.verificationTrack);
+          if (parsed.workEmail) setWorkEmail((prev) => prev || parsed.workEmail);
+          if (parsed.emailOtpVerified) setEmailOtpVerified(parsed.emailOtpVerified);
+          if (parsed.pastEmployer) setPastEmployer((prev) => prev || parsed.pastEmployer);
+          if (parsed.pastJobTitle) setPastJobTitle((prev) => prev || parsed.pastJobTitle);
+          if (parsed.weeklyHours) setWeeklyHours(parsed.weeklyHours);
+          if (parsed.payoutMethod) setPayoutMethod(parsed.payoutMethod);
+          if (parsed.upiId) setUpiId((prev) => prev || parsed.upiId);
+          if (parsed.accountNumber) setAccountNumber((prev) => prev || parsed.accountNumber);
+          if (parsed.ifscCode) setIfscCode((prev) => prev || parsed.ifscCode);
+        }
+      } catch (e) {}
+    }
+
     if (!user || !user.id) return;
 
     const userId = user.id;
@@ -466,7 +495,36 @@ export default function MentorOnboardingPage() {
       }
 
       if (!resolvedUserId) {
-        throw new Error("Authentication session expired. Please sign in to submit your mentor application.");
+        if (typeof window !== "undefined") {
+          sessionStorage.setItem(
+            "dreamx_draft_mentor_onboarding",
+            JSON.stringify({
+              fullName,
+              email,
+              phone,
+              currentEmployer,
+              jobTitle,
+              yearsOfExperience,
+              headline,
+              bio,
+              selectedDomains,
+              selectedServices,
+              verificationTrack,
+              workEmail,
+              emailOtpVerified,
+              pastEmployer,
+              pastJobTitle,
+              weeklyHours,
+              payoutMethod,
+              upiId,
+              accountNumber,
+              ifscCode,
+            })
+          );
+        }
+        setSubmitError("Application validated! Since you are exploring in Preview Mode, please sign up or log in with your personal email to permanently register your mentor dossier.");
+        setSaving(false);
+        return;
       }
 
       const isAlumni = verificationTrack === "alumni";
@@ -588,65 +646,6 @@ export default function MentorOnboardingPage() {
     );
   }
 
-  // Authentication Gate: Must be signed in to submit
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-[#fafafc] flex flex-col justify-between p-4 sm:p-6 lg:p-8 text-[#171717]">
-        <div className="max-w-4xl w-full mx-auto flex items-center justify-between pb-6 border-b border-[#e7e7eb] text-xs">
-          <Link href="/" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-[#5145cd] flex items-center justify-center font-bold text-white shadow-xs">
-              DX
-            </div>
-            <span className="font-bold text-base text-[#171717]">DreamX</span>
-          </Link>
-          <Link href="/mentor/login" className="text-[#5145cd] hover:underline font-semibold text-xs">
-            Mentor Sign In →
-          </Link>
-        </div>
-
-        <div className="max-w-md w-full mx-auto my-auto bg-white border border-[#e7e7eb] p-8 rounded-2xl shadow-sm text-center space-y-6">
-          <div className="w-14 h-14 rounded-2xl bg-[#eef2ff] border border-[#d2ceff] flex items-center justify-center mx-auto text-[#5145cd] text-xl font-bold">
-            DX
-          </div>
-
-          <div className="space-y-2">
-            <h1 className="text-xl font-extrabold text-[#171717] tracking-tight">
-              Mentor Accreditation Desk
-            </h1>
-            <p className="text-xs text-[#66666f] leading-relaxed">
-              Create your DreamX mentor account using your personal email to complete the 4-stage accreditation flow and unlock student bookings.
-            </p>
-          </div>
-
-          <div className="space-y-3 pt-2">
-            <Link
-              href="/signup?role=mentor&redirect=/mentor/onboarding"
-              className="w-full py-3.5 px-5 rounded-xl bg-[#5145cd] hover:bg-[#4035b3] text-white text-xs font-bold transition flex items-center justify-center gap-2 shadow-xs"
-            >
-              <span>Create Mentor Account (Personal Email) →</span>
-            </Link>
-
-            <Link
-              href="/mentor/login?redirect=/mentor/onboarding"
-              className="w-full py-3 px-5 rounded-xl bg-[#f7f7f8] hover:bg-[#e7e7eb] text-[#171717] text-xs font-semibold transition flex items-center justify-center"
-            >
-              <span>Already have an account? Sign In</span>
-            </Link>
-          </div>
-
-          <div className="pt-2 border-t border-[#e7e7eb] text-[11px] text-[#66666f] flex items-center justify-center gap-1.5">
-            <span className="text-[#16834a] font-bold">✓</span>
-            <span>Dual-Track Pedigree • 100% Non-Dilution Escrow • 48-Hour SLA</span>
-          </div>
-        </div>
-
-        <div className="max-w-4xl w-full mx-auto text-center text-xs text-[#8b8b95] pt-6">
-          DreamX Career Acceleration Protocol • Statutory RBAC Protected
-        </div>
-      </div>
-    );
-  }
-
   // Success Notice View
   if (successNotice) {
     return (
@@ -750,13 +749,59 @@ export default function MentorOnboardingPage() {
           </nav>
 
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#f7f7f8] border border-[#e7e7eb] text-xs text-[#171717] font-medium">
-              <span className="w-2 h-2 rounded-full bg-[#16834a]"></span>
-              <span className="truncate max-w-[200px]">{user.email} (Personal)</span>
-            </div>
+            {user ? (
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#f7f7f8] border border-[#e7e7eb] text-xs text-[#171717] font-medium">
+                <span className="w-2 h-2 rounded-full bg-[#16834a]"></span>
+                <span className="truncate max-w-[200px]">{user.email} (Personal)</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#eef2ff] border border-[#c7d2fe] text-xs text-[#5145cd] font-semibold">
+                  <span className="w-2 h-2 rounded-full bg-[#5145cd] animate-pulse"></span>
+                  <span>Interactive Preview Mode</span>
+                </div>
+                <Link
+                  href="/mentor/login?redirect=/mentor/onboarding"
+                  className="px-3 py-1.5 rounded-lg bg-[#5145cd] hover:bg-[#4035b3] text-white text-xs font-bold transition shadow-xs"
+                >
+                  Sign In
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </header>
+
+      {/* Preview Notice Bar for Non-logged-in Guests */}
+      {!user && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-3">
+          <div className="p-3.5 rounded-xl bg-[#eef2ff] border border-[#c7d2fe] text-xs text-[#5145cd] flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+            <div className="flex items-center gap-2.5">
+              <span className="text-base">⚡</span>
+              <div>
+                <span className="font-bold">Interactive Accreditation Sandbox:</span>{" "}
+                <span className="text-[#4338ca]">
+                  Test the complete 4-stage accreditation flow, Dual-Track pedigree model, and dynamic earning yield in real-time.
+                </span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <Link
+                href="/signup?role=mentor&redirect=/mentor/onboarding"
+                className="px-3 py-1.5 rounded-lg bg-[#5145cd] hover:bg-[#4035b3] text-white font-bold text-xs transition shadow-xs"
+              >
+                Sign Up with Personal Email
+              </Link>
+              <Link
+                href="/mentor/login?redirect=/mentor/onboarding"
+                className="px-3 py-1.5 rounded-lg bg-white border border-[#c7d2fe] hover:bg-[#f7f7f8] text-[#5145cd] font-semibold text-xs transition"
+              >
+                Sign In
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 2. SUBHEADER / PIPELINE RIBBON */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
