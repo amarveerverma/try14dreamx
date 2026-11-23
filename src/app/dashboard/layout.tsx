@@ -28,7 +28,10 @@ export default function StudentDashboardLayout({
       } else if (user.role === "admin") {
         router.replace("/admin");
       } else if (!user.onboarding_completed && pathname !== "/dashboard/onboarding") {
-        router.replace("/dashboard/onboarding");
+        const isCookieOnboarded = typeof document !== "undefined" && document.cookie.includes("dreamx_onboarded=true");
+        if (!isCookieOnboarded) {
+          router.replace("/dashboard/onboarding");
+        }
       }
     }
   }, [user, isLoading, pathname, router]);

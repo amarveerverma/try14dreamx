@@ -177,7 +177,7 @@ const COMPANY_TIERS = [
   },
 ];
 
-export default function CandidateOnboardingPage() {
+function CandidateOnboardingContent() {
   const router = useRouter();
   const { user, completeOnboarding } = useAuth();
   const supabase = React.useMemo(() => createClient(), []);
@@ -213,7 +213,14 @@ export default function CandidateOnboardingPage() {
 
   // Strict Role & Onboarding Status Guards
   React.useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      const isCookieOnboarded = typeof document !== "undefined" && document.cookie.includes("dreamx_onboarded=true");
+      const isCookieStudent = typeof document !== "undefined" && document.cookie.includes("dreamx_role=student");
+      if (isCookieOnboarded && isCookieStudent) {
+        router.replace("/dashboard");
+      }
+      return;
+    }
     if (user.role === "mentor") {
       router.replace(user.onboarding_completed ? "/mentor" : "/mentor/onboarding");
     } else if (user.role === "admin") {
@@ -346,54 +353,82 @@ export default function CandidateOnboardingPage() {
   const handleCompleteOnboarding = async () => {
     setIsSaving(true);
     try {
-      const targetUserId = user?.id;
-
-      // 1. Persist to local storage for instant optimistic client reflection
-      if (typeof window !== "undefined") {
-        if (targetUserId) {
-          localStorage.setItem(`dreamx_baseline_score_${targetUserId}`, String(calculatedScore));
-          localStorage.setItem(`dreamx_baseline_ratings_${targetUserId}`, JSON.stringify(ratings));
-          localStorage.setItem(`dreamx_target_role_${targetUserId}`, selectedDomain);
-          localStorage.removeItem(`dreamx_candidate_draft_${targetUserId}`);
+      // 1. Resolve user ID robustly (from auth state or current session)
+      let resolvedUserId = user?.id;
+      if (!resolvedUserId) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user?.id) {
+          resolvedUserId = session.user.id;
         }
-        localStorage.setItem("dreamx_onboarding_just_completed", "true");
       }
 
-      // 2. Persist to Supabase profiles
-      if (targetUserId) {
-        const mappedSegment =
-          selectedStage === "student"
-            ? "student"
-            : selectedStage === "fresh_graduate"
-            ? "fresh_graduate"
-            : "early_career";
+      const mappedSegment =
+        selectedStage === "student"
+          ? "student"
+          : selectedStage === "fresh_graduate"
+          ? "fresh_graduate"
+          : selectedStage === "career_switcher"
+          ? "career_switcher"
+          : "early_career";
 
-        await supabase
-          .from("profiles")
-          .update({
-            onboarding_completed: true,
-            segment: mappedSegment,
-            target_role: selectedDomain,
-            target_company_tier: selectedTiers.join(", "),
-            linkedin_url: linkedinUrl.trim() || null,
-            github_url: githubUrl.trim() || null,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", targetUserId);
-
-        // 3. Record initial readiness baseline assessment
+      // 2. Persist to Supabase atomically via stored procedure
+      if (resolvedUserId) {
         try {
-          await supabase.from("readiness_assessments").insert({
-            user_id: targetUserId,
-            overall_score: calculatedScore,
-            segment: mappedSegment,
-            rubric_version: "v3.0",
-            evidence_coverage: 75,
-            dimension_scores: ratings,
-            is_private: true,
+          const { error: rpcErr } = await (supabase.rpc as any)("submit_student_onboarding", {
+            p_user_id: resolvedUserId,
+            p_segment: mappedSegment,
+            p_target_role: selectedDomain,
+            p_target_company_tier: selectedTiers.join(", "),
+            p_target_ctc: Number(targetCtc) || 36,
+            p_linkedin_url: linkedinUrl.trim() || null,
+            p_github_url: githubUrl.trim() || null,
+            p_overall_score: calculatedScore,
+            p_dimension_scores: ratings,
           });
-        } catch (subErr) {
-          console.warn("Baseline assessment insert error:", subErr);
+
+          if (rpcErr) {
+            console.warn("Notice during submit_student_onboarding RPC:", rpcErr);
+            await supabase
+              .from("profiles")
+              .update({
+                role: "student",
+                onboarding_completed: true,
+                segment: mappedSegment,
+                target_role: selectedDomain,
+                target_company_tier: selectedTiers.join(", "),
+                linkedin_url: linkedinUrl.trim() || null,
+                github_url: githubUrl.trim() || null,
+                updated_at: new Date().toISOString(),
+              })
+              .eq("id", resolvedUserId);
+          }
+        } catch (dbErr) {
+          console.warn("DB update fallback attempt:", dbErr);
+        }
+      }
+
+      // 3. Set cookies & localStorage for instant client & middleware synchronization
+      if (typeof window !== "undefined") {
+        document.cookie = "dreamx_role=student; path=/; max-age=2592000; SameSite=Lax";
+        document.cookie = "dreamx_onboarded=true; path=/; max-age=2592000; SameSite=Lax";
+        document.cookie = "dreamx_auth=true; path=/; max-age=2592000; SameSite=Lax";
+
+        if (resolvedUserId) {
+          localStorage.setItem(`dreamx_baseline_score_${resolvedUserId}`, String(calculatedScore));
+          localStorage.setItem(`dreamx_baseline_ratings_${resolvedUserId}`, JSON.stringify(ratings));
+          localStorage.setItem(`dreamx_target_role_${resolvedUserId}`, selectedDomain);
+          localStorage.removeItem(`dreamx_candidate_draft_${resolvedUserId}`);
+        }
+        localStorage.setItem("dreamx_onboarding_just_completed", "true");
+
+        const storedUser = localStorage.getItem("dreamx_user");
+        if (storedUser) {
+          try {
+            const parsed = JSON.parse(storedUser);
+            parsed.onboarding_completed = true;
+            parsed.role = "student";
+            localStorage.setItem("dreamx_user", JSON.stringify(parsed));
+          } catch {}
         }
       }
 
@@ -403,12 +438,16 @@ export default function CandidateOnboardingPage() {
 
       // 5. Clean redirect to student dashboard
       setTimeout(() => {
-        router.push("/dashboard");
+        router.replace("/dashboard");
       }, 700);
     } catch (err) {
       console.error("Failed to save onboarding calibration:", err);
       // Fallback: still navigate so user is not blocked
-      router.push("/dashboard");
+      if (typeof window !== "undefined") {
+        document.cookie = "dreamx_role=student; path=/; max-age=2592000; SameSite=Lax";
+        document.cookie = "dreamx_onboarded=true; path=/; max-age=2592000; SameSite=Lax";
+      }
+      router.replace("/dashboard");
     } finally {
       setIsSaving(false);
     }
@@ -1100,12 +1139,14 @@ export default function CandidateOnboardingPage() {
 
           {/* Primary Action Button */}
           <div className="pt-4 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-[#f0eded]">
-            <Link
-              href="/dashboard"
-              className="text-xs font-bold text-gray-500 hover:text-gray-900 transition-colors"
+            <button
+              type="button"
+              disabled={isSaving}
+              onClick={handleCompleteOnboarding}
+              className="text-xs font-bold text-gray-500 hover:text-gray-900 transition-colors cursor-pointer disabled:opacity-50"
             >
               ← Skip to Dashboard (Use Defaults)
-            </Link>
+            </button>
 
             <button
               type="button"
@@ -1171,5 +1212,24 @@ export default function CandidateOnboardingPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function CandidateOnboardingPage() {
+  return (
+    <React.Suspense
+      fallback={
+        <div className="min-h-screen bg-[#faf9f8] flex items-center justify-center">
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-10 h-10 border-3 border-[#5145cd] border-t-transparent rounded-full animate-spin" />
+            <span className="text-xs font-semibold text-gray-500 font-mono">
+              Loading DreamX Calibration Engine...
+            </span>
+          </div>
+        </div>
+      }
+    >
+      <CandidateOnboardingContent />
+    </React.Suspense>
   );
 }

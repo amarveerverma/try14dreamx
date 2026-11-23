@@ -45,6 +45,7 @@ import { StudentSettingsView } from "./views/StudentSettingsView";
 
 import {
   StudentProfileData,
+  CandidateSegment,
   ReadinessDimension,
   ReadinessHistoryEntry,
   StudentBooking,
@@ -80,6 +81,20 @@ interface ToastMessage {
   tone: "success" | "info" | "warning" | "danger";
   title: string;
   detail?: string;
+}
+
+function mapDbSegmentToUi(s?: string | null): CandidateSegment {
+  if (s === "student" || s === "Student") return "Student";
+  if (s === "fresh_graduate" || s === "Fresh graduate") return "Fresh graduate";
+  if (s === "career_switcher" || s === "Career switcher") return "Career switcher";
+  return "Early-career professional";
+}
+
+function mapUiSegmentToDb(s?: CandidateSegment | null): "student" | "fresh_graduate" | "early_career" | "career_switcher" {
+  if (s === "Student") return "student";
+  if (s === "Fresh graduate") return "fresh_graduate";
+  if (s === "Career switcher") return "career_switcher";
+  return "early_career";
 }
 
 export function StudentPortalShell({
@@ -169,7 +184,12 @@ export function StudentPortalShell({
             firstName: names[0] || prev.firstName,
             lastName: names.slice(1).join(" ") || prev.lastName,
             email: dbProfile.email || prev.email,
+            segment: mapDbSegmentToUi(dbProfile.segment),
             targetRole: dbProfile.target_role || prev.targetRole,
+            targetDomain: dbProfile.target_role || prev.targetDomain,
+            linkedinUrl: dbProfile.linkedin_url || prev.linkedinUrl,
+            portfolioUrl: dbProfile.github_url || prev.portfolioUrl,
+            onboardingCompleted: dbProfile.onboarding_completed ?? true,
           }));
         }
 
@@ -208,28 +228,71 @@ export function StudentPortalShell({
           setBookings(mappedBookings);
         }
 
-        // Check for baseline assessment in localStorage
-        const savedBaseline = typeof window !== "undefined" ? localStorage.getItem(`dreamx_baseline_score_${currentUserId}`) : null;
-        const savedRatings = typeof window !== "undefined" ? localStorage.getItem(`dreamx_baseline_ratings_${currentUserId}`) : null;
-        if (savedBaseline && savedRatings && !isCancelled) {
-          try {
-            const parsedRatings = JSON.parse(savedRatings);
+        // Fetch Live Baseline Readiness Assessment from Supabase
+        const { data: dbAssessment } = await supabase
+          .from("readiness_assessments")
+          .select("overall_score, dimension_scores, created_at")
+          .eq("user_id", currentUserId)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (dbAssessment && !isCancelled) {
+          const dimScores = dbAssessment.dimension_scores as Record<string, number> | null;
+          if (dimScores) {
             setDimensions((prev) =>
               prev.map((d, idx) => {
-                const rating = parsedRatings[idx + 1];
+                const rating = dimScores[String(idx + 1)] || dimScores[idx + 1];
                 if (rating) {
                   return {
                     ...d,
-                    score: rating,
+                    score: Number(rating),
                     status: "Baseline Self-Report",
-                    assessorLabel: "Candidate Self-Calibration",
+                    assessorLabel: "Candidate Calibration Engine",
                   };
                 }
                 return d;
               })
             );
-          } catch (e) {
-            console.warn("Could not parse saved onboarding ratings:", e);
+          }
+          if (dbAssessment.overall_score) {
+            setHistory((prev) => [
+              {
+                id: "baseline-1",
+                date: new Date(dbAssessment.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }),
+                score: Number(dbAssessment.overall_score),
+                assessedCount: 8,
+                applicableCount: 8,
+                triggerNote: "Initial Onboarding Calibration",
+                rubricVersion: "v3.0",
+              },
+              ...prev.filter((h) => h.id !== "baseline-1"),
+            ]);
+          }
+        } else {
+          // Fallback: Check for baseline assessment in localStorage
+          const savedBaseline = typeof window !== "undefined" ? localStorage.getItem(`dreamx_baseline_score_${currentUserId}`) : null;
+          const savedRatings = typeof window !== "undefined" ? localStorage.getItem(`dreamx_baseline_ratings_${currentUserId}`) : null;
+          if (savedBaseline && savedRatings && !isCancelled) {
+            try {
+              const parsedRatings = JSON.parse(savedRatings);
+              setDimensions((prev) =>
+                prev.map((d, idx) => {
+                  const rating = parsedRatings[idx + 1];
+                  if (rating) {
+                    return {
+                      ...d,
+                      score: rating,
+                      status: "Baseline Self-Report",
+                      assessorLabel: "Candidate Self-Calibration",
+                    };
+                  }
+                  return d;
+                })
+              );
+            } catch (e) {
+              console.warn("Could not parse saved onboarding ratings:", e);
+            }
           }
         }
       } catch (err) {
@@ -1209,9 +1272,29 @@ export function StudentPortalShell({
             {activeTab === "settings" && (
               <StudentSettingsView
                 profile={profile}
-                onSaveProfile={(updated) => {
+                onSaveProfile={async (updated) => {
                   setProfile(updated);
-                  showToast("success", "Profile Saved");
+                  if (user?.id) {
+                    try {
+                      await supabase
+                        .from("profiles")
+                        .update({
+                          full_name: `${updated.firstName} ${updated.lastName}`.trim(),
+                          target_role: updated.targetRole || updated.targetDomain,
+                          segment: mapUiSegmentToDb(updated.segment),
+                          linkedin_url: updated.linkedinUrl || updated.linkedInUrl || null,
+                          github_url: updated.portfolioUrl || null,
+                          updated_at: new Date().toISOString(),
+                        })
+                        .eq("id", user.id);
+                      showToast("success", "Profile preferences saved to cloud");
+                    } catch (e) {
+                      console.warn("Could not persist profile:", e);
+                      showToast("success", "Profile Saved");
+                    }
+                  } else {
+                    showToast("success", "Profile Saved");
+                  }
                 }}
                 onOpenOnboarding={() => setOnboardingOpen(true)}
                 onPrivacyRequest={handlePrivacyRequest}
