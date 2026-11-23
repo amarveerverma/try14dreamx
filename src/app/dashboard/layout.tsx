@@ -24,7 +24,7 @@ export default function StudentDashboardLayout({
       if (!user) {
         router.replace(`/login?redirect=${encodeURIComponent(pathname)}`);
       } else if (user.role === "mentor") {
-        router.replace("/mentor");
+        router.replace(user.onboarding_completed ? "/mentor" : "/mentor/onboarding");
       } else if (user.role === "admin") {
         router.replace("/admin");
       } else if (!user.onboarding_completed && pathname !== "/dashboard/onboarding") {

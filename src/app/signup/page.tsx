@@ -93,9 +93,9 @@ export default function SignUpPage() {
 
     // Instant registration: route directly to mandatory onboarding wizard without magic links or signup OTPs
     if (role === "mentor") {
-      router.push("/mentor/onboarding");
+      router.replace("/mentor/onboarding");
     } else {
-      router.push("/dashboard/onboarding");
+      router.replace("/dashboard/onboarding");
     }
   };
 
@@ -204,7 +204,7 @@ export default function SignUpPage() {
           <div>
             <button
               type="button"
-              onClick={() => signInWithGoogle()}
+              onClick={() => signInWithGoogle(role)}
               className="w-full h-11 px-4 rounded-xl border border-[#e7e7eb] bg-white hover:bg-gray-50 text-xs font-bold text-[#1c1b1b] flex items-center justify-center gap-2.5 transition-colors shadow-xs cursor-pointer"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24">
@@ -213,7 +213,7 @@ export default function SignUpPage() {
                 <path d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.17 0 9.99 0 12s.45 3.83 1.25 5.42l4.03-3.15z" fill="#FBBC05" />
                 <path d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z" fill="#EA4335" />
               </svg>
-              <span>Sign up with Google Workspace</span>
+              <span>{role === "mentor" ? "Sign up with Google (Personal Account)" : "Sign up with Google"}</span>
             </button>
           </div>
 

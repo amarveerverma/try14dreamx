@@ -266,10 +266,10 @@ export default function MentorLoginPage() {
             <div className="text-gray-400">
               New mentor?{" "}
               <Link
-                href="/mentor/onboarding"
+                href="/signup?role=mentor"
                 className="font-bold text-indigo-400 hover:underline"
               >
-                Apply for Mentor Accreditation →
+                Create Mentor Account / Apply →
               </Link>
             </div>
             <div className="text-gray-500 text-[11px]">

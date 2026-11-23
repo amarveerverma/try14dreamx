@@ -211,6 +211,15 @@ export default function CandidateOnboardingPage() {
     setIsMounted(true);
   }, []);
 
+  // Strict Mentor Guard: If an accredited mentor lands on the student onboarding page, redirect to mentor onboarding
+  React.useEffect(() => {
+    if (user && user.role === "mentor") {
+      router.replace(user.onboarding_completed ? "/mentor" : "/mentor/onboarding");
+    } else if (user && user.role === "admin") {
+      router.replace("/admin");
+    }
+  }, [user, router]);
+
   // Real-time calculated overall readiness score out of 100
   const calculatedScore = React.useMemo(() => {
     let total = 0;

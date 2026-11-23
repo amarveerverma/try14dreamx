@@ -40,8 +40,8 @@ interface AuthContextType {
     fullName: string,
     role: UserRole,
     phone?: string
-  ) => Promise<{ success: boolean; error?: string; hasSession?: boolean; alreadyExists?: boolean }>;
-  signInWithGoogle: () => Promise<void>;
+  ) => Promise<{ success: boolean; error?: string; hasSession?: boolean; alreadyExists?: boolean; role?: UserRole }>;
+  signInWithGoogle: (roleHint?: UserRole) => Promise<void>;
   upgradeMembership: (tier: "pro" | "elite", annual?: boolean) => Promise<void>;
   cancelMembership: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -64,7 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const supabase = React.useMemo(() => createClient(), []);
 
   // Fetch profile from public.profiles
-  const fetchProfile = React.useCallback(async (userId: string, authUserEmail?: string) => {
+  const fetchProfile = React.useCallback(async (userId: string, authUserEmail?: string, roleHint?: UserRole) => {
     try {
       const { data, error } = await supabase
         .from("profiles")
@@ -72,69 +72,100 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .eq("id", userId)
         .maybeSingle();
 
+      // Check session user_metadata for role if not in data or if roleHint is provided
+      let resolvedRole: UserRole = roleHint || "student";
+      let resolvedName = "User";
+      let resolvedOnboarding = false;
+
       if (!error && data) {
-        const profile: UserProfile = {
-          id: data.id,
-          name: data.full_name || "User",
-          email: data.email || authUserEmail || "",
-          role: (data.role as UserRole) || "student",
-          avatar: data.avatar_url || undefined,
-          phone: data.phone || undefined,
-          segment: data.segment || null,
-          onboarding_completed: data.onboarding_completed ?? false,
-        };
-        setUser(profile);
-        if (typeof window !== "undefined") {
-          localStorage.setItem("dreamx_user", JSON.stringify(profile));
-          document.cookie = `dreamx_role=${profile.role}; path=/; max-age=604800; SameSite=Lax`;
-          document.cookie = `dreamx_auth=true; path=/; max-age=604800; SameSite=Lax`;
-        }
-
-        // Fetch verified membership from database (PRD §7.2, P10 Exit Criteria 2)
+        resolvedRole = (data.role as UserRole) || roleHint || "student";
+        resolvedName = data.full_name || authUserEmail?.split("@")[0] || "User";
+        resolvedOnboarding = data.onboarding_completed ?? false;
+      } else {
+        // Fallback to session user_metadata
         try {
-          const { data: memberData } = await supabase.rpc("get_user_membership", {
-            p_user_id: userId,
-          });
-
-          if (memberData) {
-            const m = memberData as {
-              plan: MembershipTier;
-              is_active: boolean;
-              discount_pct: number;
-              billing_cycle?: string;
-              current_period_end?: string;
-            };
-            setMembership({
-              tier: m.plan || "free",
-              status: m.is_active ? "active" : "none",
-              discountPercent: Math.round((m.discount_pct || 0) * 100),
-              annualBilling: m.billing_cycle === "yearly",
-              renewalDate: m.current_period_end
-                ? new Date(m.current_period_end).toLocaleDateString("en-IN", {
-                    day: "numeric",
-                    month: "short",
-                    year: "numeric",
-                  })
-                : undefined,
-            });
-          }
+          const { data: sessionData } = await supabase.auth.getSession();
+          const metaRole = sessionData?.session?.user?.user_metadata?.role as UserRole;
+          const metaName = sessionData?.session?.user?.user_metadata?.full_name || sessionData?.session?.user?.user_metadata?.name;
+          resolvedRole = (data?.role as UserRole) || metaRole || roleHint || "student";
+          if (metaName) resolvedName = metaName;
         } catch {
-          // Fallback to default
+          // ignore
         }
-
-        return;
       }
+
+      const profile: UserProfile = {
+        id: data?.id || userId,
+        name: resolvedName,
+        email: data?.email || authUserEmail || "",
+        role: resolvedRole,
+        avatar: data?.avatar_url || undefined,
+        phone: data?.phone || undefined,
+        segment: data?.segment || null,
+        onboarding_completed: resolvedOnboarding,
+      };
+
+      setUser(profile);
+      if (typeof window !== "undefined") {
+        localStorage.setItem("dreamx_user", JSON.stringify(profile));
+        document.cookie = `dreamx_role=${profile.role}; path=/; max-age=604800; SameSite=Lax`;
+        document.cookie = `dreamx_auth=true; path=/; max-age=604800; SameSite=Lax`;
+      }
+
+      // Fetch verified membership from database (PRD §7.2, P10 Exit Criteria 2)
+      try {
+        const { data: memberData } = await supabase.rpc("get_user_membership", {
+          p_user_id: userId,
+        });
+
+        if (memberData) {
+          const m = memberData as {
+            plan: MembershipTier;
+            is_active: boolean;
+            discount_pct: number;
+            billing_cycle?: string;
+            current_period_end?: string;
+          };
+          setMembership({
+            tier: m.plan || "free",
+            status: m.is_active ? "active" : "none",
+            discountPercent: Math.round((m.discount_pct || 0) * 100),
+            annualBilling: m.billing_cycle === "yearly",
+            renewalDate: m.current_period_end
+              ? new Date(m.current_period_end).toLocaleDateString("en-IN", {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                })
+              : undefined,
+          });
+        }
+      } catch {
+        // Fallback to default
+      }
+
+      return;
     } catch (err) {
       console.warn("Could not fetch remote profile:", err);
     }
 
     // Fallback if profile row is not yet indexed
     if (authUserEmail) {
+      let fallbackRole: UserRole = roleHint || "student";
+      if (!roleHint && typeof window !== "undefined") {
+        const cookieRole = document.cookie
+          .split("; ")
+          .find((c) => c.startsWith("dreamx_role="))
+          ?.split("=")[1] as UserRole;
+        if (cookieRole === "mentor" || cookieRole === "admin") {
+          fallbackRole = cookieRole;
+        }
+      }
       const fallbackProfile: UserProfile = {
         id: userId,
         name: authUserEmail.split("@")[0],
         email: authUserEmail,
-        role: "student",
+        role: fallbackRole,
       };
       setUser(fallbackProfile);
       if (typeof window !== "undefined") {
@@ -163,7 +194,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
-          await fetchProfile(session.user.id, session.user.email);
+          const metaRole = session.user.user_metadata?.role as UserRole | undefined;
+          await fetchProfile(session.user.id, session.user.email, metaRole);
         } else {
           // Check local prototype session
           const stored = localStorage.getItem("dreamx_user");
@@ -187,7 +219,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (session?.user) {
-          await fetchProfile(session.user.id, session.user.email);
+          const metaRole = session.user.user_metadata?.role as UserRole | undefined;
+          await fetchProfile(session.user.id, session.user.email, metaRole);
         } else if (event === "SIGNED_OUT") {
           setUser(null);
           localStorage.removeItem("dreamx_user");
@@ -242,6 +275,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   ) => {
     try {
       const cleanEmail = email.trim().toLowerCase();
+
+      // Immediately cache user role intent in cookie so middleware strictly respects it
+      if (typeof window !== "undefined") {
+        document.cookie = `dreamx_role=${role}; path=/; max-age=604800; SameSite=Lax`;
+      }
+
       const { data, error } = await supabase.auth.signUp({
         email: cleanEmail,
         password,
@@ -267,6 +306,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         };
       }
 
+      // Proactively establish initial profile with chosen role
+      if (data.user) {
+        const initialProfile: UserProfile = {
+          id: data.user.id,
+          name: fullName || cleanEmail.split("@")[0],
+          email: cleanEmail,
+          role,
+          phone: phone || undefined,
+          onboarding_completed: false,
+        };
+        setUser(initialProfile);
+        if (typeof window !== "undefined") {
+          localStorage.setItem("dreamx_user", JSON.stringify(initialProfile));
+          document.cookie = `dreamx_role=${role}; path=/; max-age=604800; SameSite=Lax`;
+          document.cookie = `dreamx_auth=true; path=/; max-age=604800; SameSite=Lax`;
+        }
+
+        // Proactively upsert into public.profiles to guarantee role and onboarding state
+        try {
+          await supabase.from("profiles").upsert(
+            {
+              id: data.user.id,
+              full_name: fullName,
+              email: cleanEmail,
+              role: role,
+              phone: phone || null,
+              onboarding_completed: false,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "id" }
+          );
+        } catch {
+          // ignore background upsert
+        }
+      }
+
       // If no session was returned by signUp, attempt immediate sign-in with the credentials provided
       // because our database trigger auto_confirm_user() confirms the email immediately.
       let hasSession = !!data.session;
@@ -278,27 +353,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           });
           if (signInData?.session) {
             hasSession = true;
-            await fetchProfile(signInData.user.id, signInData.user.email);
+            await fetchProfile(signInData.user.id, signInData.user.email, role);
           }
         } catch {
           // ignore fallback attempt
         }
       } else if (data.user) {
-        await fetchProfile(data.user.id, data.user.email);
+        await fetchProfile(data.user.id, data.user.email, role);
       }
 
-      return { success: true, hasSession };
+      return { success: true, hasSession, role };
     } catch (err) {
       return { success: false, error: err instanceof Error ? err.message : "Registration failed" };
     }
   };
 
-  const signInWithGoogle = async () => {
+  const signInWithGoogle = async (roleHint: UserRole = "student") => {
     const origin = typeof window !== "undefined" ? window.location.origin : "http://localhost:3000";
+    if (typeof window !== "undefined") {
+      document.cookie = `dreamx_role=${roleHint}; path=/; max-age=604800; SameSite=Lax`;
+    }
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${origin}/verify-email`,
+        redirectTo: `${origin}/verify-email?role=${roleHint}`,
       },
     });
   };

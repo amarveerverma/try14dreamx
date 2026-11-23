@@ -52,7 +52,7 @@ export function proxy(request: NextRequest) {
     }
     if (role === "mentor") {
       return NextResponse.redirect(
-        new URL("/mentor?notice=mentor_dashboard_only", request.url)
+        new URL("/mentor/onboarding", request.url)
       );
     }
   }
