@@ -13,6 +13,7 @@ export function proxy(request: NextRequest) {
       c.name === "dreamx_auth"
   );
   const role = request.cookies.get("dreamx_role")?.value;
+  const onboarded = request.cookies.get("dreamx_onboarded")?.value;
 
   // 1. Admin route protection
   if (pathname.startsWith("/admin")) {
@@ -38,6 +39,11 @@ export function proxy(request: NextRequest) {
         new URL("/mentor/onboarding?notice=apply_as_mentor", request.url)
       );
     }
+    if (role === "mentor" && onboarded === "false") {
+      return NextResponse.redirect(
+        new URL("/mentor/onboarding", request.url)
+      );
+    }
   }
 
   // 3. Mentor Onboarding (/mentor/onboarding)
@@ -53,6 +59,11 @@ export function proxy(request: NextRequest) {
     if (role === "mentor") {
       return NextResponse.redirect(
         new URL("/mentor/onboarding", request.url)
+      );
+    }
+    if (pathname !== "/dashboard/onboarding" && onboarded === "false") {
+      return NextResponse.redirect(
+        new URL("/dashboard/onboarding", request.url)
       );
     }
   }

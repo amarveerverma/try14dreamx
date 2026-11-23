@@ -35,19 +35,23 @@ export default function LoginPage() {
   // Auto-redirect if candidate already has an active session
   React.useEffect(() => {
     if (!authLoading && user) {
-      const redirectParam = typeof window !== "undefined"
-        ? new URLSearchParams(window.location.search).get("redirect")
-        : null;
-      if (redirectParam && redirectParam.startsWith("/") && redirectParam !== "/login") {
-        router.replace(redirectParam);
-        return;
-      }
       if (user.role === "admin") {
         router.replace("/admin");
       } else if (user.role === "mentor") {
         router.replace(user.onboarding_completed ? "/mentor" : "/mentor/onboarding");
       } else {
-        router.replace(user.onboarding_completed ? "/dashboard" : "/dashboard/onboarding");
+        if (!user.onboarding_completed) {
+          router.replace("/dashboard/onboarding");
+          return;
+        }
+        const redirectParam = typeof window !== "undefined"
+          ? new URLSearchParams(window.location.search).get("redirect")
+          : null;
+        if (redirectParam && redirectParam.startsWith("/") && redirectParam !== "/login") {
+          router.replace(redirectParam);
+          return;
+        }
+        router.replace("/dashboard");
       }
     }
   }, [user, authLoading, router]);
@@ -88,6 +92,12 @@ export default function LoginPage() {
       return;
     }
 
+    const isOnboarded = res.onboarding_completed ?? false;
+    if (!isOnboarded) {
+      router.push("/dashboard/onboarding");
+      return;
+    }
+
     const redirectParam = typeof window !== "undefined"
       ? new URLSearchParams(window.location.search).get("redirect")
       : null;
@@ -103,8 +113,7 @@ export default function LoginPage() {
       return;
     }
 
-    const isOnboarded = res.onboarding_completed ?? false;
-    router.push(isOnboarded ? "/dashboard" : "/dashboard/onboarding");
+    router.push("/dashboard");
   };
 
   return (

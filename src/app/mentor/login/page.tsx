@@ -37,6 +37,10 @@ export default function MentorLoginPage() {
   React.useEffect(() => {
     if (!authLoading && user) {
       if (user.role === "mentor") {
+        if (!user.onboarding_completed) {
+          router.replace("/mentor/onboarding");
+          return;
+        }
         const redirectParam = typeof window !== "undefined"
           ? new URLSearchParams(window.location.search).get("redirect")
           : null;
@@ -44,7 +48,7 @@ export default function MentorLoginPage() {
           router.replace(redirectParam);
           return;
         }
-        router.replace(user.onboarding_completed ? "/mentor" : "/mentor/onboarding");
+        router.replace("/mentor");
       } else if (user.role === "admin") {
         router.replace("/admin");
       }
@@ -85,7 +89,13 @@ export default function MentorLoginPage() {
       return;
     }
 
-    // Check redirect param
+    const isOnboarded = res.onboarding_completed ?? false;
+    if (!isOnboarded) {
+      router.push("/mentor/onboarding");
+      return;
+    }
+
+    // Check redirect param if already onboarded
     const redirectParam = typeof window !== "undefined"
       ? new URLSearchParams(window.location.search).get("redirect")
       : null;
@@ -95,8 +105,7 @@ export default function MentorLoginPage() {
       return;
     }
 
-    const isOnboarded = res.onboarding_completed ?? false;
-    router.replace(isOnboarded ? "/mentor" : "/mentor/onboarding");
+    router.push("/mentor");
   };
 
   return (

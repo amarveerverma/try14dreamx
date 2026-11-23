@@ -211,14 +211,84 @@ export default function CandidateOnboardingPage() {
     setIsMounted(true);
   }, []);
 
-  // Strict Mentor Guard: If an accredited mentor lands on the student onboarding page, redirect to mentor onboarding
+  // Strict Role & Onboarding Status Guards
   React.useEffect(() => {
-    if (user && user.role === "mentor") {
+    if (!user) return;
+    if (user.role === "mentor") {
       router.replace(user.onboarding_completed ? "/mentor" : "/mentor/onboarding");
-    } else if (user && user.role === "admin") {
+    } else if (user.role === "admin") {
       router.replace("/admin");
+    } else if (user.role === "student" && user.onboarding_completed) {
+      router.replace("/dashboard");
     }
   }, [user, router]);
+
+  // Rehydrate existing candidate draft or profile data so session expiration never loses progress
+  React.useEffect(() => {
+    if (!user?.id) return;
+    const userId = user.id;
+
+    async function loadCandidateDraft() {
+      try {
+        // 1. Try local draft
+        if (typeof window !== "undefined") {
+          const localDraft = localStorage.getItem(`dreamx_candidate_draft_${userId}`);
+          if (localDraft) {
+            const parsed = JSON.parse(localDraft);
+            if (parsed.selectedStage) setSelectedStage(parsed.selectedStage);
+            if (parsed.selectedDomain) setSelectedDomain(parsed.selectedDomain);
+            if (parsed.selectedTiers && parsed.selectedTiers.length > 0) setSelectedTiers(parsed.selectedTiers);
+            if (parsed.targetCtc) setTargetCtc(parsed.targetCtc);
+            if (parsed.linkedinUrl) setLinkedinUrl(parsed.linkedinUrl);
+            if (parsed.githubUrl) setGithubUrl(parsed.githubUrl);
+            if (parsed.ratings) setRatings(parsed.ratings);
+            if (parsed.activeStep) setActiveStep(parsed.activeStep);
+          }
+        }
+
+        // 2. Supplement from remote profiles table
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("segment, target_role, target_company_tier, linkedin_url, github_url")
+          .eq("id", userId)
+          .maybeSingle();
+
+        if (profile) {
+          if (profile.segment) setSelectedStage(profile.segment);
+          if (profile.target_role) setSelectedDomain(profile.target_role);
+          if (profile.target_company_tier) {
+            const tiers = profile.target_company_tier.split(", ").map((t: string) => t.trim()).filter(Boolean);
+            if (tiers.length > 0) setSelectedTiers(tiers);
+          }
+          if (profile.linkedin_url) setLinkedinUrl((prev) => prev || profile.linkedin_url || "");
+          if (profile.github_url) setGithubUrl((prev) => prev || profile.github_url || "");
+        }
+      } catch (err) {
+        console.warn("Could not load candidate draft:", err);
+      }
+    }
+
+    loadCandidateDraft();
+  }, [user?.id, supabase]);
+
+  // Auto-save candidate onboarding draft on field changes
+  React.useEffect(() => {
+    if (typeof window !== "undefined" && user?.id) {
+      localStorage.setItem(
+        `dreamx_candidate_draft_${user.id}`,
+        JSON.stringify({
+          activeStep,
+          selectedStage,
+          selectedDomain,
+          selectedTiers,
+          targetCtc,
+          linkedinUrl,
+          githubUrl,
+          ratings,
+        })
+      );
+    }
+  }, [user?.id, activeStep, selectedStage, selectedDomain, selectedTiers, targetCtc, linkedinUrl, githubUrl, ratings]);
 
   // Real-time calculated overall readiness score out of 100
   const calculatedScore = React.useMemo(() => {
@@ -284,6 +354,7 @@ export default function CandidateOnboardingPage() {
           localStorage.setItem(`dreamx_baseline_score_${targetUserId}`, String(calculatedScore));
           localStorage.setItem(`dreamx_baseline_ratings_${targetUserId}`, JSON.stringify(ratings));
           localStorage.setItem(`dreamx_target_role_${targetUserId}`, selectedDomain);
+          localStorage.removeItem(`dreamx_candidate_draft_${targetUserId}`);
         }
         localStorage.setItem("dreamx_onboarding_just_completed", "true");
       }

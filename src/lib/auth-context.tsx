@@ -110,6 +110,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.setItem("dreamx_user", JSON.stringify(profile));
         document.cookie = `dreamx_role=${profile.role}; path=/; max-age=604800; SameSite=Lax`;
         document.cookie = `dreamx_auth=true; path=/; max-age=604800; SameSite=Lax`;
+        document.cookie = `dreamx_onboarded=${profile.onboarding_completed ? "true" : "false"}; path=/; max-age=604800; SameSite=Lax`;
       }
 
       // Fetch verified membership from database (PRD §7.2, P10 Exit Criteria 2)
@@ -172,6 +173,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.setItem("dreamx_user", JSON.stringify(fallbackProfile));
         document.cookie = `dreamx_role=${fallbackProfile.role}; path=/; max-age=604800; SameSite=Lax`;
         document.cookie = `dreamx_auth=true; path=/; max-age=604800; SameSite=Lax`;
+        document.cookie = `dreamx_onboarded=${fallbackProfile.onboarding_completed ? "true" : "false"}; path=/; max-age=604800; SameSite=Lax`;
       }
     }
   }, [supabase]);
@@ -279,6 +281,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Immediately cache user role intent in cookie so middleware strictly respects it
       if (typeof window !== "undefined") {
         document.cookie = `dreamx_role=${role}; path=/; max-age=604800; SameSite=Lax`;
+        document.cookie = `dreamx_onboarded=false; path=/; max-age=604800; SameSite=Lax`;
       }
 
       const { data, error } = await supabase.auth.signUp({
@@ -321,6 +324,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           localStorage.setItem("dreamx_user", JSON.stringify(initialProfile));
           document.cookie = `dreamx_role=${role}; path=/; max-age=604800; SameSite=Lax`;
           document.cookie = `dreamx_auth=true; path=/; max-age=604800; SameSite=Lax`;
+          document.cookie = `dreamx_onboarded=false; path=/; max-age=604800; SameSite=Lax`;
         }
 
         // Proactively upsert into public.profiles to guarantee role and onboarding state
@@ -414,6 +418,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.removeItem("dreamx_membership");
       document.cookie = "dreamx_role=; path=/; max-age=0; SameSite=Lax";
       document.cookie = "dreamx_auth=; path=/; max-age=0; SameSite=Lax";
+      document.cookie = "dreamx_onboarded=; path=/; max-age=0; SameSite=Lax";
     }
   };
 
@@ -472,10 +477,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const parsed = JSON.parse(stored);
             parsed.onboarding_completed = true;
             localStorage.setItem("dreamx_user", JSON.stringify(parsed));
+            document.cookie = "dreamx_onboarded=true; path=/; max-age=604800; SameSite=Lax";
           } catch {
             // ignore
           }
         }
+        document.cookie = "dreamx_onboarded=true; path=/; max-age=604800; SameSite=Lax";
       }
     } catch (err) {
       console.warn("Failed to complete onboarding:", err);
