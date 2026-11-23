@@ -73,10 +73,11 @@ export default function LoginPage() {
       return;
     }
 
-    // Seamless Mentor Redirection: Route to mentor onboarding if incomplete, or mentor console
+    // STRICT CANDIDATE ROLE ENFORCEMENT
     if (res.role === "mentor") {
-      const isOnboarded = res.onboarding_completed ?? false;
-      router.replace(isOnboarded ? "/mentor" : "/mentor/onboarding");
+      await logout();
+      setError("Access Restricted: This login is exclusively for candidates. Mentor accounts must sign in through the Mentor Portal.");
+      setRoleRedirectUrl({ url: "/mentor/login", label: "Go to Mentor Portal Sign In →" });
       return;
     }
 
