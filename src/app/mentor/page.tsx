@@ -83,7 +83,7 @@ type MentorTab =
   | "earnings"
   | "settings";
 
-export default function MentorPortalPage() {
+function MentorPortalContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, logout } = useAuth();
@@ -204,7 +204,73 @@ export default function MentorPortalPage() {
             currentRoleLabel: dbProfile.current_employer ? `${dbProfile.job_title || "Staff Engineer"} (${dbProfile.current_employer})` : prev.currentRoleLabel,
             bio: dbProfile.bio || prev.bio,
             yearsOfExperience: dbProfile.years_of_experience || prev.yearsOfExperience,
+            verifiedCompany: dbProfile.verified_company || dbProfile.current_employer || "",
+            employmentType: (dbProfile.employment_type as "employed" | "alumni") || "employed",
+            experienceVerificationLabel: dbProfile.verification_status === "approved" ? "Verified Practitioner (Active)" : "Accreditation Submitted (In Review)",
           }));
+
+          // Live Trust Pillars
+          setTrustPillars([
+            {
+              id: "identity",
+              title: "1. Identity Verification",
+              status: "Verified",
+              requiredEvidence: [
+                "Government photo identity record",
+                "Masked ID hash stored in audit vault",
+              ],
+              submittedEvidence: [
+                "Encrypted Identity Record on File (DPDP Act Protected)",
+              ],
+              submittedAt: dbProfile.created_at || new Date().toISOString(),
+            },
+            {
+              id: "employment",
+              title: "2. Current / Past Tech Employment",
+              status: dbProfile.work_email_verified ? "Verified" : (dbProfile.verification_status === "approved" ? "Verified" : "Submitted"),
+              requiredEvidence: [
+                "Corporate email verification or relieving letter / Form 16",
+                "Confirmed employer domain",
+              ],
+              submittedEvidence: [
+                dbProfile.work_email_verified
+                  ? `Cryptographically verified corporate inbox (${dbProfile.work_email || "Official"})`
+                  : (dbProfile.verified_company ? `Pedigree confirmed at ${dbProfile.verified_company}` : "Document proof uploaded"),
+              ],
+              submittedAt: dbProfile.updated_at || new Date().toISOString(),
+            },
+            {
+              id: "rubric",
+              title: "3. Rubric & SLA Agreement",
+              status: "Verified",
+              requiredEvidence: [
+                "48-hour report delivery commitment",
+                "Adherence to objective 8-dimension rubric criteria",
+              ],
+              submittedEvidence: [
+                "Standard Mentor Service Level Agreement accepted",
+                "Nodal Escrow terms & 24h dispute window ratified",
+              ],
+              submittedAt: dbProfile.updated_at || new Date().toISOString(),
+            },
+          ]);
+
+          // Live approved services mapping
+          if (dbProfile.approved_services && dbProfile.approved_services.length > 0) {
+            const approvedCodes = new Set(dbProfile.approved_services as string[]);
+            setServiceApprovals(
+              SERVICES_CATALOGUE.map((svc) => ({
+                serviceId: svc.id,
+                status: approvedCodes.has(svc.id) ? "Approved" : "Submitted",
+                submittedAt: dbProfile.created_at || new Date().toISOString(),
+                reviewedAt: approvedCodes.has(svc.id) ? (dbProfile.updated_at || new Date().toISOString()) : undefined,
+                activeForBookings: approvedCodes.has(svc.id),
+                directBookingEnabled: approvedCodes.has(svc.id),
+                smartMatchEnabled: approvedCodes.has(svc.id),
+                evidenceSummary: "Corporate Pedigree Verified",
+              }))
+            );
+          }
         }
 
         // Live Bookings for this Mentor
@@ -1064,5 +1130,24 @@ export default function MentorPortalPage() {
         ))}
       </div>
     </div>
+  );
+}
+
+export default function MentorPortalPage() {
+  return (
+    <React.Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-screen w-full bg-[#0d0e15] text-white">
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-10 h-10 border-3 border-[#5145cd] border-t-transparent rounded-full animate-spin" />
+            <span className="text-xs font-semibold text-gray-400 font-mono">
+              Loading Mentor Delivery Console...
+            </span>
+          </div>
+        </div>
+      }
+    >
+      <MentorPortalContent />
+    </React.Suspense>
   );
 }

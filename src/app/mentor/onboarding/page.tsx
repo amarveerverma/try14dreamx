@@ -143,7 +143,7 @@ export default function MentorOnboardingPage() {
   const [verifiedCompany, setVerifiedCompany] = React.useState("");
   const [sendingOtp, setSendingOtp] = React.useState(false);
   const [verifyingOtp, setVerifyingOtp] = React.useState(false);
-  const [otpMessage, setOtpMessage] = React.useState<{ text: string; type: "success" | "error" } | null>(null);
+  const [otpMessage, setOtpMessage] = React.useState<{ text: string; type: "success" | "error" | "info" } | null>(null);
 
   // Option 2: Alumni / Ex-FAANG / Consultant / Founder (Documentary Evidence)
   const [pastEmployer, setPastEmployer] = React.useState("");
@@ -334,15 +334,20 @@ export default function MentorOnboardingPage() {
       if (!res.ok) {
         setOtpMessage({ text: data.error || "Failed to send verification code.", type: "error" });
       } else {
-        setOtpMessage({
-          text: data.message || `Verification code sent to ${workEmail}!`,
-          type: "success",
-        });
         if (data.company && !currentEmployer) {
           setCurrentEmployer(data.company);
         }
         if (data.previewCode) {
           setWorkEmailOtp(data.previewCode);
+          setOtpMessage({
+            text: `[Sandbox Active]: 6-digit verification code (${data.previewCode}) auto-filled for instant testing. (Live SMTP key not set in dev).`,
+            type: "info",
+          });
+        } else {
+          setOtpMessage({
+            text: data.message || `Verification code sent to ${workEmail}! Please check your corporate inbox.`,
+            type: "success",
+          });
         }
       }
     } catch {
@@ -538,91 +543,56 @@ export default function MentorOnboardingPage() {
 
       const effectiveStatus = (verificationTrack === "employed" && emailOtpVerified) ? "approved" : "pending";
 
-      // 1. Upsert public.mentor_applications
-      const { data: appData, error: appError } = await supabase
-        .from("mentor_applications")
-        .upsert(
-          {
-            user_id: resolvedUserId,
-            full_name: fullName.trim(),
-            email: email.trim(),
-            phone: phone.trim() || null,
-            current_employer: effectiveEmployer,
-            job_title: effectiveTitle,
-            years_of_experience: Number(yearsOfExperience),
-            linkedin_url: linkedinUrl.trim() || null,
-            bio: (headline ? `${headline} • ` : "") + (bio || ""),
-            domains: selectedDomains,
-            requested_services: selectedServices,
-            work_email: isAlumni ? null : (workEmail.trim() || null),
-            work_email_verified: isAlumni ? false : emailOtpVerified,
-            work_proof_file_name: isAlumni ? (alumniProofFileName || "Alumni_Tenure_Document") : "Corporate_OTP_Verification",
-            work_proof_file_url: isAlumni ? `s3://dreamx-mentor-verification/${alumniProofFileName || "alumni-doc"}` : null,
-            id_document_type: idType,
-            id_document_masked: idNumber || idProofFileName || "Encrypted_KYC_Record",
-            weekly_availability_hours: Number(weeklyHours),
-            status: effectiveStatus,
-            employment_type: verificationTrack,
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: "user_id" }
-        )
-        .select("id")
-        .single();
+      // Call secure database procedure to register dossier, approved services, and mentor profile atomically
+      const { data: rpcRes, error: rpcErr } = await (supabase.rpc as any)("submit_mentor_onboarding", {
+        p_user_id: resolvedUserId,
+        p_full_name: fullName.trim(),
+        p_email: email.trim(),
+        p_phone: phone.trim() || null,
+        p_current_employer: effectiveEmployer,
+        p_job_title: effectiveTitle,
+        p_years_of_experience: Number(yearsOfExperience),
+        p_headline: headline.trim() || null,
+        p_bio: bio.trim() || null,
+        p_selected_domains: selectedDomains,
+        p_selected_services: selectedServices,
+        p_verification_track: verificationTrack,
+        p_work_email: isAlumni ? null : (workEmail.trim() || null),
+        p_email_otp_verified: isAlumni ? false : emailOtpVerified,
+        p_work_proof_file_name: isAlumni ? (alumniProofFileName || "Alumni_Tenure_Document") : "Corporate_OTP_Verification",
+        p_work_proof_file_url: isAlumni ? `s3://dreamx-mentor-verification/${alumniProofFileName || "alumni-doc"}` : null,
+        p_id_document_type: idType,
+        p_id_document_masked: idNumber || idProofFileName || "Encrypted_KYC_Record",
+        p_weekly_hours: Number(weeklyHours),
+        p_payout_method: payoutMethod,
+        p_upi_id: payoutMethod === "upi" ? upiId.trim() : null,
+        p_account_number: payoutMethod === "bank" ? accountNumber.trim() : null,
+        p_ifsc_code: payoutMethod === "bank" ? ifscCode.trim() : null,
+        p_linkedin_url: linkedinUrl.trim() || null,
+      });
 
-      if (appError) {
-        console.warn("Notice during Supabase mentor_applications upsert:", appError);
-      } else if (appData?.id) {
-        setSubmittedAppId(`MTR-APP-${appData.id.slice(0, 8).toUpperCase()}`);
-      } else {
-        setSubmittedAppId(`MTR-APP-${Math.floor(1000 + Math.random() * 9000)}`);
+      if (rpcErr) {
+        throw new Error(rpcErr.message);
       }
 
-      // 2. Insert service capability approvals (PRD §9.1)
-      const approvalsPayload = selectedServices.map((code) => ({
-        mentor_id: resolvedUserId as string,
-        service_code: code,
-        status: effectiveStatus as any,
-        updated_at: new Date().toISOString(),
-      }));
-      await supabase
-        .from("mentor_service_approvals")
-        .upsert(approvalsPayload, { onConflict: "mentor_id,service_code" });
+      const generatedAppId = (rpcRes as { app_id?: string })?.app_id || `MTR-APP-${resolvedUserId.slice(0, 8).toUpperCase()}`;
+      setSubmittedAppId(generatedAppId);
 
-      // 3. Upsert public.mentor_profiles
-      await supabase.from("mentor_profiles").upsert(
-        {
-          id: resolvedUserId,
-          current_employer: effectiveEmployer,
-          job_title: effectiveTitle,
-          years_of_experience: Number(yearsOfExperience),
-          verification_status: effectiveStatus,
-          approved_services: selectedServices,
-          bio: (headline ? `${headline} • ` : "") + (bio || ""),
-          linkedin_url: linkedinUrl.trim() || null,
-          work_email: isAlumni ? null : (workEmail.trim() || null),
-          work_email_verified: isAlumni ? false : emailOtpVerified,
-          verified_company: effectiveEmployer,
-          employment_type: verificationTrack,
-          hourly_rate_inr: 999,
-          upi_id: payoutMethod === "upi" ? upiId.trim() : null,
-          bank_account_number: payoutMethod === "bank" ? accountNumber.trim() : null,
-          bank_ifsc: payoutMethod === "bank" ? ifscCode.trim() : null,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "id" }
-      );
-
-      // 4. Update public.profiles role and onboarding flag
-      await supabase
-        .from("profiles")
-        .update({
-          onboarding_completed: true,
-          role: "mentor",
-          linkedin_url: linkedinUrl.trim() || null,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", resolvedUserId);
+      // Force-commit cookies and local storage immediately
+      if (typeof window !== "undefined") {
+        document.cookie = "dreamx_role=mentor; path=/; max-age=604800; SameSite=Lax";
+        document.cookie = "dreamx_onboarded=true; path=/; max-age=604800; SameSite=Lax";
+        document.cookie = "dreamx_auth=true; path=/; max-age=604800; SameSite=Lax";
+        const stored = localStorage.getItem("dreamx_user");
+        if (stored) {
+          try {
+            const parsed = JSON.parse(stored);
+            parsed.role = "mentor";
+            parsed.onboarding_completed = true;
+            localStorage.setItem("dreamx_user", JSON.stringify(parsed));
+          } catch {}
+        }
+      }
 
       await completeOnboarding();
       setSuccessNotice(true);
@@ -698,8 +668,15 @@ export default function MentorOnboardingPage() {
           <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
             <button
               type="button"
-              onClick={() => router.push("/mentor")}
-              className="w-full sm:w-auto py-3.5 px-6 rounded-xl bg-[#5145cd] hover:bg-[#4035b3] text-white text-xs font-bold transition shadow-xs flex items-center justify-center gap-2"
+              onClick={() => {
+                if (typeof window !== "undefined") {
+                  document.cookie = "dreamx_role=mentor; path=/; max-age=604800; SameSite=Lax";
+                  document.cookie = "dreamx_onboarded=true; path=/; max-age=604800; SameSite=Lax";
+                  document.cookie = "dreamx_auth=true; path=/; max-age=604800; SameSite=Lax";
+                }
+                router.replace("/mentor");
+              }}
+              className="w-full sm:w-auto py-3.5 px-6 rounded-xl bg-[#5145cd] hover:bg-[#4035b3] text-white text-xs font-bold transition shadow-xs flex items-center justify-center gap-2 cursor-pointer"
             >
               <span>Enter Mentor Delivery Console →</span>
             </button>
@@ -1289,7 +1266,11 @@ export default function MentorOnboardingPage() {
 
                     {otpMessage && (
                       <div className={`p-3 rounded-lg text-xs font-medium ${
-                        otpMessage.type === "success" ? "bg-[#ebf7ee] text-[#16834a] border border-[#d3ebd7]" : "bg-[#fdf2f2] text-[#c43b3b] border border-[#f8b4b4]"
+                        otpMessage.type === "success" 
+                          ? "bg-[#ebf7ee] text-[#16834a] border border-[#d3ebd7]" 
+                          : otpMessage.type === "info"
+                          ? "bg-[#eef2ff] text-[#5145cd] border border-[#c7d2fe]"
+                          : "bg-[#fdf2f2] text-[#c43b3b] border border-[#f8b4b4]"
                       }`}>
                         {otpMessage.text}
                       </div>
