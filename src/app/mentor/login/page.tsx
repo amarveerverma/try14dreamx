@@ -96,7 +96,7 @@ export default function MentorLoginPage() {
     }
 
     const isOnboarded = res.onboarding_completed ?? false;
-    router.push(isOnboarded ? "/mentor" : "/mentor/onboarding");
+    router.replace(isOnboarded ? "/mentor" : "/mentor/onboarding");
   };
 
   return (
