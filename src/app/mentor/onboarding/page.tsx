@@ -664,7 +664,9 @@ export default function MentorOnboardingPage() {
             </h1>
             <p className="text-xs text-[#66666f] max-w-md mx-auto leading-relaxed">
               Your mentor dossier and service approvals have been securely registered under application ID{" "}
-              <span className="font-mono font-bold text-[#171717]">{submittedAppId}</span>.
+              <span className="font-mono font-bold text-[#171717]">
+                {submittedAppId || (user?.id ? `MTR-APP-${user.id.slice(0, 8).toUpperCase()}` : "MTR-APP-8104")}
+              </span>.
             </p>
           </div>
 
