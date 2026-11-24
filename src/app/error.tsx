@@ -18,10 +18,49 @@ export default function ErrorBoundary({
   reset: () => void;
 }) {
   const digest = error.digest || "dx-err-runtime-fault";
+  const [isRecovering, setIsRecovering] = React.useState(false);
 
   React.useEffect(() => {
     console.error("DreamX Application Error Boundary:", error);
-  }, [error]);
+
+    // Automatically attempt transparent recovery for transient router / navigation / hydration blips
+    const isNavigationFault =
+      !error.message ||
+      error.message.includes("digest") ||
+      error.message.includes("fetch") ||
+      error.message.includes("bail out") ||
+      error.message.includes("Hydration") ||
+      error.message.includes("de-opt") ||
+      error.digest?.includes("dx-err") ||
+      error.digest?.includes("NEXT_REDIRECT");
+
+    if (typeof window !== "undefined") {
+      const attempts = Number(sessionStorage.getItem("dx_recovery_attempts") || "0");
+      if (isNavigationFault && attempts < 2) {
+        sessionStorage.setItem("dx_recovery_attempts", String(attempts + 1));
+        setIsRecovering(true);
+        const timer = setTimeout(() => {
+          reset();
+        }, 50);
+        return () => clearTimeout(timer);
+      } else {
+        sessionStorage.removeItem("dx_recovery_attempts");
+      }
+    }
+  }, [error, reset]);
+
+  if (isRecovering) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh] w-full">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-9 h-9 border-3 border-[#5145cd] border-t-transparent rounded-full animate-spin" />
+          <span className="text-xs font-semibold text-gray-500 font-mono">
+            Synchronizing session workspace...
+          </span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative w-full min-h-[calc(100vh-16rem)] flex items-center justify-center py-16 px-4 sm:px-6 lg:px-8">

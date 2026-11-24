@@ -280,7 +280,11 @@ export default function MentorOnboardingPage() {
   React.useEffect(() => {
     if (!isLoading && user) {
       if (user.role === "mentor" && user.onboarding_completed) {
-        router.replace("/mentor");
+        if (typeof window !== "undefined") {
+          window.location.replace("/mentor");
+        } else {
+          router.replace("/mentor");
+        }
       }
     }
   }, [user, isLoading, router]);
@@ -673,8 +677,10 @@ export default function MentorOnboardingPage() {
                   document.cookie = "dreamx_role=mentor; path=/; max-age=604800; SameSite=Lax";
                   document.cookie = "dreamx_onboarded=true; path=/; max-age=604800; SameSite=Lax";
                   document.cookie = "dreamx_auth=true; path=/; max-age=604800; SameSite=Lax";
+                  window.location.replace("/mentor");
+                } else {
+                  router.replace("/mentor");
                 }
-                router.replace("/mentor");
               }}
               className="w-full sm:w-auto py-3.5 px-6 rounded-xl bg-[#5145cd] hover:bg-[#4035b3] text-white text-xs font-bold transition shadow-xs flex items-center justify-center gap-2 cursor-pointer"
             >

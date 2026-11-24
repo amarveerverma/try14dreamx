@@ -94,7 +94,11 @@ export default function LoginPage() {
 
     const isOnboarded = res.onboarding_completed ?? false;
     if (!isOnboarded) {
-      router.push("/dashboard/onboarding");
+      if (typeof window !== "undefined") {
+        window.location.replace("/dashboard/onboarding");
+      } else {
+        router.push("/dashboard/onboarding");
+      }
       return;
     }
 
@@ -102,18 +106,19 @@ export default function LoginPage() {
       ? new URLSearchParams(window.location.search).get("redirect")
       : null;
 
-    if (
+    const targetUrl = (
       redirectParam &&
       redirectParam.startsWith("/") &&
       redirectParam !== "/dashboard" &&
       redirectParam !== "/mentor" &&
       redirectParam !== "/login"
-    ) {
-      router.push(redirectParam);
-      return;
-    }
+    ) ? redirectParam : "/dashboard";
 
-    router.push("/dashboard");
+    if (typeof window !== "undefined") {
+      window.location.replace(targetUrl);
+    } else {
+      router.push(targetUrl);
+    }
   };
 
   return (

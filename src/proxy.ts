@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const isRsc = request.headers.get("rsc") === "1" || request.headers.has("next-router-state-tree");
 
   // Detect Supabase or DreamX auth cookies
   const allCookies = request.cookies.getAll();
@@ -14,6 +15,11 @@ export function proxy(request: NextRequest) {
   );
   const role = request.cookies.get("dreamx_role")?.value;
   const onboarded = request.cookies.get("dreamx_onboarded")?.value;
+
+  // For internal RSC router fetches, avoid abrupt 307 redirects that cause client navigation faults
+  if (isRsc) {
+    return NextResponse.next();
+  }
 
   // 1. Admin route protection
   if (pathname.startsWith("/admin")) {
@@ -46,8 +52,11 @@ export function proxy(request: NextRequest) {
     }
   }
 
-  // 3. Mentor Onboarding (/mentor/onboarding)
-  // Direct access permitted for onboarding and interactive accreditation reviews.
+  // 3. Mentor Onboarding protection (/mentor/onboarding)
+  // If already an onboarded mentor, forward directly to the delivery console
+  if (pathname === "/mentor/onboarding" && role === "mentor" && onboarded === "true") {
+    return NextResponse.redirect(new URL("/mentor", request.url));
+  }
 
   // 4. Candidate Dashboard protection (/dashboard, /dashboard/*)
   if (pathname.startsWith("/dashboard")) {
@@ -58,12 +67,17 @@ export function proxy(request: NextRequest) {
     }
     if (role === "mentor") {
       return NextResponse.redirect(
-        new URL("/mentor/onboarding", request.url)
+        new URL(onboarded === "true" ? "/mentor" : "/mentor/onboarding", request.url)
       );
     }
     if (pathname !== "/dashboard/onboarding" && onboarded === "false") {
       return NextResponse.redirect(
         new URL("/dashboard/onboarding", request.url)
+      );
+    }
+    if (pathname === "/dashboard/onboarding" && onboarded === "true") {
+      return NextResponse.redirect(
+        new URL("/dashboard", request.url)
       );
     }
   }

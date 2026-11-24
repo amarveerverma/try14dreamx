@@ -17,9 +17,10 @@ export function Footer() {
   const isOnboardingPage =
     pathname === "/dashboard/onboarding" || pathname === "/mentor/onboarding";
   const isDashboardPage = pathname?.startsWith("/dashboard");
+  const isMentorPage = pathname?.startsWith("/mentor");
 
-  // Suppress full marketing footer on dedicated workspaces, auth pages, and student portal
-  if (isAuthPage || isAdminPage || isOnboardingPage || isDashboardPage) {
+  // Suppress full marketing footer on dedicated workspaces, auth pages, and portal consoles
+  if (isAuthPage || isAdminPage || isOnboardingPage || isDashboardPage || isMentorPage) {
     return null;
   }
 

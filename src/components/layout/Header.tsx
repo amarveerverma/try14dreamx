@@ -30,11 +30,13 @@ export function Header() {
     pathname === "/forgot-password" ||
     pathname === "/reset-password";
   const isAdminPage = pathname?.startsWith("/admin");
+  const isMentorPage = pathname?.startsWith("/mentor");
+  const isDashboardPage = pathname?.startsWith("/dashboard");
   const isOnboardingPage =
     pathname === "/dashboard/onboarding" || pathname === "/mentor/onboarding";
 
-  // Hide the global consumer header on dedicated auth, admin, and full-screen onboarding flows
-  if (isAuthPage || isAdminPage || isOnboardingPage) {
+  // Hide the global consumer header on dedicated auth, admin, and full-screen portal consoles
+  if (isAuthPage || isAdminPage || isOnboardingPage || isMentorPage || isDashboardPage) {
     return null;
   }
 
@@ -49,12 +51,13 @@ export function Header() {
   const dashboardRoute =
     role === "admin" ? "/admin" : role === "mentor" ? "/mentor" : "/dashboard";
   const userDisplayName = user?.name || "Account";
-  const userInitials = userDisplayName
-    .split(" ")
-    .map((n) => n[0])
+  const userInitials = (user?.name || "Account")
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((n) => n[0] || "")
     .join("")
     .slice(0, 2)
-    .toUpperCase();
+    .toUpperCase() || "DX";
 
   return (
     <>

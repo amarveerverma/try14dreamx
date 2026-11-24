@@ -217,16 +217,29 @@ function CandidateOnboardingContent() {
       const isCookieOnboarded = typeof document !== "undefined" && document.cookie.includes("dreamx_onboarded=true");
       const isCookieStudent = typeof document !== "undefined" && document.cookie.includes("dreamx_role=student");
       if (isCookieOnboarded && isCookieStudent) {
-        router.replace("/dashboard");
+        if (typeof window !== "undefined") {
+          window.location.replace("/dashboard");
+        } else {
+          router.replace("/dashboard");
+        }
       }
       return;
     }
     if (user.role === "mentor") {
-      router.replace(user.onboarding_completed ? "/mentor" : "/mentor/onboarding");
+      const target = user.onboarding_completed ? "/mentor" : "/mentor/onboarding";
+      if (typeof window !== "undefined") {
+        window.location.replace(target);
+      } else {
+        router.replace(target);
+      }
     } else if (user.role === "admin") {
       router.replace("/admin");
     } else if (user.role === "student" && user.onboarding_completed) {
-      router.replace("/dashboard");
+      if (typeof window !== "undefined") {
+        window.location.replace("/dashboard");
+      } else {
+        router.replace("/dashboard");
+      }
     }
   }, [user, router]);
 
@@ -438,7 +451,11 @@ function CandidateOnboardingContent() {
 
       // 5. Clean redirect to student dashboard
       setTimeout(() => {
-        router.replace("/dashboard");
+        if (typeof window !== "undefined") {
+          window.location.replace("/dashboard");
+        } else {
+          router.replace("/dashboard");
+        }
       }, 700);
     } catch (err) {
       console.error("Failed to save onboarding calibration:", err);
@@ -446,8 +463,10 @@ function CandidateOnboardingContent() {
       if (typeof window !== "undefined") {
         document.cookie = "dreamx_role=student; path=/; max-age=2592000; SameSite=Lax";
         document.cookie = "dreamx_onboarded=true; path=/; max-age=2592000; SameSite=Lax";
+        window.location.replace("/dashboard");
+      } else {
+        router.replace("/dashboard");
       }
-      router.replace("/dashboard");
     } finally {
       setIsSaving(false);
     }

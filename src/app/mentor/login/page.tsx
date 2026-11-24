@@ -91,7 +91,11 @@ export default function MentorLoginPage() {
 
     const isOnboarded = res.onboarding_completed ?? false;
     if (!isOnboarded) {
-      router.push("/mentor/onboarding");
+      if (typeof window !== "undefined") {
+        window.location.replace("/mentor/onboarding");
+      } else {
+        router.push("/mentor/onboarding");
+      }
       return;
     }
 
@@ -100,12 +104,18 @@ export default function MentorLoginPage() {
       ? new URLSearchParams(window.location.search).get("redirect")
       : null;
 
-    if (redirectParam && redirectParam.startsWith("/") && redirectParam !== "/login" && redirectParam !== "/mentor/login") {
-      router.push(redirectParam);
-      return;
-    }
+    const targetUrl = (
+      redirectParam &&
+      redirectParam.startsWith("/") &&
+      redirectParam !== "/login" &&
+      redirectParam !== "/mentor/login"
+    ) ? redirectParam : "/mentor";
 
-    router.push("/mentor");
+    if (typeof window !== "undefined") {
+      window.location.replace(targetUrl);
+    } else {
+      router.push(targetUrl);
+    }
   };
 
   return (
