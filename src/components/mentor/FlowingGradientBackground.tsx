@@ -27,10 +27,12 @@ export function FlowingGradientBackground({
 }: FlowingGradientBackgroundProps) {
   const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
   const modeRef = React.useRef(mode);
-  modeRef.current = mode;
-
   const telemetryRef = React.useRef(onColorTelemetry);
-  telemetryRef.current = onColorTelemetry;
+
+  React.useEffect(() => {
+    modeRef.current = mode;
+    telemetryRef.current = onColorTelemetry;
+  }, [mode, onColorTelemetry]);
 
   React.useEffect(() => {
     const canvas = canvasRef.current;

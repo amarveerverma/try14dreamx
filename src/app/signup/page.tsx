@@ -127,7 +127,7 @@ export default function SignUpPage() {
           <span className="text-gray-600">DPDP Act 2023 Consent Manager</span>
           <span className="text-gray-300">•</span>
           <Link
-            href="/login"
+            href={role === "mentor" ? "/mentor/login" : "/login"}
             className="text-[#3828b5] font-semibold hover:underline"
           >
             ← Already have an account? Sign In

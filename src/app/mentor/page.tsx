@@ -83,6 +83,12 @@ type MentorTab =
   | "earnings"
   | "settings";
 
+let localIdSeq = 1000;
+function nextLocalId(prefix: string, numericOffset = 0): string {
+  localIdSeq += 1;
+  return `${prefix}-${numericOffset + localIdSeq}`;
+}
+
 function MentorPortalContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -166,7 +172,7 @@ function MentorPortalContent() {
   >([]);
 
   const addToast = (message: string, tone: Tone = "info") => {
-    const id = Math.random().toString(36).substring(2, 9);
+    const id = nextLocalId("toast");
     setToasts((prev) => [...prev, { id, message, tone }]);
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
@@ -371,8 +377,8 @@ function MentorPortalContent() {
 
     // Create a new committed booking
     const newBooking: MentorBooking = {
-      id: `BK-${Date.now().toString().slice(-4)}`,
-      bookingRef: `DX-BK-2026-${Math.floor(2000 + Math.random() * 8000)}`,
+      id: nextLocalId("BK"),
+      bookingRef: nextLocalId("DX-BK-2026", 1000),
       serviceId: offer.serviceId,
       bookingMode: "Smart Match",
       studentName: offer.studentAlias,
@@ -390,7 +396,7 @@ function MentorPortalContent() {
       attendance: {},
       authorizedDocuments: [
         {
-          id: `doc-${Date.now()}`,
+          id: nextLocalId("doc"),
           title: `${offer.studentAlias.split(" ")[0]}_Dossier_Context.pdf`,
           type: "PDF Dossier",
           signedUrlExpiresIn: "Generated at session window",
@@ -547,7 +553,7 @@ function MentorPortalContent() {
 
     // Create session report with 48h timer
     const newReport: SessionReport = {
-      id: `RPT-${Math.floor(600 + Math.random() * 400)}`,
+      id: nextLocalId("RPT"),
       bookingId: booking.id,
       bookingRef: booking.bookingRef,
       serviceId: booking.serviceId,
@@ -574,7 +580,7 @@ function MentorPortalContent() {
       improvementAreas: ["Dry-run edge cases before implementation"],
       actionPlan: [
         {
-          id: `ap-${Date.now()}`,
+          id: nextLocalId("ap"),
           action: "Review recommended reference material and practice structured constraint checklist.",
           priority: "High",
           timeframe: "Next 7 days",
@@ -637,7 +643,7 @@ function MentorPortalContent() {
       // Add to financial ledger
       const service = SERVICES_CATALOGUE.find((s) => s.id === existing.serviceId) || SERVICES_CATALOGUE[0];
       const newLedgerEntry: FinancialLedgerRecord = {
-        id: `FIN-${Math.floor(400 + Math.random() * 600)}`,
+        id: nextLocalId("FIN"),
         bookingRef: existing.bookingRef,
         serviceId: existing.serviceId,
         studentName: existing.studentName,
@@ -921,7 +927,7 @@ function MentorPortalContent() {
               type="button"
               onClick={async () => {
                 await logout();
-                router.replace("/login?role=mentor");
+                router.replace("/mentor/login");
               }}
               className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-red-400 hover:bg-red-950/30 transition-all cursor-pointer ${
                 sidebarCollapsed ? "justify-center px-0" : ""

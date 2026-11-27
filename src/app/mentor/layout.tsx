@@ -13,13 +13,9 @@ export default function MentorWorkspaceLayout({
   const router = useRouter();
   const { user, isLoading } = useAuth();
 
-  // If in dedicated mentor login, render standalone
-  if (pathname === "/mentor/login") {
-    return <>{children}</>;
-  }
-
-  // Auth and Mentor Role Gate
+  // Auth and Mentor Role Gate (hook must be declared unconditionally before any early returns)
   React.useEffect(() => {
+    if (pathname === "/mentor/login") return;
     if (!isLoading) {
       if (!user) {
         router.replace(`/mentor/login?redirect=${encodeURIComponent(pathname)}`);
@@ -30,10 +26,21 @@ export default function MentorWorkspaceLayout({
       } else if (pathname === "/mentor/onboarding" && user.onboarding_completed) {
         router.replace("/mentor");
       } else if (!user.onboarding_completed && pathname !== "/mentor/onboarding") {
-        router.replace("/mentor/onboarding");
+        const isCookieOnboarded =
+          typeof document !== "undefined" &&
+          document.cookie.includes("dreamx_onboarded=true") &&
+          document.cookie.includes("dreamx_role=mentor");
+        if (!isCookieOnboarded) {
+          router.replace("/mentor/onboarding");
+        }
       }
     }
   }, [user, isLoading, pathname, router]);
+
+  // If in dedicated mentor login, render standalone
+  if (pathname === "/mentor/login") {
+    return <>{children}</>;
+  }
 
   if (isLoading) {
     return (

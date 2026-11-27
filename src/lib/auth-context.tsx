@@ -33,7 +33,11 @@ interface AuthContextType {
   membership: MembershipState;
   login: (role: UserRole, email?: string, name?: string) => void;
   logout: () => Promise<void>;
-  signInWithEmail: (email: string, password: string) => Promise<{ success: boolean; error?: string; role?: UserRole; onboarding_completed?: boolean }>;
+  signInWithEmail: (
+    email: string,
+    password: string,
+    expectedRole?: UserRole
+  ) => Promise<{ success: boolean; error?: string; role?: UserRole; onboarding_completed?: boolean }>;
   signUpWithEmail: (
     email: string,
     password: string,
@@ -82,13 +86,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         resolvedName = data.full_name || authUserEmail?.split("@")[0] || "User";
         resolvedOnboarding = data.onboarding_completed ?? false;
       } else {
-        // Fallback to session user_metadata
+        // Fallback to session user_metadata & preserve prior onboarding flag if already verified locally
         try {
           const { data: sessionData } = await supabase.auth.getSession();
           const metaRole = sessionData?.session?.user?.user_metadata?.role as UserRole;
           const metaName = sessionData?.session?.user?.user_metadata?.full_name || sessionData?.session?.user?.user_metadata?.name;
           resolvedRole = (data?.role as UserRole) || metaRole || roleHint || "student";
           if (metaName) resolvedName = metaName;
+        } catch {
+          // ignore
+        }
+        if (typeof window !== "undefined") {
+          try {
+            const cached = JSON.parse(localStorage.getItem("dreamx_user") || "null");
+            if (cached?.id === userId && cached?.onboarding_completed) {
+              resolvedOnboarding = true;
+            }
+          } catch {}
+        }
+      }
+
+      // Safety verification: if a mentor already has a mentor_profiles record, onboarding is complete
+      if (resolvedRole === "mentor" && !resolvedOnboarding) {
+        try {
+          const { data: mp } = await supabase
+            .from("mentor_profiles")
+            .select("id")
+            .eq("id", userId)
+            .maybeSingle();
+          if (mp?.id) {
+            resolvedOnboarding = true;
+          }
         } catch {
           // ignore
         }
@@ -235,7 +263,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [supabase, fetchProfile]);
 
-  const signInWithEmail = async (email: string, password: string) => {
+  const signInWithEmail = async (email: string, password: string, expectedRole?: UserRole) => {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -247,18 +275,56 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (data.user) {
-        await fetchProfile(data.user.id, data.user.email);
-        // Determine role and onboarding state for routing
+        // Resolve true role and onboarding state BEFORE committing React user state or cookies
         const { data: profile } = await supabase
           .from("profiles")
           .select("role, onboarding_completed")
           .eq("id", data.user.id)
           .maybeSingle();
 
+        const metaRole = data.user.user_metadata?.role as UserRole | undefined;
+        const actualRole: UserRole = (profile?.role as UserRole) || metaRole || "student";
+        let actualOnboarded = profile?.onboarding_completed ?? false;
+
+        if (actualRole === "mentor" && !actualOnboarded) {
+          const { data: mp } = await supabase
+            .from("mentor_profiles")
+            .select("id")
+            .eq("id", data.user.id)
+            .maybeSingle();
+          if (mp?.id) {
+            actualOnboarded = true;
+          }
+        }
+
+        // Strict portal role check: sign out immediately before setting user/cookies if role mismatches
+        if (expectedRole && actualRole !== expectedRole) {
+          await supabase.auth.signOut();
+          setUser(null);
+          if (typeof window !== "undefined") {
+            localStorage.removeItem("dreamx_user");
+            document.cookie = "dreamx_role=; path=/; max-age=0; SameSite=Lax";
+            document.cookie = "dreamx_auth=; path=/; max-age=0; SameSite=Lax";
+            document.cookie = "dreamx_onboarded=; path=/; max-age=0; SameSite=Lax";
+          }
+          return {
+            success: false,
+            role: actualRole,
+            error:
+              actualRole === "mentor"
+                ? "Access Restricted: This login is exclusively for candidates. Mentor accounts must sign in through the Mentor Portal."
+                : actualRole === "admin"
+                ? "Access Restricted: Administrator accounts must sign in via the Admin Console."
+                : "Access Restricted: Candidate accounts cannot sign in to the Mentor Portal — please sign in through the Candidate Portal.",
+          };
+        }
+
+        await fetchProfile(data.user.id, data.user.email, actualRole);
+
         return {
           success: true,
-          role: (profile?.role as UserRole) || "student",
-          onboarding_completed: profile?.onboarding_completed ?? false,
+          role: actualRole,
+          onboarding_completed: actualOnboarded,
         };
       }
 

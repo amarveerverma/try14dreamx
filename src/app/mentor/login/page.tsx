@@ -33,7 +33,7 @@ export default function MentorLoginPage() {
   const [error, setError] = React.useState<string | null>(null);
   const [roleRedirectUrl, setRoleRedirectUrl] = React.useState<{ url: string; label: string } | null>(null);
 
-  // Auto-redirect if already authenticated as mentor
+  // Auto-redirect only if authenticated strictly as mentor (never bounce completed mentors back to onboarding)
   React.useEffect(() => {
     if (!authLoading && user) {
       if (user.role === "mentor") {
@@ -44,13 +44,16 @@ export default function MentorLoginPage() {
         const redirectParam = typeof window !== "undefined"
           ? new URLSearchParams(window.location.search).get("redirect")
           : null;
-        if (redirectParam && redirectParam.startsWith("/") && redirectParam !== "/mentor/login") {
+        if (
+          redirectParam &&
+          redirectParam.startsWith("/") &&
+          redirectParam !== "/mentor/login" &&
+          redirectParam !== "/mentor/onboarding"
+        ) {
           router.replace(redirectParam);
           return;
         }
         router.replace("/mentor");
-      } else if (user.role === "admin") {
-        router.replace("/admin");
       }
     }
   }, [user, authLoading, router]);
@@ -62,17 +65,25 @@ export default function MentorLoginPage() {
     setRoleRedirectUrl(null);
 
     if (!email || !password) {
-      setError("Please enter your registered mentor work email and password.");
+      setError("Please enter your registered mentor email and password.");
       setIsLoading(false);
       return;
     }
 
     const cleanEmail = email.trim().toLowerCase();
-    const res = await signInWithEmail(cleanEmail, password);
+    const res = await signInWithEmail(cleanEmail, password, "mentor");
     setIsLoading(false);
 
     if (!res.success) {
-      setError(res.error || "Invalid mentor credentials. Please verify your email and password.");
+      if (res.role === "student") {
+        setError("Access Restricted: This login is exclusively for Accredited Mentors. Candidate accounts cannot sign in here — please sign in through the Candidate Portal.");
+        setRoleRedirectUrl({ url: "/login", label: "Go to Candidate Portal Sign In →" });
+      } else if (res.role === "admin") {
+        setError("Access Restricted: Administrator accounts must sign in via the Admin Console.");
+        setRoleRedirectUrl({ url: "/admin/login", label: "Go to Admin Console →" });
+      } else {
+        setError(res.error || "Invalid mentor credentials. Please verify your email and password.");
+      }
       return;
     }
 
@@ -99,7 +110,7 @@ export default function MentorLoginPage() {
       return;
     }
 
-    // Check redirect param if already onboarded
+    // Check redirect param if already onboarded (never send completed mentor back to onboarding)
     const redirectParam = typeof window !== "undefined"
       ? new URLSearchParams(window.location.search).get("redirect")
       : null;
@@ -108,7 +119,8 @@ export default function MentorLoginPage() {
       redirectParam &&
       redirectParam.startsWith("/") &&
       redirectParam !== "/login" &&
-      redirectParam !== "/mentor/login"
+      redirectParam !== "/mentor/login" &&
+      redirectParam !== "/mentor/onboarding"
     ) ? redirectParam : "/mentor";
 
     if (typeof window !== "undefined") {

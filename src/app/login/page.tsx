@@ -32,14 +32,10 @@ export default function LoginPage() {
   const [error, setError] = React.useState<string | null>(null);
   const [roleRedirectUrl, setRoleRedirectUrl] = React.useState<{ url: string; label: string } | null>(null);
 
-  // Auto-redirect if candidate already has an active session
+  // Auto-redirect only if authenticated strictly as a candidate (student)
   React.useEffect(() => {
     if (!authLoading && user) {
-      if (user.role === "admin") {
-        router.replace("/admin");
-      } else if (user.role === "mentor") {
-        router.replace(user.onboarding_completed ? "/mentor" : "/mentor/onboarding");
-      } else {
+      if (user.role === "student") {
         if (!user.onboarding_completed) {
           router.replace("/dashboard/onboarding");
           return;
@@ -47,7 +43,12 @@ export default function LoginPage() {
         const redirectParam = typeof window !== "undefined"
           ? new URLSearchParams(window.location.search).get("redirect")
           : null;
-        if (redirectParam && redirectParam.startsWith("/") && redirectParam !== "/login") {
+        if (
+          redirectParam &&
+          redirectParam.startsWith("/") &&
+          redirectParam !== "/login" &&
+          redirectParam !== "/dashboard/onboarding"
+        ) {
           router.replace(redirectParam);
           return;
         }
@@ -69,11 +70,19 @@ export default function LoginPage() {
     }
 
     const cleanEmail = email.trim().toLowerCase();
-    const res = await signInWithEmail(cleanEmail, password);
+    const res = await signInWithEmail(cleanEmail, password, "student");
     setIsLoading(false);
 
     if (!res.success) {
-      setError(res.error || "Invalid email or password. Please try again.");
+      if (res.role === "mentor") {
+        setError("Access Restricted: This login is exclusively for candidates. Mentor accounts must sign in through the Mentor Portal.");
+        setRoleRedirectUrl({ url: "/mentor/login", label: "Go to Mentor Portal Sign In →" });
+      } else if (res.role === "admin") {
+        setError("Access Restricted: Administrator accounts must sign in via the Admin Console.");
+        setRoleRedirectUrl({ url: "/admin/login", label: "Go to Admin Console →" });
+      } else {
+        setError(res.error || "Invalid email or password. Please try again.");
+      }
       return;
     }
 
@@ -110,6 +119,7 @@ export default function LoginPage() {
       redirectParam &&
       redirectParam.startsWith("/") &&
       redirectParam !== "/dashboard" &&
+      redirectParam !== "/dashboard/onboarding" &&
       redirectParam !== "/mentor" &&
       redirectParam !== "/login"
     ) ? redirectParam : "/dashboard";

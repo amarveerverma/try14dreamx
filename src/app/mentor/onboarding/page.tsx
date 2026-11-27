@@ -278,7 +278,7 @@ export default function MentorOnboardingPage() {
 
   // If already an accredited mentor with onboarding completed, route to delivery console. If unauthenticated, redirect to mentor sign in.
   React.useEffect(() => {
-    if (!isLoading) {
+    if (!isLoading && !successNotice) {
       if (!user) {
         router.replace("/mentor/login?redirect=/mentor/onboarding");
       } else if (user.role === "mentor" && user.onboarding_completed) {
@@ -291,7 +291,7 @@ export default function MentorOnboardingPage() {
         router.replace("/dashboard?notice=candidates_restricted_from_mentor_portal");
       }
     }
-  }, [user, isLoading, router]);
+  }, [user, isLoading, successNotice, router]);
 
   // Domain toggling
   const toggleDomain = (dom: string) => {
@@ -1161,7 +1161,7 @@ export default function MentorOnboardingPage() {
                       />
                     </div>
                     <h4 className="text-sm font-bold text-[#171717]">Option 2: Alumni, Consultant or Founder</h4>
-                    <p className="text-xs text-[#66666f] mt-1">Don't have an active corporate email? Verify your past seniority using your Relieving Letter, Form-16, MCA Company CIN, or old work ID.</p>
+                    <p className="text-xs text-[#66666f] mt-1">Don&apos;t have an active corporate email? Verify your past seniority using your Relieving Letter, Form-16, MCA Company CIN, or old work ID.</p>
                     
                     <div className="mt-4 pt-3 border-t border-[#e7e7eb]/80 space-y-1.5">
                       <div className="flex items-center gap-1.5 text-xs text-[#66666f]">
