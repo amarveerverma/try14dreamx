@@ -222,7 +222,9 @@ function CandidateOnboardingContent() {
         } else {
           router.replace("/dashboard");
         }
+        return;
       }
+      router.replace("/login?redirect=/dashboard/onboarding");
       return;
     }
     if (user.role === "mentor") {

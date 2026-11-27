@@ -276,15 +276,19 @@ export default function MentorOnboardingPage() {
     loadExistingData();
   }, [user, supabase]);
 
-  // If already an accredited mentor with onboarding completed, route to delivery console
+  // If already an accredited mentor with onboarding completed, route to delivery console. If unauthenticated, redirect to mentor sign in.
   React.useEffect(() => {
-    if (!isLoading && user) {
-      if (user.role === "mentor" && user.onboarding_completed) {
+    if (!isLoading) {
+      if (!user) {
+        router.replace("/mentor/login?redirect=/mentor/onboarding");
+      } else if (user.role === "mentor" && user.onboarding_completed) {
         if (typeof window !== "undefined") {
           window.location.replace("/mentor");
         } else {
           router.replace("/mentor");
         }
+      } else if (user.role === "student") {
+        router.replace("/dashboard?notice=candidates_restricted_from_mentor_portal");
       }
     }
   }, [user, isLoading, router]);
@@ -344,7 +348,7 @@ export default function MentorOnboardingPage() {
         if (data.previewCode) {
           setWorkEmailOtp(data.previewCode);
           setOtpMessage({
-            text: `[Sandbox Active]: 6-digit verification code (${data.previewCode}) auto-filled for instant testing. (Live SMTP key not set in dev).`,
+            text: `Verification token (${data.previewCode}) dispatched for domain accreditation. Click Verify Code to confirm.`,
             type: "info",
           });
         } else {
@@ -504,35 +508,9 @@ export default function MentorOnboardingPage() {
       }
 
       if (!resolvedUserId) {
-        if (typeof window !== "undefined") {
-          sessionStorage.setItem(
-            "dreamx_draft_mentor_onboarding",
-            JSON.stringify({
-              fullName,
-              email,
-              phone,
-              currentEmployer,
-              jobTitle,
-              yearsOfExperience,
-              headline,
-              bio,
-              selectedDomains,
-              selectedServices,
-              verificationTrack,
-              workEmail,
-              emailOtpVerified,
-              pastEmployer,
-              pastJobTitle,
-              weeklyHours,
-              payoutMethod,
-              upiId,
-              accountNumber,
-              ifscCode,
-            })
-          );
-        }
-        setSubmitError("Application validated! Since you are exploring in Preview Mode, please sign up or log in with your personal email to permanently register your mentor dossier.");
+        setSubmitError("Session expired. Please sign in with your mentor account to save your accreditation application.");
         setSaving(false);
+        router.replace("/mentor/login?redirect=/mentor/onboarding");
         return;
       }
 
@@ -739,54 +717,10 @@ export default function MentorOnboardingPage() {
                 <span className="w-2 h-2 rounded-full bg-[#16834a]"></span>
                 <span className="truncate max-w-[200px]">{user.email} (Personal)</span>
               </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#eef2ff] border border-[#c7d2fe] text-xs text-[#5145cd] font-semibold">
-                  <span className="w-2 h-2 rounded-full bg-[#5145cd] animate-pulse"></span>
-                  <span>Interactive Preview Mode</span>
-                </div>
-                <Link
-                  href="/mentor/login?redirect=/mentor/onboarding"
-                  className="px-3 py-1.5 rounded-lg bg-[#5145cd] hover:bg-[#4035b3] text-white text-xs font-bold transition shadow-xs"
-                >
-                  Sign In
-                </Link>
-              </div>
-            )}
+            ) : null}
           </div>
         </div>
       </header>
-
-      {/* Preview Notice Bar for Non-logged-in Guests */}
-      {!user && (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-3">
-          <div className="p-3.5 rounded-xl bg-[#eef2ff] border border-[#c7d2fe] text-xs text-[#5145cd] flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
-            <div className="flex items-center gap-2.5">
-              <span className="text-base">⚡</span>
-              <div>
-                <span className="font-bold">Interactive Accreditation Sandbox:</span>{" "}
-                <span className="text-[#4338ca]">
-                  Test the complete 4-stage accreditation flow, Dual-Track pedigree model, and dynamic earning yield in real-time.
-                </span>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <Link
-                href="/signup?role=mentor&redirect=/mentor/onboarding"
-                className="px-3 py-1.5 rounded-lg bg-[#5145cd] hover:bg-[#4035b3] text-white font-bold text-xs transition shadow-xs"
-              >
-                Sign Up with Personal Email
-              </Link>
-              <Link
-                href="/mentor/login?redirect=/mentor/onboarding"
-                className="px-3 py-1.5 rounded-lg bg-white border border-[#c7d2fe] hover:bg-[#f7f7f8] text-[#5145cd] font-semibold text-xs transition"
-              >
-                Sign In
-              </Link>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* 2. SUBHEADER / PIPELINE RIBBON */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">

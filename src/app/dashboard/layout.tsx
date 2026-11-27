@@ -13,11 +13,6 @@ export default function StudentDashboardLayout({
   const router = useRouter();
   const { user, isLoading } = useAuth();
 
-  // If inside standalone onboarding route, pass through
-  if (pathname === "/dashboard/onboarding") {
-    return <>{children}</>;
-  }
-
   // Auth & Onboarding gate
   React.useEffect(() => {
     if (!isLoading) {
@@ -27,6 +22,8 @@ export default function StudentDashboardLayout({
         router.replace(user.onboarding_completed ? "/mentor" : "/mentor/onboarding");
       } else if (user.role === "admin") {
         router.replace("/admin");
+      } else if (pathname === "/dashboard/onboarding" && user.onboarding_completed) {
+        router.replace("/dashboard");
       } else if (!user.onboarding_completed && pathname !== "/dashboard/onboarding") {
         const isCookieOnboarded = typeof document !== "undefined" && document.cookie.includes("dreamx_onboarded=true");
         if (!isCookieOnboarded) {

@@ -13,8 +13,8 @@ export default function MentorWorkspaceLayout({
   const router = useRouter();
   const { user, isLoading } = useAuth();
 
-  // If in the onboarding wizard or dedicated mentor login, render standalone
-  if (pathname === "/mentor/onboarding" || pathname === "/mentor/login") {
+  // If in dedicated mentor login, render standalone
+  if (pathname === "/mentor/login") {
     return <>{children}</>;
   }
 
@@ -27,6 +27,8 @@ export default function MentorWorkspaceLayout({
         router.replace("/dashboard?notice=candidates_restricted_from_mentor_portal");
       } else if (user.role !== "mentor" && user.role !== "admin") {
         router.replace("/mentor/login");
+      } else if (pathname === "/mentor/onboarding" && user.onboarding_completed) {
+        router.replace("/mentor");
       } else if (!user.onboarding_completed && pathname !== "/mentor/onboarding") {
         router.replace("/mentor/onboarding");
       }

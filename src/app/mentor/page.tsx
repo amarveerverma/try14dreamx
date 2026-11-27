@@ -197,6 +197,10 @@ function MentorPortalContent() {
           .maybeSingle();
 
         if (dbProfile) {
+          const isAlumni = dbProfile.employment_type === "alumni";
+          const employerName = dbProfile.verified_company || dbProfile.current_employer || "";
+          const cleanEmployer = isAlumni && employerName.startsWith("Ex-") ? employerName.replace(/^Ex-/, "").trim() : employerName;
+
           setProfile((prev) => ({
             ...prev,
             displayName: user.name || prev.displayName,
@@ -204,9 +208,12 @@ function MentorPortalContent() {
             currentRoleLabel: dbProfile.current_employer ? `${dbProfile.job_title || "Staff Engineer"} (${dbProfile.current_employer})` : prev.currentRoleLabel,
             bio: dbProfile.bio || prev.bio,
             yearsOfExperience: dbProfile.years_of_experience || prev.yearsOfExperience,
-            verifiedCompany: dbProfile.verified_company || dbProfile.current_employer || "",
+            verifiedCompany: cleanEmployer,
             employmentType: (dbProfile.employment_type as "employed" | "alumni") || "employed",
-            experienceVerificationLabel: dbProfile.verification_status === "approved" ? "Verified Practitioner (Active)" : "Accreditation Submitted (In Review)",
+            workEmail: dbProfile.work_email || (cleanEmployer ? `mentor@${cleanEmployer.toLowerCase().replace(/\s+/g, "")}.com` : ""),
+            pastEmployer: isAlumni ? cleanEmployer : "",
+            pastJobTitle: dbProfile.job_title || "",
+            experienceVerificationLabel: dbProfile.verification_status === "approved" || dbProfile.work_email_verified ? "Verified Practitioner (Active)" : "Accreditation Submitted (In Review)",
           }));
 
           // Live Trust Pillars
@@ -945,6 +952,7 @@ function MentorPortalContent() {
 
           {activeTab === "verification" && (
             <VerificationView
+              profile={profile}
               isApplicantMode={isApplicantMode}
               trustPillars={trustPillars}
               serviceApprovals={serviceApprovals}

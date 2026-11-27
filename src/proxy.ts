@@ -33,8 +33,8 @@ export function proxy(request: NextRequest) {
     }
   }
 
-  // 2. Mentor Delivery Console protection (/mentor, /mentor/earnings, /mentor/sessions, etc.)
-  if (pathname.startsWith("/mentor") && pathname !== "/mentor/onboarding" && pathname !== "/mentor/login") {
+  // 2. Mentor Portal & Delivery Console protection (/mentor, /mentor/onboarding, /mentor/earnings, etc.)
+  if (pathname.startsWith("/mentor") && pathname !== "/mentor/login") {
     if (!hasAuthToken) {
       return NextResponse.redirect(
         new URL(`/mentor/login?redirect=${encodeURIComponent(pathname)}`, request.url)
@@ -42,20 +42,18 @@ export function proxy(request: NextRequest) {
     }
     if (role === "student") {
       return NextResponse.redirect(
-        new URL("/mentor/onboarding?notice=apply_as_mentor", request.url)
+        new URL("/dashboard?notice=candidates_restricted_from_mentor_portal", request.url)
       );
     }
-    if (role === "mentor" && onboarded === "false") {
+    // If already an onboarded mentor, forward directly to the delivery console
+    if (pathname === "/mentor/onboarding" && role === "mentor" && onboarded === "true") {
+      return NextResponse.redirect(new URL("/mentor", request.url));
+    }
+    if (pathname !== "/mentor/onboarding" && role === "mentor" && onboarded === "false") {
       return NextResponse.redirect(
         new URL("/mentor/onboarding", request.url)
       );
     }
-  }
-
-  // 3. Mentor Onboarding protection (/mentor/onboarding)
-  // If already an onboarded mentor, forward directly to the delivery console
-  if (pathname === "/mentor/onboarding" && role === "mentor" && onboarded === "true") {
-    return NextResponse.redirect(new URL("/mentor", request.url));
   }
 
   // 4. Candidate Dashboard protection (/dashboard, /dashboard/*)

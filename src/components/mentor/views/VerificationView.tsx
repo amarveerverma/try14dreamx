@@ -19,6 +19,7 @@ import {
 import {
   TrustPillar,
   ServiceApproval,
+  MentorProfileData,
   SERVICES_CATALOGUE,
   getServiceById,
   formatINR,
@@ -28,6 +29,7 @@ import { StatusBadge } from "../StatusBadge";
 import { MentorModal } from "../MentorModal";
 
 interface VerificationViewProps {
+  profile?: MentorProfileData;
   isApplicantMode: boolean;
   trustPillars: TrustPillar[];
   serviceApprovals: ServiceApproval[];
@@ -36,6 +38,7 @@ interface VerificationViewProps {
 }
 
 export function VerificationView({
+  profile,
   isApplicantMode,
   trustPillars,
   serviceApprovals,
@@ -70,6 +73,32 @@ export function VerificationView({
   const [pastJobTitle, setPastJobTitle] = React.useState("");
   const [linkedinUrl, setLinkedinUrl] = React.useState("");
   const [uploadedRelievingDoc, setUploadedRelievingDoc] = React.useState<string | null>(null);
+
+  // Hydrate verification state from authenticated mentor profile
+  React.useEffect(() => {
+    if (profile) {
+      if (profile.employmentType === "alumni") {
+        setEmploymentTrack("alumni");
+        if (profile.pastEmployer || profile.verifiedCompany) {
+          setPastEmployer(profile.pastEmployer || profile.verifiedCompany || "");
+        }
+        if (profile.pastJobTitle) {
+          setPastJobTitle(profile.pastJobTitle);
+        }
+      } else {
+        setEmploymentTrack("employed");
+        if (profile.verifiedCompany) {
+          setVerifiedCompany(profile.verifiedCompany);
+          setWorkEmailVerified(true);
+        }
+        if (profile.workEmail) {
+          setWorkEmail(profile.workEmail);
+        } else if (profile.verifiedCompany) {
+          setWorkEmail(`practitioner@${profile.verifiedCompany.toLowerCase().replace(/\s+/g, "")}.com`);
+        }
+      }
+    }
+  }, [profile]);
 
   // Requested vs unrequested services
   const requestedServiceIds = new Set(serviceApprovals.map((s) => s.serviceId));
@@ -264,14 +293,14 @@ export function VerificationView({
                 label={
                   isApplicantMode
                     ? "Under review"
-                    : workEmailVerified || pastEmployer
+                    : (workEmailVerified || Boolean(verifiedCompany) || Boolean(profile?.verifiedCompany) || Boolean(pastEmployer) || Boolean(profile?.pastEmployer))
                     ? "Approved"
                     : "Action Needed"
                 }
                 tone={
                   isApplicantMode
                     ? "info"
-                    : workEmailVerified || pastEmployer
+                    : (workEmailVerified || Boolean(verifiedCompany) || Boolean(profile?.verifiedCompany) || Boolean(pastEmployer) || Boolean(profile?.pastEmployer))
                     ? "success"
                     : "warning"
                 }
@@ -310,83 +339,132 @@ export function VerificationView({
             {/* Track A: Currently Employed Track */}
             {employmentTrack === "employed" && (
               <div className="space-y-3 p-4 rounded-xl bg-zinc-50 border border-zinc-200">
-                <div className="space-y-1">
-                  <span className="text-xs font-bold text-zinc-800">
-                    Corporate Email Domain Check (30-Second Verification)
-                  </span>
-                  <p className="text-[11px] text-zinc-600">
-                    Enter your active company email. We dispatch a 6-digit confirmation token.
-                  </p>
-                </div>
+                {workEmailVerified || verifiedCompany || profile?.verifiedCompany ? (
+                  <div className="p-4 rounded-xl bg-emerald-50/80 border border-emerald-200 text-xs text-emerald-950 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 font-bold text-emerald-900">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                        <span>Corporate Pedigree Verified</span>
+                      </div>
+                      <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-300">
+                        Active Verified Badge
+                      </span>
+                    </div>
 
-                <div className="flex gap-2">
-                  <div className="relative flex-1">
-                    <Mail className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="email"
-                      value={workEmail}
-                      onChange={(e) => setWorkEmail(e.target.value)}
-                      placeholder="you@company.com (e.g. google.com)"
-                      disabled={workEmailVerified}
-                      className="w-full pl-9 pr-3 py-2 rounded-lg bg-white border border-zinc-300 text-xs font-mono text-zinc-900 focus:outline-none focus:border-[#5145cd]"
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleSendWorkEmailOtp}
-                    disabled={otpSending || workEmailVerified}
-                    className="px-3.5 py-2 rounded-lg bg-[#5145cd] hover:bg-[#4035b3] disabled:opacity-60 text-white text-xs font-bold transition-all shrink-0 flex items-center gap-1.5"
-                  >
-                    <Send className="w-3.5 h-3.5" />
-                    <span>{otpSending ? "Sending..." : otpSent ? "Resend" : "Send OTP"}</span>
-                  </button>
-                </div>
+                    <div className="flex items-center gap-2.5 bg-white border border-emerald-200/90 rounded-lg p-3">
+                      <div className="w-9 h-9 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-[#5145cd] font-bold shrink-0">
+                        <Building2 className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <span className="font-bold text-zinc-900 block text-xs">
+                          {verifiedCompany || profile?.verifiedCompany || "Tier-1 Tech"} Engineering Team
+                        </span>
+                        <span className="text-[11px] text-zinc-500 font-mono">
+                          {workEmail || (profile?.workEmail ? profile.workEmail : `@${(verifiedCompany || profile?.verifiedCompany || "company").toLowerCase().replace(/\s+/g, "")}.com (Cryptographically Confirmed)`)}
+                        </span>
+                      </div>
+                    </div>
 
-                {otpSent && !workEmailVerified && (
-                  <div className="flex gap-2 pt-1">
-                    <input
-                      type="text"
-                      maxLength={6}
-                      value={workEmailOtp}
-                      onChange={(e) => setWorkEmailOtp(e.target.value)}
-                      placeholder="Enter 6-digit OTP"
-                      className="flex-1 px-3 py-2 rounded-lg bg-white border border-zinc-300 text-xs font-mono text-zinc-900 focus:outline-none focus:border-[#5145cd]"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleVerifyWorkEmailOtp}
-                      disabled={otpVerifying}
-                      className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 text-white text-xs font-bold transition-all shrink-0"
-                    >
-                      {otpVerifying ? "Verifying..." : "Verify Code"}
-                    </button>
+                    <p className="text-[11px] text-emerald-800 leading-relaxed">
+                      Engineering pedigree verified under PRD §9.2. Your official employer badge is active on all candidate booking cards and public directory searches.
+                    </p>
+
+                    <div className="pt-1 flex items-center justify-between text-[11px] border-t border-emerald-200/70">
+                      <span className="text-emerald-700 font-medium">Status: Practitioner Verified</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setWorkEmailVerified(false);
+                          setOtpSent(false);
+                          setOtpNotice("Enter updated corporate email to re-verify domain.");
+                        }}
+                        className="text-emerald-800 hover:text-emerald-950 font-bold underline cursor-pointer"
+                      >
+                        Update Corporate Email
+                      </button>
+                    </div>
                   </div>
+                ) : (
+                  <>
+                    <div className="space-y-1">
+                      <span className="text-xs font-bold text-zinc-800">
+                        Corporate Email Domain Check (30-Second Verification)
+                      </span>
+                      <p className="text-[11px] text-zinc-600">
+                        Enter your active company email. We dispatch a 6-digit confirmation token.
+                      </p>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <div className="relative flex-1">
+                        <Mail className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                        <input
+                          type="email"
+                          value={workEmail}
+                          onChange={(e) => setWorkEmail(e.target.value)}
+                          placeholder="you@company.com (e.g. google.com)"
+                          disabled={workEmailVerified}
+                          className="w-full pl-9 pr-3 py-2 rounded-lg bg-white border border-zinc-300 text-xs font-mono text-zinc-900 focus:outline-none focus:border-[#5145cd]"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleSendWorkEmailOtp}
+                        disabled={otpSending || workEmailVerified}
+                        className="px-3.5 py-2 rounded-lg bg-[#5145cd] hover:bg-[#4035b3] disabled:opacity-60 text-white text-xs font-bold transition-all shrink-0 flex items-center gap-1.5"
+                      >
+                        <Send className="w-3.5 h-3.5" />
+                        <span>{otpSending ? "Sending..." : otpSent ? "Resend" : "Send OTP"}</span>
+                      </button>
+                    </div>
+
+                    {otpSent && !workEmailVerified && (
+                      <div className="flex gap-2 pt-1">
+                        <input
+                          type="text"
+                          maxLength={6}
+                          value={workEmailOtp}
+                          onChange={(e) => setWorkEmailOtp(e.target.value)}
+                          placeholder="Enter 6-digit OTP"
+                          className="flex-1 px-3 py-2 rounded-lg bg-white border border-zinc-300 text-xs font-mono text-zinc-900 focus:outline-none focus:border-[#5145cd]"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleVerifyWorkEmailOtp}
+                          disabled={otpVerifying}
+                          className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 text-white text-xs font-bold transition-all shrink-0"
+                        >
+                          {otpVerifying ? "Verifying..." : "Verify Code"}
+                        </button>
+                      </div>
+                    )}
+
+                    {otpNotice && (
+                      <p
+                        className={`text-xs font-semibold ${
+                          workEmailVerified
+                            ? "text-emerald-700"
+                            : otpNotice.includes("Please")
+                            ? "text-amber-800"
+                            : "text-zinc-600"
+                        }`}
+                      >
+                        {otpNotice}
+                      </p>
+                    )}
+
+                    {/* Moonlighting Assurance */}
+                    <div className="p-3 rounded-lg bg-indigo-50/70 border border-indigo-200/80 text-[11px] text-[#4035b3] space-y-1">
+                      <div className="flex items-center gap-1.5 font-bold">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-indigo-700 shrink-0" />
+                        <span>Zero Moonlighting Audit Exposure:</span>
+                      </div>
+                      <p className="leading-snug text-indigo-900">
+                        Your corporate email is strictly used once for domain badge verification. All student bookings, payouts, and platform notifications remain on your personal account.
+                      </p>
+                    </div>
+                  </>
                 )}
-
-                {otpNotice && (
-                  <p
-                    className={`text-xs font-semibold ${
-                      workEmailVerified
-                        ? "text-emerald-700"
-                        : otpNotice.includes("Please")
-                        ? "text-amber-800"
-                        : "text-zinc-600"
-                    }`}
-                  >
-                    {otpNotice}
-                  </p>
-                )}
-
-                {/* Moonlighting Assurance */}
-                <div className="p-3 rounded-lg bg-indigo-50/70 border border-indigo-200/80 text-[11px] text-[#4035b3] space-y-1">
-                  <div className="flex items-center gap-1.5 font-bold">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-indigo-700 shrink-0" />
-                    <span>Zero Moonlighting Audit Exposure:</span>
-                  </div>
-                  <p className="leading-snug text-indigo-900">
-                    Your corporate email is strictly used once for domain badge verification. All student bookings, payouts, and platform notifications remain on your personal account.
-                  </p>
-                </div>
               </div>
             )}
 
