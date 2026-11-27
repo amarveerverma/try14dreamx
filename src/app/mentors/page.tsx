@@ -3,11 +3,12 @@
 import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { MENTORS } from "@/data/mentors";
+import { MENTORS, type Mentor } from "@/data/mentors";
 import { CompanyLogo } from "@/components/ui/company-logo";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { createClient } from "@/lib/supabase/client";
 import {
   ShieldCheck,
   Star,
@@ -16,13 +17,83 @@ import {
   Briefcase,
 } from "lucide-react";
 
+function slugify(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
 export default function MentorsPage() {
   const [selectedTier, setSelectedTier] = React.useState<string>("All");
+  const [mentorsList, setMentorsList] = React.useState<Mentor[]>(MENTORS);
+
+  React.useEffect(() => {
+    async function loadLiveMentors() {
+      try {
+        const supabase = createClient();
+        const { data: dbMentors } = await supabase
+          .from("mentor_profiles")
+          .select("*, profiles(*)");
+
+        if (dbMentors && dbMentors.length > 0) {
+          const serviceLabels: Record<string, string> = {
+            S01: "S01 Resume Review",
+            S02: "S02 Architecture Design",
+            S03: "S03 Project Deep-Dive",
+            S04: "S04 Codebase & Architecture",
+            S05: "S05 Behavioral & Leadership",
+            S06: "S06 Technical Mock Interview",
+            S07: "S07 Career Consultation",
+            S08: "S08 Offer Negotiation",
+            S09: "S09 Transition Strategy",
+            S10: "S10 Algorithmic Coding Prep",
+          };
+
+          const mapped: Mentor[] = dbMentors.map((m: any) => {
+            const prof = m.profiles || {};
+            const fullName = prof.full_name || "Accredited Mentor";
+            const yoe = Number(m.years_of_experience || 5);
+            const services = (m.approved_services || []).map((s: string) => serviceLabels[s] || `${s} Consultation`);
+
+            return {
+              id: m.id,
+              slug: slugify(fullName),
+              name: fullName,
+              role: m.job_title || "Senior Practitioner",
+              company: m.verified_company || m.current_employer || "Tech Enterprise",
+              avatar:
+                prof.avatar_url ||
+                "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=250&q=80",
+              tier: yoe >= 8 ? "Executive (8+ yrs)" : yoe >= 3 ? "Senior (3–7 yrs)" : "Peer (1–3 yrs)",
+              experienceYears: yoe,
+              location: "India (IST)",
+              rating: Number(m.rating || 5.0),
+              reviewCount: Number(m.reviews_count || 0),
+              bio: m.bio || "Accredited engineering practitioner on DreamX with proven corporate pedigree and institutional SLA alignment.",
+              approvedServices: services.length > 0 ? services : ["S01 Resume Review", "S06 Technical Mock Interview"],
+              skills: ["Distributed Systems", "Backend Architecture", "System Design"],
+              verifiedCompany: true,
+              activeAvailability: "Available this week",
+            };
+          });
+
+          // Deduplicate by ID
+          const existingIds = new Set(MENTORS.map((m) => m.id));
+          const additions = mapped.filter((m) => !existingIds.has(m.id));
+          setMentorsList([...MENTORS, ...additions]);
+        }
+      } catch (err) {
+        console.warn("Could not load live mentors:", err);
+      }
+    }
+    loadLiveMentors();
+  }, []);
 
   const filteredMentors = React.useMemo(() => {
-    if (selectedTier === "All") return MENTORS;
-    return MENTORS.filter((m) => m.tier.startsWith(selectedTier));
-  }, [selectedTier]);
+    if (selectedTier === "All") return mentorsList;
+    return mentorsList.filter((m) => m.tier.startsWith(selectedTier));
+  }, [selectedTier, mentorsList]);
 
   return (
     <div className="flex flex-col w-full pb-20">
@@ -35,7 +106,7 @@ export default function MentorsPage() {
             <span className="font-semibold text-[#171717]">Verified Mentors Directory</span>
           </div>
           <span className="text-xs font-semibold text-[#16834a] flex items-center gap-1">
-            <ShieldCheck className="w-3.5 h-3.5" /> 100% Background & Employment Verified
+            <ShieldCheck className="w-3.5 h-3.5" /> 100% Background &amp; Employment Verified
           </span>
         </div>
       </section>
@@ -45,7 +116,7 @@ export default function MentorsPage() {
         <div className="max-w-7xl mx-auto space-y-6">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#eef2ff] text-[#5145cd] text-xs font-semibold">
             <Briefcase className="w-3.5 h-3.5" />
-            <span>3-Tier Verified Engineering & Product Leaders</span>
+            <span>3-Tier Verified Engineering &amp; Product Leaders</span>
           </div>
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#171717] tracking-tight">
             Work 1:1 with India&apos;s Top Tech Practitioners
@@ -66,7 +137,7 @@ export default function MentorsPage() {
                     : "bg-[#fafafc] text-[#66666f] border-[#e7e7eb] hover:bg-[#f7f7f8] hover:text-[#171717]"
                 }`}
               >
-                {tier === "All" ? `All Mentors (${MENTORS.length})` : `${tier} Tier`}
+                {tier === "All" ? `All Mentors (${mentorsList.length})` : `${tier} Tier`}
               </button>
             ))}
           </div>
@@ -98,59 +169,78 @@ export default function MentorsPage() {
                       <h3 className="text-lg font-bold text-[#171717] group-hover:text-[#5145cd] transition-colors">
                         {mentor.name}
                       </h3>
-                      <Badge variant="verified">Verified</Badge>
+                      <div className="flex items-center gap-1 text-xs font-bold text-[#171717] bg-[#f7f7f8] px-2 py-0.5 rounded-full border border-[#e7e7eb]">
+                        <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                        <span>{mentor.rating.toFixed(2)}</span>
+                        {mentor.reviewCount > 0 && (
+                          <span className="text-[#66666f] font-normal">({mentor.reviewCount})</span>
+                        )}
+                      </div>
                     </div>
 
-                    <p className="text-xs font-semibold text-[#5145cd] flex items-center gap-1.5">
-                      <span>{mentor.role} @ {mentor.company}</span>
-                      <CompanyLogo name={mentor.company} className="w-3.5 h-3.5 inline-block" />
+                    <p className="text-xs font-medium text-[#66666f]">
+                      {mentor.role}
                     </p>
 
-                    <div className="flex items-center gap-3 text-xs text-[#8b8b95] pt-0.5">
-                      <span className="flex items-center gap-1 text-[#a7670b] font-semibold">
-                        <Star className="w-3.5 h-3.5 fill-[#a7670b]" /> {mentor.rating} ({mentor.reviewCount})
-                      </span>
-                      <span>•</span>
-                      <span>{mentor.experienceYears}+ years exp</span>
+                    <div className="flex items-center gap-2 pt-0.5">
+                      <CompanyLogo name={mentor.company} className="w-4 h-4" />
+                      <span className="text-xs font-semibold text-[#171717]">{mentor.company}</span>
+                      {mentor.verifiedCompany && (
+                        <span className="text-[10px] bg-[#ebf7ee] text-[#16834a] px-1.5 py-0.2 rounded font-bold border border-[#d3ebd7]">
+                          ✓ Verified
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
 
-                {/* Bio */}
-                <p className="text-xs text-[#66666f] leading-relaxed line-clamp-2">
+                {/* Badges Bar */}
+                <div className="flex flex-wrap items-center gap-2 text-xs">
+                  <Badge variant="neutral" className="border-[#e7e7eb] text-[#66666f] bg-[#fafafc]">
+                    {mentor.tier}
+                  </Badge>
+                  <Badge variant="neutral" className="border-[#e7e7eb] text-[#66666f] bg-[#fafafc]">
+                    {mentor.experienceYears}+ yrs YoE
+                  </Badge>
+                  <span className="text-xs text-[#66666f] flex items-center gap-1 ml-auto font-medium">
+                    <Clock className="w-3.5 h-3.5 text-[#5145cd]" /> {mentor.activeAvailability}
+                  </span>
+                </div>
+
+                {/* Bio Snippet */}
+                <p className="text-xs text-[#66666f] line-clamp-2 leading-relaxed">
                   {mentor.bio}
                 </p>
 
-                {/* Skills tags */}
+                {/* Skills/Pillars */}
                 <div className="flex flex-wrap gap-1.5 pt-1">
-                  {mentor.skills.map((skill, idx) => (
+                  {mentor.skills.slice(0, 4).map((skill) => (
                     <span
-                      key={idx}
-                      className="px-2 py-0.5 rounded bg-[#f7f7f8] text-[11px] font-medium text-[#171717] border border-[#e7e7eb]"
+                      key={skill}
+                      className="px-2 py-0.5 rounded-md bg-[#f7f7f8] border border-[#e7e7eb] text-[11px] text-[#66666f]"
                     >
                       {skill}
                     </span>
                   ))}
-                </div>
-
-                {/* Next Availability */}
-                <div className="p-3 rounded-xl bg-[#ebf7ee]/50 border border-[#94f7b2]/40 flex items-center justify-between text-xs">
-                  <span className="text-[#006d3a] font-semibold flex items-center gap-1.5">
-                    <Clock className="w-3.5 h-3.5" /> Next Available Slot:
-                  </span>
-                  <span className="font-bold text-[#171717]">{mentor.activeAvailability}</span>
+                  {mentor.skills.length > 4 && (
+                    <span className="text-[11px] text-[#66666f] font-medium self-center pl-1">
+                      +{mentor.skills.length - 4} more
+                    </span>
+                  )}
                 </div>
               </div>
 
-              {/* Action */}
-              <div className="pt-6 mt-6 border-t border-[#f7f7f8] flex items-center justify-between">
-                <span className="text-xs text-[#66666f]">
-                  Tier: <strong className="text-[#171717]">{mentor.tier.split(" ")[0]}</strong>
-                </span>
+              {/* Card Footer: Approved Services & CTA */}
+              <div className="pt-6 mt-6 border-t border-[#e7e7eb] flex items-center justify-between gap-4">
+                <div className="flex items-center gap-1 text-[11px] text-[#16834a] font-semibold">
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  <span>{mentor.approvedServices.length} Calibrated Services</span>
+                </div>
+
                 <Link href={`/mentors/${mentor.slug}`}>
-                  <Button size="sm">
-                    <span>View Profile & Slots</span>
-                    <ArrowRight className="w-3.5 h-3.5 ml-1" />
+                  <Button size="sm" className="bg-[#5145cd] hover:bg-[#4035b3] text-white text-xs font-semibold gap-1.5 shadow-xs">
+                    <span>View Profile &amp; Slots</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
                   </Button>
                 </Link>
               </div>

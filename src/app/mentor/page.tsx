@@ -24,9 +24,6 @@ import {
   DEFAULT_WEEKLY_SLOTS,
   DEFAULT_DATE_EXCEPTIONS,
   SEED_DISPATCH_OFFERS,
-  SEED_BOOKINGS,
-  SEED_REPORTS,
-  SEED_FINANCIAL_LEDGER,
   SEED_NOTIFICATIONS,
   SEED_PROFILE,
   SEED_TRUST_PILLARS,
@@ -64,11 +61,12 @@ import {
   Bell,
   HelpCircle,
   LogOut,
-  Clock,
+  ExternalLink,
   Sparkles,
   CheckCircle,
   X,
-  AlertTriangle
+  AlertTriangle,
+  User
 } from "lucide-react";
 
 type MentorTab =
@@ -87,6 +85,13 @@ let localIdSeq = 1000;
 function nextLocalId(prefix: string, numericOffset = 0): string {
   localIdSeq += 1;
   return `${prefix}-${numericOffset + localIdSeq}`;
+}
+
+function slugify(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
 }
 
 function MentorPortalContent() {
@@ -162,7 +167,7 @@ function MentorPortalContent() {
   const [isApplicantMode, setIsApplicantMode] = React.useState(false);
 
   // Targeted record highlights
-  const [highlightedBookingId, setHighlightedBookingId] = React.useState<string | undefined>("BK-901");
+  const [highlightedBookingId, setHighlightedBookingId] = React.useState<string | undefined>(undefined);
   const [highlightedOfferId, setHighlightedOfferId] = React.useState<string | undefined>(undefined);
   const [highlightedReportId, setHighlightedReportId] = React.useState<string | undefined>(undefined);
 
@@ -179,112 +184,202 @@ function MentorPortalContent() {
     }, 4500);
   };
 
-  // Central Application Data State
+  // Central Live Application Data State
   const [profile, setProfile] = React.useState<MentorProfileData>(SEED_PROFILE);
   const [trustPillars, setTrustPillars] = React.useState(SEED_TRUST_PILLARS);
   const [serviceApprovals, setServiceApprovals] = React.useState<ServiceApproval[]>(SEED_SERVICE_APPROVALS);
   const [dispatchOffers, setDispatchOffers] = React.useState<DispatchOffer[]>(SEED_DISPATCH_OFFERS);
-  const [bookings, setBookings] = React.useState<MentorBooking[]>(SEED_BOOKINGS);
-  const [reports, setReports] = React.useState<SessionReport[]>(SEED_REPORTS);
-  const [ledger, setLedger] = React.useState<FinancialLedgerRecord[]>(SEED_FINANCIAL_LEDGER);
+  const [bookings, setBookings] = React.useState<MentorBooking[]>([]);
+  const [reports, setReports] = React.useState<SessionReport[]>([]);
+  const [ledger, setLedger] = React.useState<FinancialLedgerRecord[]>([]);
   const [weeklySlots, setWeeklySlots] = React.useState<WeeklySlot[]>(DEFAULT_WEEKLY_SLOTS);
   const [exceptions, setExceptions] = React.useState<DateException[]>(DEFAULT_DATE_EXCEPTIONS);
 
-  // Load live Supabase profile, bookings, and slots if authenticated
+  // Load live Supabase profile, application, bookings, and slots
   React.useEffect(() => {
     async function loadLiveMentorData() {
       if (!user) return;
       try {
         const supabase = createClient();
+
+        // 1. Fetch from mentor_profiles
         const { data: dbProfile } = await supabase
           .from("mentor_profiles")
           .select("*")
           .eq("id", user.id)
           .maybeSingle();
 
-        if (dbProfile) {
-          const isAlumni = dbProfile.employment_type === "alumni";
-          const employerName = dbProfile.verified_company || dbProfile.current_employer || "";
-          const cleanEmployer = isAlumni && employerName.startsWith("Ex-") ? employerName.replace(/^Ex-/, "").trim() : employerName;
+        // 2. Fetch from mentor_applications
+        const { data: dbApp } = await supabase
+          .from("mentor_applications")
+          .select("*")
+          .eq("user_id", user.id)
+          .maybeSingle();
 
-          setProfile((prev) => ({
-            ...prev,
-            displayName: user.name || prev.displayName,
-            headline: dbProfile.job_title && dbProfile.current_employer ? `${dbProfile.job_title} at ${dbProfile.current_employer}` : prev.headline,
-            currentRoleLabel: dbProfile.current_employer ? `${dbProfile.job_title || "Staff Engineer"} (${dbProfile.current_employer})` : prev.currentRoleLabel,
-            bio: dbProfile.bio || prev.bio,
-            yearsOfExperience: dbProfile.years_of_experience || prev.yearsOfExperience,
-            verifiedCompany: cleanEmployer,
-            employmentType: (dbProfile.employment_type as "employed" | "alumni") || "employed",
-            workEmail: dbProfile.work_email || (cleanEmployer ? `mentor@${cleanEmployer.toLowerCase().replace(/\s+/g, "")}.com` : ""),
-            pastEmployer: isAlumni ? cleanEmployer : "",
-            pastJobTitle: dbProfile.job_title || "",
-            experienceVerificationLabel: dbProfile.verification_status === "approved" || dbProfile.work_email_verified ? "Verified Practitioner (Active)" : "Accreditation Submitted (In Review)",
-          }));
+        // 3. Fetch from profiles
+        const { data: userProfile } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", user.id)
+          .maybeSingle();
 
-          // Live Trust Pillars
-          setTrustPillars([
-            {
-              id: "identity",
-              title: "1. Identity Verification",
-              status: "Verified",
-              requiredEvidence: [
-                "Government photo identity record",
-                "Masked ID hash stored in audit vault",
-              ],
-              submittedEvidence: [
-                "Encrypted Identity Record on File (DPDP Act Protected)",
-              ],
-              submittedAt: dbProfile.created_at || new Date().toISOString(),
-            },
-            {
-              id: "employment",
-              title: "2. Current / Past Tech Employment",
-              status: dbProfile.work_email_verified ? "Verified" : (dbProfile.verification_status === "approved" ? "Verified" : "Submitted"),
-              requiredEvidence: [
-                "Corporate email verification or relieving letter / Form 16",
-                "Confirmed employer domain",
-              ],
-              submittedEvidence: [
-                dbProfile.work_email_verified
-                  ? `Cryptographically verified corporate inbox (${dbProfile.work_email || "Official"})`
-                  : (dbProfile.verified_company ? `Pedigree confirmed at ${dbProfile.verified_company}` : "Document proof uploaded"),
-              ],
-              submittedAt: dbProfile.updated_at || new Date().toISOString(),
-            },
-            {
-              id: "rubric",
-              title: "3. Rubric & SLA Agreement",
-              status: "Verified",
-              requiredEvidence: [
-                "48-hour report delivery commitment",
-                "Adherence to objective 8-dimension rubric criteria",
-              ],
-              submittedEvidence: [
-                "Standard Mentor Service Level Agreement accepted",
-                "Nodal Escrow terms & 24h dispute window ratified",
-              ],
-              submittedAt: dbProfile.updated_at || new Date().toISOString(),
-            },
-          ]);
+        const rawName =
+          user.name ||
+          (userProfile?.full_name as string) ||
+          (dbApp?.full_name as string) ||
+          user.email?.split("@")[0] ||
+          "Accredited Mentor";
 
-          // Live approved services mapping
-          if (dbProfile.approved_services && dbProfile.approved_services.length > 0) {
-            const approvedCodes = new Set(dbProfile.approved_services as string[]);
-            setServiceApprovals(
-              SERVICES_CATALOGUE.map((svc) => ({
-                serviceId: svc.id,
-                status: approvedCodes.has(svc.id) ? "Approved" : "Submitted",
-                submittedAt: dbProfile.created_at || new Date().toISOString(),
-                reviewedAt: approvedCodes.has(svc.id) ? (dbProfile.updated_at || new Date().toISOString()) : undefined,
-                activeForBookings: approvedCodes.has(svc.id),
-                directBookingEnabled: approvedCodes.has(svc.id),
-                smartMatchEnabled: approvedCodes.has(svc.id),
-                evidenceSummary: "Corporate Pedigree Verified",
-              }))
-            );
-          }
-        }
+        const mentorSlug = slugify(rawName);
+
+        const employerName =
+          (dbProfile?.verified_company as string) ||
+          (dbProfile?.current_employer as string) ||
+          (dbApp?.current_employer as string) ||
+          "Tech Enterprise";
+
+        const isAlumni =
+          dbProfile?.employment_type === "alumni" ||
+          employerName.toLowerCase().startsWith("ex-");
+
+        const cleanEmployer = isAlumni && employerName.startsWith("Ex-")
+          ? employerName.replace(/^Ex-/, "").trim()
+          : employerName;
+
+        const jobTitle =
+          (dbProfile?.job_title as string) ||
+          (dbApp?.job_title as string) ||
+          "Senior Engineering Practitioner";
+
+        const yoe = Number(
+          dbProfile?.years_of_experience ||
+          dbApp?.years_of_experience ||
+          5
+        );
+
+        const isApproved =
+          dbProfile?.verification_status === "approved" ||
+          Boolean(dbApp?.work_email_verified) ||
+          dbApp?.status === "approved";
+
+        setIsApplicantMode(!isApproved);
+
+        const approvedCodes: string[] =
+          (dbProfile?.approved_services && (dbProfile.approved_services as string[]).length > 0)
+            ? (dbProfile.approved_services as string[])
+            : (dbApp?.requested_services && (dbApp.requested_services as string[]).length > 0)
+            ? (dbApp.requested_services as string[])
+            : ["S01", "S06"];
+
+        const approvedSet = new Set(approvedCodes);
+
+        const liveBio =
+          (dbProfile?.bio as string) ||
+          (dbApp?.bio as string) ||
+          `${yoe}+ years evaluating technical candidates. Focused on system design, clean coding architecture, and offer negotiation.`;
+
+        const liveHeadline =
+          ((dbApp as any)?.headline as string) ||
+          `${jobTitle} at ${cleanEmployer}`;
+
+        const verifiedWorkEmail =
+          (dbProfile?.work_email as string) ||
+          (dbApp?.work_email as string) ||
+          (cleanEmployer ? `mentor@${cleanEmployer.toLowerCase().replace(/\s+/g, "")}.com` : "");
+
+        const domainsList =
+          (dbApp?.domains && (dbApp.domains as string[]).length > 0)
+            ? (dbApp.domains as string[])
+            : ["Distributed Systems", "Backend Architecture", "System Design"];
+
+        // Set live profile
+        setProfile({
+          displayName: rawName,
+          slug: mentorSlug,
+          headline: liveHeadline,
+          bio: liveBio,
+          currentRoleLabel: `${jobTitle} (${cleanEmployer})`,
+          experienceVerificationLabel: isApproved ? "Verified Practitioner (Active)" : "Accreditation Submitted (In Review)",
+          yearsOfExperience: yoe,
+          domains: domainsList,
+          skills: domainsList,
+          languages: ["English", "Hindi"],
+          educationSummary: "B.Tech in Computer Science & Engineering",
+          timezone: "Asia/Kolkata (IST)",
+          verifiedCompany: cleanEmployer,
+          employmentType: isAlumni ? "alumni" : "employed",
+          workEmail: verifiedWorkEmail,
+          pastEmployer: isAlumni ? cleanEmployer : "",
+          pastJobTitle: jobTitle,
+          notifications: {
+            inAppDispatch: true,
+            emailDigest: true,
+            whatsappAlerts: false,
+          },
+        });
+
+        // Set live Trust Pillars
+        setTrustPillars([
+          {
+            id: "identity",
+            title: "1. Identity Verification",
+            status: "Verified",
+            requiredEvidence: [
+              "Government photo identity record",
+              "Masked ID hash stored in audit vault",
+            ],
+            submittedEvidence: [
+              "Encrypted Identity Record on File (DPDP Act Protected)",
+            ],
+            submittedAt: dbProfile?.created_at || new Date().toISOString(),
+          },
+          {
+            id: "employment",
+            title: "2. Current / Past Tech Employment",
+            status: isApproved ? "Verified" : "Submitted",
+            requiredEvidence: [
+              "Corporate email verification or relieving letter / Form 16",
+              "Confirmed employer domain",
+            ],
+            submittedEvidence: [
+              isApproved
+                ? `Cryptographically verified corporate inbox (${verifiedWorkEmail || "Official Domain"})`
+                : (cleanEmployer ? `Pedigree confirmed at ${cleanEmployer}` : "Document proof uploaded"),
+            ],
+            submittedAt: dbProfile?.updated_at || new Date().toISOString(),
+          },
+          {
+            id: "rubric",
+            title: "3. Rubric & SLA Agreement",
+            status: "Verified",
+            requiredEvidence: [
+              "48-hour report delivery commitment",
+              "Adherence to objective 8-dimension rubric criteria",
+            ],
+            submittedEvidence: [
+              "Standard Mentor Service Level Agreement accepted",
+              "Nodal Escrow terms & 24h dispute window ratified",
+            ],
+            submittedAt: dbProfile?.updated_at || new Date().toISOString(),
+          },
+        ]);
+
+        // Set Service Approvals from Onboarding Selection
+        setServiceApprovals(
+          SERVICES_CATALOGUE.map((svc) => {
+            const isSelected = approvedSet.has(svc.id);
+            return {
+              serviceId: svc.id,
+              status: isSelected ? "Approved" : "Submitted",
+              submittedAt: dbProfile?.created_at || new Date().toISOString(),
+              reviewedAt: isSelected ? (dbProfile?.updated_at || new Date().toISOString()) : undefined,
+              activeForBookings: isSelected,
+              directBookingEnabled: isSelected,
+              smartMatchEnabled: isSelected,
+              evidenceSummary: "Corporate Pedigree Verified",
+            };
+          })
+        );
 
         // Live Bookings for this Mentor
         const { data: dbBookings } = await supabase
@@ -324,6 +419,13 @@ function MentorPortalContent() {
             timeline: [],
           }));
           setBookings(mapped);
+          if (mapped.length > 0) {
+            setHighlightedBookingId(mapped[0].id);
+          }
+        } else {
+          // Fresh mentor with 0 bookings: Clean empty state
+          setBookings([]);
+          setHighlightedBookingId(undefined);
         }
 
         // Live Availability Slots
@@ -343,6 +445,40 @@ function MentorPortalContent() {
               enabled: s.is_active,
             }))
           );
+        }
+
+        // Generate tailored dispatch offers for the mentor's approved services
+        if (approvedCodes.length > 0) {
+          const tailoredOffers = approvedCodes.slice(0, 2).map((code, idx) => {
+            const svc = SERVICES_CATALOGUE.find((s) => s.id === code) || SERVICES_CATALOGUE[0];
+            return {
+              id: `DX-OFFER-${code}-${idx + 101}`,
+              requestCode: `SM-REQ-${idx + 401}`,
+              serviceId: svc.id,
+              studentAlias: idx === 0 ? "Aditya V. (Tier-1 GCC Candidate)" : "Rohan K. (SDE-2 Candidate)",
+              studentSegment: "Early Career Engineer",
+              targetDomain: domainsList[0] || "Backend Architecture",
+              goalSummary: `Diagnostic ${svc.name} targeting product tech loop readiness.`,
+              sessionContextNote: "Candidate has 3+ YoE preparing for senior engineering loops. Needs deep architectural feedback.",
+              preferredWindows: [
+                { id: "w1", label: "Tomorrow · 07:00 PM – 08:00 PM IST", dateIso: new Date(Date.now() + 86400000).toISOString() },
+                { id: "w2", label: "Saturday · 11:00 AM – 12:00 PM IST", dateIso: new Date(Date.now() + 172800000).toISOString() },
+              ],
+              wave: "Wave 1" as const,
+              minutesSinceRequest: 4,
+              expiresInMinutes: 26,
+              matchReasons: [
+                `Direct Domain Match: ${domainsList[0] || "Backend Architecture"}`,
+                `Employer Pedigree: Verified at ${cleanEmployer}`,
+                `Approved Service: ${svc.name}`,
+              ],
+              matchingRuleVersion: "PRD-v3.0-Deterministic",
+              status: "Pending" as const,
+            };
+          });
+          setDispatchOffers(tailoredOffers);
+        } else {
+          setDispatchOffers([]);
         }
       } catch (err) {
         console.error("Error loading live mentor data:", err);
@@ -430,6 +566,7 @@ function MentorPortalContent() {
     };
 
     setBookings((prev) => [newBooking, ...prev]);
+    setHighlightedBookingId(newBooking.id);
     addToast(`Offer ${offer.requestCode} claimed successfully! Added to Bookings.`, "success");
     return "accepted";
   };
@@ -718,26 +855,26 @@ function MentorPortalContent() {
   ];
 
   return (
-    <div className="relative min-h-screen w-full bg-[#0d0e15] text-white flex flex-col font-sans selection:bg-[#5145cd] selection:text-white">
+    <div className="min-h-screen relative text-zinc-900 flex flex-col font-sans bg-[#fafafc] selection:bg-[#5145cd] selection:text-white">
       {/* 1. Ambient Background Canvas */}
       <FlowingGradientBackground mode={canvasMode} />
 
       {/* 2. Top Header Navigation */}
-      <header className="sticky top-0 z-40 w-full h-16 border-b border-white/10 bg-[#0d0e15]/80 backdrop-blur-xl flex items-center justify-between px-4 sm:px-6">
+      <header className="sticky top-2 sm:top-3.5 z-40 rounded-2xl border border-white/80 bg-white/90 backdrop-blur-xl px-4 py-2.5 shadow-xs flex items-center justify-between gap-3 mx-2 sm:mx-3.5 max-w-[1600px] sm:w-[calc(100%-1.75rem)] w-[calc(100%-1rem)]">
         {/* Brand & Mode Controls */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           <Link href="/mentor" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#5145cd] to-violet-500 flex items-center justify-center font-extrabold text-white text-xs shadow-lg shadow-indigo-900/40">
+            <div className="w-8 h-8 rounded-xl bg-[#5145cd] flex items-center justify-center font-extrabold text-white text-xs shadow-xs">
               DX
             </div>
             <div className="hidden sm:block">
-              <span className="font-extrabold text-sm tracking-tight text-white">DreamX</span>
-              <span className="text-[11px] font-mono text-gray-400 ml-1.5">Mentor Portal</span>
+              <span className="font-extrabold text-sm tracking-tight text-zinc-900">DreamX</span>
+              <span className="text-[11px] font-mono text-zinc-500 ml-1.5 font-semibold">Mentor Portal</span>
             </div>
           </Link>
 
           {/* Canvas Mode Selector */}
-          <div className="flex items-center gap-1 p-1 rounded-xl bg-white/5 border border-white/10 text-xs">
+          <div className="hidden md:flex items-center gap-1 p-1 rounded-xl bg-zinc-100 border border-zinc-200/80 text-xs">
             {(["vibrant", "balanced", "calm", "showcase"] as CanvasMode[]).map((mode) => (
               <button
                 key={mode}
@@ -745,8 +882,8 @@ function MentorPortalContent() {
                 onClick={() => setCanvasMode(mode)}
                 className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold capitalize transition-all cursor-pointer ${
                   canvasMode === mode
-                    ? "bg-[#5145cd] text-white shadow-sm"
-                    : "text-gray-400 hover:text-gray-200"
+                    ? "bg-white text-[#5145cd] shadow-2xs"
+                    : "text-zinc-600 hover:text-zinc-900"
                 }`}
               >
                 {mode}
@@ -756,28 +893,40 @@ function MentorPortalContent() {
         </div>
 
         {/* Center: Global Search */}
-        <div className="hidden md:flex items-center w-72 lg:w-96">
+        <div className="hidden md:flex items-center w-64 lg:w-80">
           <div className="relative w-full">
-            <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search services, candidates, ref codes..."
-              className="w-full pl-9 pr-4 py-1.5 rounded-xl bg-white/5 border border-white/10 text-xs text-white placeholder:text-gray-500 focus:outline-none focus:border-[#5145cd] focus:ring-1 focus:ring-[#5145cd] transition-all"
+              className="w-full pl-9 pr-4 py-1.5 rounded-xl bg-zinc-100 border border-zinc-200 text-xs text-zinc-900 placeholder:text-zinc-400 focus:bg-white focus:outline-none focus:border-[#5145cd] focus:ring-1 focus:ring-[#5145cd] transition-all"
             />
           </div>
         </div>
 
         {/* Right Action Ribbon */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
+          {/* Direct Public Profile Link */}
+          <Link
+            href={`/mentors/${profile.slug}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 text-xs font-semibold text-zinc-700 shadow-2xs transition-all cursor-pointer"
+          >
+            <User className="w-3.5 h-3.5 text-[#5145cd]" />
+            <span>View Profile</span>
+            <ExternalLink className="w-3 h-3 text-zinc-400" />
+          </Link>
+
           {/* Policy Guide */}
           <button
             type="button"
             onClick={() => setShowPolicyModal(true)}
-            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-gray-300 transition-all cursor-pointer"
+            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-zinc-50 border border-zinc-200 text-xs font-semibold text-zinc-700 shadow-2xs transition-all cursor-pointer"
           >
-            <HelpCircle className="w-3.5 h-3.5 text-indigo-400" />
+            <HelpCircle className="w-3.5 h-3.5 text-[#5145cd]" />
             <span>48h SLA Policy</span>
           </button>
 
@@ -786,27 +935,28 @@ function MentorPortalContent() {
             <button
               type="button"
               onClick={() => setShowNotifications(!showNotifications)}
-              className="relative p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 transition-all cursor-pointer"
+              className="relative p-2 rounded-xl bg-white hover:bg-zinc-50 border border-zinc-200 text-zinc-700 shadow-2xs transition-all cursor-pointer"
+              aria-label="View notifications"
             >
               <Bell className="w-4 h-4" />
-              <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-amber-400 ring-2 ring-[#0d0e15]" />
+              <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-amber-500 ring-2 ring-white" />
             </button>
 
             {/* Notifications Popover */}
             {showNotifications && (
-              <div className="absolute right-0 mt-2 w-80 rounded-2xl bg-[#141624] border border-white/10 p-4 shadow-2xl space-y-3 z-50 backdrop-blur-xl">
-                <div className="flex items-center justify-between pb-2 border-b border-white/10">
-                  <span className="text-xs font-bold text-white">Notifications &amp; Alerts</span>
+              <div className="absolute right-0 mt-2 w-80 sm:w-96 rounded-2xl bg-white border border-zinc-200 p-4 shadow-2xl space-y-3 z-50">
+                <div className="flex items-center justify-between pb-2 border-b border-zinc-100">
+                  <span className="text-xs font-bold text-zinc-900">Notifications &amp; Alerts</span>
                   <button
                     type="button"
                     onClick={() => setShowNotifications(false)}
-                    className="text-gray-400 hover:text-white"
+                    className="text-zinc-400 hover:text-zinc-700 cursor-pointer"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
                 </div>
 
-                <div className="space-y-2 text-xs">
+                <div className="space-y-2 text-xs max-h-80 overflow-y-auto">
                   {SEED_NOTIFICATIONS.map((n) => (
                     <div
                       key={n.id}
@@ -814,13 +964,13 @@ function MentorPortalContent() {
                         handleNavigate(n.targetRoute, n.targetRecordId);
                         setShowNotifications(false);
                       }}
-                      className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 cursor-pointer space-y-1 transition-all"
+                      className="p-2.5 rounded-xl bg-zinc-50 hover:bg-zinc-100 border border-zinc-200/60 cursor-pointer space-y-1 transition-all"
                     >
-                      <div className="flex items-center justify-between text-indigo-300 font-bold">
+                      <div className="flex items-center justify-between text-[#5145cd] font-bold">
                         <span className="flex items-center gap-1.5">{n.title}</span>
-                        <span className="text-[10px] font-mono text-gray-400">{n.timestamp}</span>
+                        <span className="text-[10px] font-mono text-zinc-400">{n.timestamp}</span>
                       </div>
-                      <p className="text-gray-300 text-[11px] leading-relaxed">{n.description}</p>
+                      <p className="text-zinc-600 text-[11px] leading-relaxed">{n.description}</p>
                     </div>
                   ))}
                 </div>
@@ -829,14 +979,14 @@ function MentorPortalContent() {
           </div>
 
           {/* User Profile Pill */}
-          <div className="flex items-center gap-2.5 pl-2 border-l border-white/10">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center font-bold text-black text-xs shadow-md">
+          <div className="flex items-center gap-2.5 pl-2 border-l border-zinc-200">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center font-bold text-white text-xs shadow-xs">
               {profile.displayName ? profile.displayName.slice(0, 2).toUpperCase() : "AV"}
             </div>
             <div className="hidden xl:block text-left">
-              <div className="text-xs font-bold text-white leading-none">{profile.displayName}</div>
-              <div className="text-[10px] font-mono text-emerald-400 mt-0.5">
-                {simulatedTier === "tier1" ? "Tier 1 (FAANG / Ex-Google)" : simulatedTier === "tier2" ? "Tier 2 (High-Growth Tech)" : "Tier 3 (Enterprise IT)"}
+              <div className="text-xs font-bold text-zinc-900 leading-none">{profile.displayName}</div>
+              <div className="text-[10px] font-mono text-emerald-700 font-semibold mt-0.5">
+                {profile.verifiedCompany ? `✓ Verified at ${profile.verifiedCompany}` : "Accredited Mentor"}
               </div>
             </div>
           </div>
@@ -844,25 +994,26 @@ function MentorPortalContent() {
       </header>
 
       {/* 3. Main Workspace Container */}
-      <div className="relative z-10 flex-1 flex w-full max-w-[1920px] mx-auto overflow-hidden">
+      <div className="flex-1 flex gap-3.5 items-start p-2 sm:p-3.5 max-w-[1600px] w-full mx-auto">
         {/* Left Sidebar */}
         <aside
-          className={`shrink-0 border-r border-white/10 bg-[#0d0e15]/60 backdrop-blur-md transition-all duration-300 flex flex-col justify-between py-4 ${
-            sidebarCollapsed ? "w-16 px-2" : "w-64 px-4"
+          aria-label="Mentor primary navigation"
+          className={`hidden lg:flex flex-col sticky top-[76px] rounded-2xl border border-white/80 bg-white/90 backdrop-blur-xl p-2.5 shadow-xs transition-all ${
+            sidebarCollapsed ? "w-[68px]" : "w-64"
           }`}
         >
           {/* Top Nav Items */}
           <div className="space-y-1">
-            <div className="flex items-center justify-between px-2 pb-3 mb-2 border-b border-white/5">
+            <div className="flex items-center justify-between px-2 pb-2 mb-2 border-b border-zinc-100">
               {!sidebarCollapsed && (
-                <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">
                   Navigation
                 </span>
               )}
               <button
                 type="button"
                 onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                className="p-1 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 ml-auto"
+                className="p-1 rounded-lg text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 ml-auto cursor-pointer"
                 title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
               >
                 {sidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
@@ -877,14 +1028,14 @@ function MentorPortalContent() {
                   key={tab.id}
                   type="button"
                   onClick={() => handleTabChange(tab.id as MentorTab)}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs transition-all cursor-pointer ${
                     isActive
-                      ? "bg-[#5145cd] text-white shadow-lg shadow-indigo-950/40"
-                      : "text-gray-400 hover:text-white hover:bg-white/5"
+                      ? "bg-[#5145cd] text-white shadow-xs font-semibold"
+                      : "text-zinc-700 hover:bg-zinc-100 hover:text-zinc-950 font-medium"
                   } ${sidebarCollapsed ? "justify-center px-0" : ""}`}
                   title={sidebarCollapsed ? tab.label : undefined}
                 >
-                  <Icon className={`w-4 h-4 shrink-0 ${isActive ? "text-white" : "text-gray-400"}`} />
+                  <Icon className={`w-4 h-4 shrink-0 ${isActive ? "text-white" : "text-zinc-500"}`} />
                   {!sidebarCollapsed && (
                     <span className="flex-1 text-left truncate">{tab.label}</span>
                   )}
@@ -892,10 +1043,10 @@ function MentorPortalContent() {
                     <span
                       className={`text-[10px] font-mono px-1.5 py-0.5 rounded-md font-bold ${
                         tab.badgeTone === "warning"
-                          ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                          ? "bg-amber-100 text-amber-900 border border-amber-200"
                           : tab.badgeTone === "danger"
-                          ? "bg-red-500/20 text-red-300 border border-red-500/30"
-                          : "bg-white/10 text-gray-300"
+                          ? "bg-rose-100 text-rose-900 border border-rose-200"
+                          : "bg-zinc-100 text-zinc-700"
                       }`}
                     >
                       {tab.badge}
@@ -907,18 +1058,18 @@ function MentorPortalContent() {
           </div>
 
           {/* Bottom Sidebar Footer */}
-          <div className="pt-4 border-t border-white/5 space-y-2">
+          <div className="pt-4 mt-4 border-t border-zinc-100 space-y-2">
             {!sidebarCollapsed ? (
-              <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 space-y-2">
+              <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200/80 space-y-1.5">
                 <div className="flex items-center justify-between text-[11px]">
-                  <span className="text-gray-400">Escrow Guarantee</span>
-                  <span className="text-emerald-400 font-bold">100% Locked</span>
+                  <span className="text-zinc-600 font-medium">Escrow Guarantee</span>
+                  <span className="text-emerald-800 font-bold">100% Protected</span>
                 </div>
-                <div className="w-full bg-white/10 rounded-full h-1.5 overflow-hidden">
-                  <div className="bg-emerald-400 h-full w-full" />
+                <div className="w-full bg-emerald-200 rounded-full h-1.5 overflow-hidden">
+                  <div className="bg-emerald-600 h-full w-full" />
                 </div>
-                <p className="text-[10px] text-gray-500 leading-snug">
-                  All sessions held in Razorpay Nodal Escrow until 48h rubric delivery.
+                <p className="text-[10px] text-zinc-600 leading-snug">
+                  All sessions held in Razorpay Nodal Escrow until 48h rubric deliverable completion.
                 </p>
               </div>
             ) : null}
@@ -929,7 +1080,7 @@ function MentorPortalContent() {
                 await logout();
                 router.replace("/mentor/login");
               }}
-              className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-red-400 hover:bg-red-950/30 transition-all cursor-pointer ${
+              className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-rose-700 hover:bg-rose-50 transition-all cursor-pointer ${
                 sidebarCollapsed ? "justify-center px-0" : ""
               }`}
               title="Sign Out"
@@ -941,7 +1092,7 @@ function MentorPortalContent() {
         </aside>
 
         {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+        <main className="flex-1 min-w-0 pb-16">
           {activeTab === "overview" && (
             <OverviewView
               profile={profile}
@@ -1081,38 +1232,38 @@ function MentorPortalContent() {
               <button
                 type="button"
                 onClick={() => setShowPolicyModal(false)}
-                className="px-4 py-2 rounded-xl bg-[#5145cd] text-white text-xs font-bold shadow-md hover:bg-[#4338ca] transition-all cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-[#5145cd] text-white text-xs font-bold shadow-xs hover:bg-[#4035b3] transition-all cursor-pointer"
               >
                 I Understand &amp; Agree
               </button>
             </div>
           }
         >
-          <div className="space-y-4 text-xs text-gray-300 leading-relaxed">
-            <div className="p-3.5 rounded-xl bg-indigo-950/40 border border-indigo-500/20 flex items-start gap-3">
-              <ShieldCheck className="w-5 h-5 text-indigo-400 shrink-0 mt-0.5" />
+          <div className="space-y-4 text-xs text-zinc-700 leading-relaxed">
+            <div className="p-3.5 rounded-xl bg-indigo-50 border border-indigo-200 flex items-start gap-3">
+              <ShieldCheck className="w-5 h-5 text-[#5145cd] shrink-0 mt-0.5" />
               <div className="space-y-1">
-                <div className="font-bold text-white">Trust Architecture &amp; Payout Release</div>
-                <p className="text-gray-400">
+                <div className="font-bold text-zinc-900">Trust Architecture &amp; Payout Release</div>
+                <p className="text-zinc-600">
                   To protect both mentors and candidates, DreamX operates an institutional 80/20 non-dilution escrow split under PRD §7.3.
                 </p>
               </div>
             </div>
 
             <div className="space-y-3">
-              <h4 className="font-bold text-white uppercase tracking-wider text-[11px]">Key Mentor Obligations</h4>
-              <ul className="space-y-2 list-disc list-inside text-gray-400 pl-1">
+              <h4 className="font-bold text-zinc-900 uppercase tracking-wider text-[11px]">Key Mentor Obligations</h4>
+              <ul className="space-y-2 list-disc list-inside text-zinc-600 pl-1">
                 <li>
-                  <strong className="text-gray-200">Session Attendance:</strong> Join via the encrypted Jitsi Vault within 5 minutes of scheduled slot time.
+                  <strong className="text-zinc-800">Session Attendance:</strong> Join via the encrypted Jitsi Vault within 5 minutes of scheduled slot time.
                 </li>
                 <li>
-                  <strong className="text-gray-200">48-Hour Report SLA:</strong> Every S01–S10 session requires an 11-section structured rubric report submitted within 48 hours of session conclusion.
+                  <strong className="text-zinc-800">48-Hour Report SLA:</strong> Every S01–S10 session requires an 11-section structured rubric report submitted within 48 hours of session conclusion.
                 </li>
                 <li>
-                  <strong className="text-gray-200">Candidate Dispute Window:</strong> Candidates have 48 hours to inspect deliverables. If no dispute is filed, Razorpay Route automatically releases your 80% payout.
+                  <strong className="text-zinc-800">Candidate Dispute Window:</strong> Candidates have 48 hours to inspect deliverables. If no dispute is filed, Razorpay Route automatically releases your 80% payout.
                 </li>
                 <li>
-                  <strong className="text-gray-200">Zero Moonlighting Exposure:</strong> All communications, reminders, and payout advice are delivered exclusively to your private email.
+                  <strong className="text-zinc-800">Zero Moonlighting Exposure:</strong> All communications, reminders, and payout advice are delivered exclusively to your private email.
                 </li>
               </ul>
             </div>
@@ -1125,20 +1276,20 @@ function MentorPortalContent() {
         {toasts.map((toast) => (
           <div
             key={toast.id}
-            className={`pointer-events-auto p-3.5 rounded-xl border shadow-2xl backdrop-blur-xl text-xs font-medium flex items-center gap-2.5 transition-all animate-in fade-in slide-in-from-bottom-2 ${
+            className={`pointer-events-auto p-3.5 rounded-xl border shadow-xl backdrop-blur-xl text-xs font-medium flex items-center gap-2.5 transition-all animate-in fade-in slide-in-from-bottom-2 ${
               toast.tone === "success"
-                ? "bg-emerald-950/90 border-emerald-500/40 text-emerald-200"
+                ? "bg-emerald-50 border-emerald-200 text-emerald-900"
                 : toast.tone === "warning"
-                ? "bg-amber-950/90 border-amber-500/40 text-amber-200"
+                ? "bg-amber-50 border-amber-200 text-amber-900"
                 : toast.tone === "danger"
-                ? "bg-red-950/90 border-red-500/40 text-red-200"
-                : "bg-[#141624]/90 border-indigo-500/30 text-indigo-200"
+                ? "bg-rose-50 border-rose-200 text-rose-900"
+                : "bg-white border-zinc-200 text-zinc-900"
             }`}
           >
-            {toast.tone === "success" && <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />}
-            {toast.tone === "warning" && <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />}
-            {toast.tone === "danger" && <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />}
-            {toast.tone === "info" && <Sparkles className="w-4 h-4 text-indigo-400 shrink-0" />}
+            {toast.tone === "success" && <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />}
+            {toast.tone === "warning" && <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />}
+            {toast.tone === "danger" && <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />}
+            {toast.tone === "info" && <Sparkles className="w-4 h-4 text-[#5145cd] shrink-0" />}
             <span className="leading-snug flex-1">{toast.message}</span>
           </div>
         ))}
@@ -1151,10 +1302,10 @@ export default function MentorPortalPage() {
   return (
     <React.Suspense
       fallback={
-        <div className="flex items-center justify-center min-h-screen w-full bg-[#0d0e15] text-white">
+        <div className="flex items-center justify-center min-h-screen w-full bg-[#fafafc]">
           <div className="flex flex-col items-center gap-3">
             <div className="w-10 h-10 border-3 border-[#5145cd] border-t-transparent rounded-full animate-spin" />
-            <span className="text-xs font-semibold text-gray-400 font-mono">
+            <span className="text-xs font-semibold text-zinc-600 font-mono">
               Loading Mentor Delivery Console...
             </span>
           </div>

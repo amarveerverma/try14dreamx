@@ -12,6 +12,7 @@ import {
   ShieldCheck,
   Video,
   XCircle,
+  CalendarCheck,
 } from "lucide-react";
 import { MentorBooking, getServiceById, formatINR } from "../types";
 import { StatusBadge } from "../StatusBadge";
@@ -167,7 +168,7 @@ export function BookingsView({
         </div>
 
         {/* Right Detail Drawer (7 cols) */}
-        {selectedBooking && (
+        {selectedBooking ? (
           <div className="lg:col-span-7 rounded-2xl border border-white/80 bg-white/94 backdrop-blur-md p-6 shadow-xs space-y-5">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-zinc-100">
               <div>
@@ -278,6 +279,20 @@ export function BookingsView({
                 ))}
               </div>
             </div>
+          </div>
+        ) : (
+          <div className="lg:col-span-7 rounded-2xl border border-white/80 bg-white/94 backdrop-blur-md p-10 shadow-xs text-center space-y-3">
+            <div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-[#5145cd] mx-auto">
+              <CalendarCheck className="w-6 h-6" />
+            </div>
+            <h3 className="text-base font-bold text-zinc-900">
+              {bookings.length === 0 ? "Ready for Dispatch & Direct Bookings" : "Select a Booking to View Details"}
+            </h3>
+            <p className="text-xs text-zinc-600 max-w-md mx-auto leading-relaxed">
+              {bookings.length === 0
+                ? "Your mentor profile is calibrated and active. When candidates complete checkout or a matching Smart Match request arrives, it will appear here."
+                : "Choose any session from the left queue to inspect meeting room details, rubric context, and deliverables."}
+            </p>
           </div>
         )}
       </div>
