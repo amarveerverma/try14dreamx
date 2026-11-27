@@ -32,9 +32,24 @@ export default function LoginPage() {
   const [error, setError] = React.useState<string | null>(null);
   const [roleRedirectUrl, setRoleRedirectUrl] = React.useState<{ url: string; label: string } | null>(null);
 
-  // Auto-redirect only if authenticated strictly as a candidate (student)
+  // Surface cross-portal error if bounced from OAuth verification
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    const pErr = new URLSearchParams(window.location.search).get("portal_error");
+    if (pErr === "mentor_on_student_portal") {
+      setError("Mentor accounts cannot login with the Student Login Portal. Because your account was registered as an Accredited Mentor, please sign in through the Mentor Login Portal.");
+      setRoleRedirectUrl({ url: "/mentor/login", label: "Go to Mentor Login Portal →" });
+    }
+  }, []);
+
+  // Auto-redirect only if authenticated strictly as a candidate (student); block if mentor
   React.useEffect(() => {
     if (!authLoading && user) {
+      if (user.role === "mentor") {
+        setError("Mentor accounts cannot login with the Student Login Portal. You are currently authenticated as an Accredited Mentor — please continue in the Mentor Login Portal.");
+        setRoleRedirectUrl({ url: "/mentor/login", label: "Go to Mentor Login Portal →" });
+        return;
+      }
       if (user.role === "student") {
         if (!user.onboarding_completed) {
           router.replace("/dashboard/onboarding");
@@ -75,8 +90,8 @@ export default function LoginPage() {
 
     if (!res.success) {
       if (res.role === "mentor") {
-        setError("Access Restricted: This login is exclusively for candidates. Mentor accounts must sign in through the Mentor Portal.");
-        setRoleRedirectUrl({ url: "/mentor/login", label: "Go to Mentor Portal Sign In →" });
+        setError("Mentor accounts cannot login with the Student Login Portal. Because your account was registered as an Accredited Mentor, please sign in through the Mentor Login Portal.");
+        setRoleRedirectUrl({ url: "/mentor/login", label: "Go to Mentor Login Portal →" });
       } else if (res.role === "admin") {
         setError("Access Restricted: Administrator accounts must sign in via the Admin Console.");
         setRoleRedirectUrl({ url: "/admin/login", label: "Go to Admin Console →" });
@@ -89,8 +104,8 @@ export default function LoginPage() {
     // STRICT CANDIDATE ROLE ENFORCEMENT
     if (res.role === "mentor") {
       await logout();
-      setError("Access Restricted: This login is exclusively for candidates. Mentor accounts must sign in through the Mentor Portal.");
-      setRoleRedirectUrl({ url: "/mentor/login", label: "Go to Mentor Portal Sign In →" });
+      setError("Mentor accounts cannot login with the Student Login Portal. Because your account was registered as an Accredited Mentor, please sign in through the Mentor Login Portal.");
+      setRoleRedirectUrl({ url: "/mentor/login", label: "Go to Mentor Login Portal →" });
       return;
     }
 
@@ -207,7 +222,7 @@ export default function LoginPage() {
           <div>
             <button
               type="button"
-              onClick={() => signInWithGoogle()}
+              onClick={() => signInWithGoogle("student", "login")}
               className="w-full h-11 px-4 rounded-xl border border-[#e7e7eb] bg-white hover:bg-gray-50 text-xs font-bold text-[#1c1b1b] flex items-center justify-center gap-2.5 transition-colors shadow-xs cursor-pointer"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24">

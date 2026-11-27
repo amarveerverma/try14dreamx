@@ -18,6 +18,7 @@ function VerifyEmailContent() {
   const searchParams = useSearchParams();
   const email = searchParams.get("email") || "user@dreamx.in";
   const role = searchParams.get("role") || "student";
+  const mode = searchParams.get("mode") || "signup";
   const redirectUrl = searchParams.get("redirect");
 
   const supabase = React.useMemo(() => createClient(), []);
@@ -26,28 +27,103 @@ function VerifyEmailContent() {
   const [timer, setTimer] = React.useState(48);
   const [isVerifying, setIsVerifying] = React.useState(false);
   const [verified, setVerified] = React.useState(false);
+  const [resolvedRole, setResolvedRole] = React.useState<"student" | "mentor" | "admin">(
+    role === "mentor" ? "mentor" : "student"
+  );
+  const [resolvedOnboarded, setResolvedOnboarded] = React.useState(false);
+  const [verifiedEmailDisplay, setVerifiedEmailDisplay] = React.useState(email);
   const [error, setError] = React.useState<string | null>(null);
   const [resendStatus, setResendStatus] = React.useState<string | null>(null);
 
-  React.useEffect(() => {
-    // Check if user arrived via verified confirmation link or already has active session
-    if (searchParams.get("verified") === "true") {
-      setVerified(true);
-      return;
-    }
+  const resolveAndEnforceOAuthSession = React.useCallback(
+    async (sessionUserId: string, sessionEmail?: string) => {
+      if (mode === "signup" && (role === "mentor" || role === "student")) {
+        try {
+          await (supabase.rpc as any)("set_initial_oauth_role", { p_role: role });
+        } catch {
+          // ignore if existing account
+        }
+      }
 
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role, onboarding_completed")
+        .eq("id", sessionUserId)
+        .maybeSingle();
+
+      const actualRole = ((profile?.role as "student" | "mentor" | "admin") ||
+        (role === "mentor" ? "mentor" : "student"));
+      const actualOnboarded = profile?.onboarding_completed ?? false;
+
+      // Strict cross-portal rejection for Google OAuth logins
+      if (mode === "login" && actualRole !== role) {
+        await supabase.auth.signOut();
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("dreamx_user");
+          document.cookie = "dreamx_role=; path=/; max-age=0; SameSite=Lax";
+          document.cookie = "dreamx_auth=; path=/; max-age=0; SameSite=Lax";
+          document.cookie = "dreamx_onboarded=; path=/; max-age=0; SameSite=Lax";
+          if (actualRole === "mentor" && role === "student") {
+            window.location.replace("/login?portal_error=mentor_on_student_portal");
+          } else if (actualRole === "student" && role === "mentor") {
+            window.location.replace("/mentor/login?portal_error=student_on_mentor_portal");
+          } else {
+            window.location.replace("/admin/login");
+          }
+        }
+        return;
+      }
+
+      setResolvedRole(actualRole);
+      setResolvedOnboarded(actualOnboarded);
+      if (sessionEmail) {
+        setVerifiedEmailDisplay(sessionEmail);
+      }
+
+      if (typeof window !== "undefined") {
+        document.cookie = `dreamx_role=${actualRole}; path=/; max-age=604800; SameSite=Lax`;
+        document.cookie = `dreamx_auth=true; path=/; max-age=604800; SameSite=Lax`;
+        document.cookie = `dreamx_onboarded=${actualOnboarded ? "true" : "false"}; path=/; max-age=604800; SameSite=Lax`;
+      }
+
+      // Immediately route OAuth logins/signups into their exact role destination
+      if (typeof window !== "undefined" && !searchParams.get("verified")) {
+        const dest =
+          actualRole === "admin"
+            ? "/admin"
+            : actualRole === "mentor"
+            ? actualOnboarded
+              ? "/mentor"
+              : "/mentor/onboarding"
+            : actualOnboarded
+            ? "/dashboard"
+            : "/dashboard/onboarding";
+        window.location.replace(dest);
+        return;
+      }
+
+      setVerified(true);
+    },
+    [mode, role, searchParams, supabase]
+  );
+
+  React.useEffect(() => {
     async function checkSession() {
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user?.email?.toLowerCase() === email.toLowerCase()) {
-          setVerified(true);
+        if (session?.user) {
+          await resolveAndEnforceOAuthSession(session.user.id, session.user.email);
+          return;
         }
       } catch {
         // ignore
       }
+      if (searchParams.get("verified") === "true") {
+        setVerified(true);
+      }
     }
     checkSession();
-  }, [searchParams, email, supabase]);
+  }, [searchParams, supabase, resolveAndEnforceOAuthSession]);
 
   React.useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -94,6 +170,7 @@ function VerifyEmailContent() {
         });
 
         if (!otpError && data.session) {
+          await resolveAndEnforceOAuthSession(data.session.user.id, data.session.user.email);
           setVerified(true);
           setIsVerifying(false);
           return;
@@ -107,6 +184,7 @@ function VerifyEmailContent() {
       // If user clicked email link or token wasn't typed, check if active session exists
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user && session.user.email?.toLowerCase() === email.toLowerCase()) {
+        await resolveAndEnforceOAuthSession(session.user.id, session.user.email);
         setVerified(true);
       } else {
         setError("Please enter the complete 6-digit verification code sent to your email, or click the link in your email.");
@@ -306,7 +384,7 @@ function VerifyEmailContent() {
 
                 <div className="pt-2 flex flex-col gap-2 text-center">
                   <Link
-                    href={`/login?email=${encodeURIComponent(email)}&role=${role}&redirect=${encodeURIComponent(
+                    href={`${role === "mentor" ? "/mentor/login" : "/login"}?email=${encodeURIComponent(email)}&redirect=${encodeURIComponent(
                       redirectUrl || (role === "mentor" ? "/mentor/onboarding" : "/dashboard/onboarding")
                     )}`}
                     className="w-full py-2.5 px-4 rounded-xl border border-[#3828b5]/30 bg-indigo-50/50 hover:bg-indigo-50 text-[#3828b5] font-bold text-xs flex items-center justify-center gap-1.5 transition-colors"
@@ -335,26 +413,32 @@ function VerifyEmailContent() {
                   Email Verified Successfully! 🎉
                 </h2>
                 <p className="text-xs text-[#474554] max-w-sm mx-auto leading-relaxed">
-                  Your identity has been cryptographically sealed. Your candidate nodal escrow wallet and 8-dimension readiness matrix are now unlocked.
+                  Your identity has been cryptographically sealed. Redirecting to your role-specific workspace.
                 </p>
               </div>
 
               <div className="p-4 rounded-xl bg-indigo-50/70 border border-indigo-200 text-xs text-left space-y-2">
                 <div className="flex items-center justify-between border-b border-indigo-100 pb-2">
                   <span className="text-gray-500 font-medium">Activated Identity:</span>
-                  <span className="font-mono font-bold text-[#3828b5]">{email}</span>
+                  <span className="font-mono font-bold text-[#3828b5]">{verifiedEmailDisplay}</span>
                 </div>
                 <div className="flex items-center justify-between border-b border-indigo-100 pb-2">
                   <span className="text-gray-500 font-medium">Role Clearance:</span>
                   <span className="font-bold text-[#16834a] flex items-center gap-1">
                     <Check className="w-3.5 h-3.5" />
-                    {role === "mentor" ? "Accredited Mentor Candidate" : "Verified Job Seeker"}
+                    {resolvedRole === "mentor" ? "Accredited Mentor" : "Verified Job Seeker"}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-gray-500 font-medium">Next Milestone:</span>
                   <span className="font-semibold text-[#1c1b1b]">
-                    {role === "mentor" ? "Complete 4-Step Onboarding Wizard" : "Complete Diagnostic Assessment"}
+                    {resolvedRole === "mentor"
+                      ? resolvedOnboarded
+                        ? "Enter Mentor Delivery Console"
+                        : "Complete 4-Step Mentor Onboarding"
+                      : resolvedOnboarded
+                      ? "Enter Student Dashboard"
+                      : "Complete 8-D Candidate Onboarding"}
                   </span>
                 </div>
               </div>
@@ -364,8 +448,12 @@ function VerifyEmailContent() {
                   href={
                     redirectUrl && redirectUrl.startsWith("/")
                       ? redirectUrl
-                      : role === "mentor"
-                      ? "/mentor/onboarding"
+                      : resolvedRole === "mentor"
+                      ? resolvedOnboarded
+                        ? "/mentor"
+                        : "/mentor/onboarding"
+                      : resolvedOnboarded
+                      ? "/dashboard"
                       : "/dashboard/onboarding"
                   }
                   className="w-full py-3.5 px-6 rounded-xl bg-[#3828b5] hover:bg-[#2e2195] text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2"
@@ -373,8 +461,12 @@ function VerifyEmailContent() {
                   <span>
                     {redirectUrl
                       ? "Continue to Payment / Booking →"
-                      : role === "mentor"
-                      ? "Proceed to Mentor Onboarding →"
+                      : resolvedRole === "mentor"
+                      ? resolvedOnboarded
+                        ? "Enter Mentor Console →"
+                        : "Proceed to Mentor Onboarding →"
+                      : resolvedOnboarded
+                      ? "Enter Student Dashboard →"
                       : "Proceed to Candidate Onboarding →"}
                   </span>
                 </Link>

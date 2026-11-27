@@ -45,7 +45,7 @@ interface AuthContextType {
     role: UserRole,
     phone?: string
   ) => Promise<{ success: boolean; error?: string; hasSession?: boolean; alreadyExists?: boolean; role?: UserRole }>;
-  signInWithGoogle: (roleHint?: UserRole) => Promise<void>;
+  signInWithGoogle: (roleHint?: UserRole, mode?: "login" | "signup") => Promise<void>;
   upgradeMembership: (tier: "pro" | "elite", annual?: boolean) => Promise<void>;
   cancelMembership: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -312,10 +312,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             role: actualRole,
             error:
               actualRole === "mentor"
-                ? "Access Restricted: This login is exclusively for candidates. Mentor accounts must sign in through the Mentor Portal."
+                ? "Mentor accounts cannot login with the Student Login Portal. Because your account was registered as an Accredited Mentor, please sign in through the Mentor Login Portal."
                 : actualRole === "admin"
                 ? "Access Restricted: Administrator accounts must sign in via the Admin Console."
-                : "Access Restricted: Candidate accounts cannot sign in to the Mentor Portal — please sign in through the Candidate Portal.",
+                : "Student/Candidate accounts cannot login with the Mentor Login Portal. Because your account was registered as a Candidate / Seeker, please sign in through the Student Login Portal.",
           };
         }
 
@@ -344,8 +344,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const cleanEmail = email.trim().toLowerCase();
 
-      // Immediately cache user role intent in cookie so middleware strictly respects it
+      // Clear any stale prior session/cookies before registering a new account
       if (typeof window !== "undefined") {
+        localStorage.removeItem("dreamx_user");
         document.cookie = `dreamx_role=${role}; path=/; max-age=604800; SameSite=Lax`;
         document.cookie = `dreamx_onboarded=false; path=/; max-age=604800; SameSite=Lax`;
       }
@@ -438,7 +439,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const signInWithGoogle = async (roleHint: UserRole = "student") => {
+  const signInWithGoogle = async (roleHint: UserRole = "student", mode: "login" | "signup" = "login") => {
     const origin = typeof window !== "undefined" ? window.location.origin : "http://localhost:3000";
     if (typeof window !== "undefined") {
       document.cookie = `dreamx_role=${roleHint}; path=/; max-age=604800; SameSite=Lax`;
@@ -446,7 +447,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${origin}/verify-email?role=${roleHint}`,
+        redirectTo: `${origin}/verify-email?role=${roleHint}&mode=${mode}`,
       },
     });
   };

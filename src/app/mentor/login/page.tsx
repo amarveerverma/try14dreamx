@@ -18,7 +18,7 @@ import {
 
 export default function MentorLoginPage() {
   const router = useRouter();
-  const { user, isLoading: authLoading, signInWithEmail, logout } = useAuth();
+  const { user, isLoading: authLoading, signInWithEmail, signInWithGoogle, logout } = useAuth();
 
   const [email, setEmail] = React.useState(() => {
     if (typeof window !== "undefined") {
@@ -33,9 +33,24 @@ export default function MentorLoginPage() {
   const [error, setError] = React.useState<string | null>(null);
   const [roleRedirectUrl, setRoleRedirectUrl] = React.useState<{ url: string; label: string } | null>(null);
 
+  // Surface cross-portal error if bounced from OAuth verification
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    const pErr = new URLSearchParams(window.location.search).get("portal_error");
+    if (pErr === "student_on_mentor_portal") {
+      setError("Student/Candidate accounts cannot login with the Mentor Login Portal. Because your account was registered as a Candidate / Seeker, please sign in through the Student Login Portal.");
+      setRoleRedirectUrl({ url: "/login", label: "Go to Student Login Portal →" });
+    }
+  }, []);
+
   // Auto-redirect only if authenticated strictly as mentor (never bounce completed mentors back to onboarding)
   React.useEffect(() => {
     if (!authLoading && user) {
+      if (user.role === "student") {
+        setError("Student/Candidate accounts cannot login with the Mentor Login Portal. You are currently signed in as a Candidate — please use the Student Login Portal.");
+        setRoleRedirectUrl({ url: "/login", label: "Go to Student Login Portal →" });
+        return;
+      }
       if (user.role === "mentor") {
         if (!user.onboarding_completed) {
           router.replace("/mentor/onboarding");
@@ -76,8 +91,8 @@ export default function MentorLoginPage() {
 
     if (!res.success) {
       if (res.role === "student") {
-        setError("Access Restricted: This login is exclusively for Accredited Mentors. Candidate accounts cannot sign in here — please sign in through the Candidate Portal.");
-        setRoleRedirectUrl({ url: "/login", label: "Go to Candidate Portal Sign In →" });
+        setError("Student/Candidate accounts cannot login with the Mentor Login Portal. Because your account was registered as a Candidate / Seeker, please sign in through the Student Login Portal.");
+        setRoleRedirectUrl({ url: "/login", label: "Go to Student Login Portal →" });
       } else if (res.role === "admin") {
         setError("Access Restricted: Administrator accounts must sign in via the Admin Console.");
         setRoleRedirectUrl({ url: "/admin/login", label: "Go to Admin Console →" });
@@ -90,8 +105,8 @@ export default function MentorLoginPage() {
     // STRICT MENTOR ROLE ENFORCEMENT
     if (res.role === "student") {
       await logout();
-      setError("Access Restricted: This login is exclusively for Accredited Mentors. Candidate accounts cannot sign in here — please sign in through the Candidate Portal.");
-      setRoleRedirectUrl({ url: "/login", label: "Go to Candidate Portal Sign In →" });
+      setError("Student/Candidate accounts cannot login with the Mentor Login Portal. Because your account was registered as a Candidate / Seeker, please sign in through the Student Login Portal.");
+      setRoleRedirectUrl({ url: "/login", label: "Go to Student Login Portal →" });
       return;
     }
 
@@ -200,6 +215,30 @@ export default function MentorLoginPage() {
               )}
             </div>
           )}
+
+          {/* Social Google OAuth Button for Mentors */}
+          <div>
+            <button
+              type="button"
+              onClick={() => signInWithGoogle("mentor", "login")}
+              className="w-full h-11 px-4 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 text-xs font-bold text-white flex items-center justify-center gap-2.5 transition-colors cursor-pointer"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24">
+                <path d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z" fill="#4285F4" />
+                <path d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z" fill="#34A853" />
+                <path d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.17 0 9.99 0 12s.45 3.83 1.25 5.42l4.03-3.15z" fill="#FBBC05" />
+                <path d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z" fill="#EA4335" />
+              </svg>
+              <span>Continue with Google (Personal Account)</span>
+            </button>
+          </div>
+
+          <div className="relative flex items-center justify-center">
+            <div className="w-full h-px bg-white/10" />
+            <span className="absolute px-3 bg-[#141624] text-[10px] font-bold uppercase tracking-wider text-gray-500">
+              or email
+            </span>
+          </div>
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">

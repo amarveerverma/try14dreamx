@@ -36,11 +36,12 @@ export default function SignUpPage() {
   const [showPassword, setShowPassword] = React.useState(false);
   const [acceptedTerms, setAcceptedTerms] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
+  const [isSubmittingSignup, setIsSubmittingSignup] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
-  // Auto-redirect if user already has an active session
+  // Auto-redirect only if user already has an active session before starting a fresh signup
   React.useEffect(() => {
-    if (!authLoading && user) {
+    if (!authLoading && user && !isSubmittingSignup) {
       if (user.role === "admin") {
         router.replace("/admin");
       } else if (user.role === "mentor") {
@@ -49,7 +50,7 @@ export default function SignUpPage() {
         router.replace(user.onboarding_completed ? "/dashboard" : "/dashboard/onboarding");
       }
     }
-  }, [user, authLoading, router]);
+  }, [user, authLoading, isSubmittingSignup, router]);
 
   // Live password validation
   const hasMinLength = password.length >= 8;
@@ -78,6 +79,7 @@ export default function SignUpPage() {
     }
 
     setIsLoading(true);
+    setIsSubmittingSignup(true);
 
     const cleanEmail = email.trim().toLowerCase();
     const cleanName = name.trim();
@@ -87,15 +89,17 @@ export default function SignUpPage() {
     setIsLoading(false);
 
     if (!res.success) {
+      setIsSubmittingSignup(false);
       setError(res.error || "Failed to create account. Please check your credentials.");
       return;
     }
 
-    // Instant registration: route directly to mandatory onboarding wizard without magic links or signup OTPs
-    if (role === "mentor") {
-      router.replace("/mentor/onboarding");
+    // Strict two-role onboarding dispatch: Mentor -> /mentor/onboarding, Candidate -> /dashboard/onboarding
+    const targetOnboarding = role === "mentor" ? "/mentor/onboarding" : "/dashboard/onboarding";
+    if (typeof window !== "undefined") {
+      window.location.replace(targetOnboarding);
     } else {
-      router.replace("/dashboard/onboarding");
+      router.replace(targetOnboarding);
     }
   };
 
@@ -204,7 +208,7 @@ export default function SignUpPage() {
           <div>
             <button
               type="button"
-              onClick={() => signInWithGoogle(role)}
+              onClick={() => signInWithGoogle(role, "signup")}
               className="w-full h-11 px-4 rounded-xl border border-[#e7e7eb] bg-white hover:bg-gray-50 text-xs font-bold text-[#1c1b1b] flex items-center justify-center gap-2.5 transition-colors shadow-xs cursor-pointer"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24">
@@ -234,10 +238,10 @@ export default function SignUpPage() {
                 </div>
                 {(error.toLowerCase().includes("already exists") || error.toLowerCase().includes("log in") || error.toLowerCase().includes("sign in")) && (
                   <Link
-                    href={`/login?email=${encodeURIComponent(email)}&role=${role}`}
+                    href={role === "mentor" ? `/mentor/login?email=${encodeURIComponent(email)}` : `/login?email=${encodeURIComponent(email)}`}
                     className="self-start inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#3828b5] hover:bg-[#2e2195] text-white font-bold text-xs shadow-xs transition-colors"
                   >
-                    <span>Sign In to Your Account With Password →</span>
+                    <span>{role === "mentor" ? "Sign In via Mentor Login Portal →" : "Sign In via Student Login Portal →"}</span>
                   </Link>
                 )}
               </div>
@@ -372,8 +376,8 @@ export default function SignUpPage() {
           {/* Footer note */}
           <div className="text-center pt-2 border-t border-gray-100 text-xs text-gray-600">
             Already have an account?{" "}
-            <Link href="/login" className="font-bold text-[#3828b5] hover:underline">
-              Sign In to DreamX
+            <Link href={role === "mentor" ? "/mentor/login" : "/login"} className="font-bold text-[#3828b5] hover:underline">
+              {role === "mentor" ? "Sign In via Mentor Portal" : "Sign In via Student Portal"}
             </Link>
           </div>
         </div>
